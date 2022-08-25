@@ -33,10 +33,3 @@ Kevin Ryer developed early versions of the APFun_env function, from which all of
 Aidan Branney, Chloe Bates, and Duston Duffie helped test, debug, and improve various functions in this package. 
 
 
-## Changelog
-0.0.0.1 - 2022-08-25
-    Package created. 
-    Added README, LICENSE, and NAMESPACE files
-    Added package dependencies and imports
-    Migrated many functions and their associated documentation from their original sources in my personal package.
-  
