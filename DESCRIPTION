@@ -4,7 +4,7 @@ Title: What the Package Does (Title Case)
 Version: 0.0.0.1
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
-                    email = "tjyamashta@hotmail.com"
+                    email = "tjyamashta@gmail.com"
                     comment = c(ORCID = "0000-0002-0213-6310")) 
           )
 Maintainer: Thomas J. Yamashita <tjyamashta@gmail.com>
