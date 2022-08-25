@@ -1,7 +1,7 @@
 Package: cameraTrapping
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.0.0.1
+Title: Managing camera trap data
+Version: 0.0.0.2
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
                     email = "tjyamashta@gmail.com"
@@ -13,10 +13,12 @@ Description: This package supports functions used for managing camera trap data 
     A description of this workflow will be included with this package for reference.
     If the workflow is not followed, it is likely that the functions here will break. Modify them at your own risk.
 License: GPL (>= 3)
+URL: https://github.com/tomyamashita/cameraTrapping
+BugReports: https://github.com/tomyamashita/cameraTrapping/issues
 Encoding: UTF-8
 LazyData: true
 Depends:
-  R (>=4.2.0)
+  R (>= 4.2.0)
 Imports:
   activity,
   camtrapR, 
@@ -33,3 +35,4 @@ Suggests:
   foreach, 
   openxlsx, 
   tidyr
+RoxygenNote: 7.2.0
