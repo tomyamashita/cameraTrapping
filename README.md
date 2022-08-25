@@ -1,5 +1,4 @@
-
-# cameraTrapping
+# Manage Camera Trap data in R
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -11,6 +10,7 @@ The goal of cameraTrapping is to provide general access to the functions I use f
 You can install the latest version of cameraTrapping from github:
 
 ``` r
+if(!require(devtools)){install.packages("devtools")}
 devtools::install_github("tomyamashta/cameraTrapping")
 ```
 
@@ -18,7 +18,7 @@ This package is currently not available on CRAN and likely will not be updated o
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This will eventually contain an example of the standard workflow for processing camera trap images (for now, it contains nothing...):
 
 ``` r
 library(cameraTrapping)
@@ -33,3 +33,5 @@ Kevin Ryer developed early versions of the APFun_env function, from which all of
 Aidan Branney, Chloe Bates, and Duston Duffie helped test, debug, and improve various functions in this package. 
 
 
+## Notes
+This package is a constant work in progress. I do not have any formal training in programming, developing R packages, or anything like that so all the things that I am adding are done as I learn more about building packages. This is the reason the NAMESPACE file is not properly formatted
