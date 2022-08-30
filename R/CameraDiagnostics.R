@@ -1,6 +1,53 @@
 # Camera Diagnostics Functions
 
-### Camera Trap Nights (Added 2022-08-25)
+## First and Last Pictures (Added 2022-08-30) ####
+##' @description This function computes the first and last pictures from the output of the \code{\link{cameraRename3}} function for basic diagnostic purposes.
+##'
+##' @title Camera basic diagnostics
+##'
+##' @param x data.frame. A data frame outputted from the \code{\link{cameraRename3}} function
+##'
+##' @details This function has only been tested to work with the output of \code{\link{cameraRename3}}. Theoretically it could work with any input that has an outpath, UserLabel, and DateTimeOriginal column but I don't know what it will do
+##'
+##' @return A data frame containing the outpath for the images, the user label, number of pictures, first picture date, and last picture date
+##'
+##' @note As with all of my functions, this assumes a very particular formatting for your data.
+##' This function is designed to help you create a CT table by identifying problems.
+##' I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own convenience and make no promises that they will work for different situations.
+##' As I come across errors, I attempt to further generalize the function but this is done as I go.
+##'
+##' @seealso \code{\link{cameraRename3}}
+##'
+##' @keywords manip
+##'
+##' @concept camera trapping
+##' @concept diagnostics
+##'
+##' @importFrom dplyr summarize group_by n
+##' @importFrom lubridate ymd year month day
+##'
+##' @export
+##'
+##' @example \dontrun{
+##' # No example provided
+##' }
+cameraDiagnostics <- function(x){
+  #x <- openxlsx::read.xlsx("new_20220801.xlsx", sheet = 1, detectDates = T)
+
+  x$Date <- lubridate::ymd(paste(lubridate::year(x$DateTimeOriginal), lubridate::month(x$DateTimeOriginal), lubridate::day(x$DateTimeOriginal)))
+  out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
+
+  print(paste("The total number of pictures is: ", sum(out$num_pics), sep = ""))
+  print(paste("The following cameras did not make to the end: ", paste(out$Label[out$last_pic == sort(unique(out$last_pic))[-length(unique(out$last_pic))]], collapse = ", "), sep = ""))
+
+  return(out)
+  rm(out)
+  #rm(x)
+}
+
+## Camera Trap Nights (Added 2022-08-25) ####
 ##' @description This function calculates the number of active camera trap nights and total camera trap nights using an inputted CT table, formatted based on camtrapR specifications.Required columns are setup date and retrieval date and theoretically, the table should have problems. I have never tested it on a dataset without any problems.
 ##'
 ##' @title Camera trapping effort (Trap nights)
@@ -73,7 +120,7 @@ trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
   #rm(cttable, group)
 }
 
-### Number of Photos (Added 2022-08-25)
+## Number of Photos (Added 2022-08-25) ####
 ##' @description This function calculates the total number of pictures, number of animals, ghosts, and humans from one or more timelapse or dataorganize files.
 ##'
 ##' @title Camera trapping effort (Images)
