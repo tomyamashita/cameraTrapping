@@ -22,7 +22,7 @@
 ##' @importFrom lubridate ymd hms ymd_hms year month day hour minute second with_tz
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 timeConvert <- function(ds, date.col, time.col, LocalTZ){

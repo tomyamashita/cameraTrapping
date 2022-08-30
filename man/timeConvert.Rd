@@ -21,6 +21,11 @@ Your original data frame with the new date and time columns appended to the end 
 \description{
 This function converts date-time information from a GPS collar from UTC time to your local time zone. This should be used when GPS collar data is not already converted and you need to keep separate "date" and "time" columns in your data.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \seealso{
 \code{\link[lubridate]{with_tz}}
 }

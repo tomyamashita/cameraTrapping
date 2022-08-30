@@ -38,6 +38,11 @@ This function copies images for interactions to a new folder and creates an inte
 \details{
 NOTE: R has no good way of handling duplicate file names so it will skip duplicates when copying. Depending on how images are named, this could be an issue. The easiest way to check is to check the number of images in the main folder.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \references{
 Tewes, M., J. Lombardi, Z. Wardle, and T. Yamashita. 2020. Ocelot and Jaguarundi Monitoring Project: Evaluating the Effectiveness of Wildlife Crossings, Cattle Guards, and Fencing on Road Facilities in Cameron County, Contract No. 57-9XXIA003, 0000018485. Feline Research Program, Caesar Kleberg Wildlife Research Institute, Texas A&M University - Kingsville.
 

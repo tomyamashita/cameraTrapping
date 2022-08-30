@@ -23,6 +23,11 @@ A data frame containing the file path info of the best pics.
 \description{
 This function uses a timelapse csv to extract photos tagged as a best picture and copies them to a specified location.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \concept{camera trapping}
 \concept{timelapse}
 \keyword{files}

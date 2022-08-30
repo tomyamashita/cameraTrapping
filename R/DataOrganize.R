@@ -23,7 +23,7 @@
 ##' @importFrom dplyr summarise group_by n
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 dataorganize <- function(inputdir, diagnostics = T){
@@ -75,11 +75,7 @@ dataorganize <- function(inputdir, diagnostics = T){
 ##' @return all.pics = TRUE:
 ##' Returns a data frame of all pictures from the input file. A index number is added associated with independent events.
 ##'
-##' @references
-##'
 ##' @note As with all of my functions, this assumes a very particular formatting for your data. If the EnvData table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
-##'
-##' @section
 ##'
 ##' @seealso \code{\link{APFun_Timelapse}}
 ##'
@@ -92,10 +88,10 @@ dataorganize <- function(inputdir, diagnostics = T){
 ##'
 ##' @importFrom dplyr arrange summarise group_by
 ##' @importFrom pbapply pbsapply
-##' @importFrom zoo na_locf
+##' @importFrom zoo na.locf
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 APFun_env <- function(x,y,sort.col="Camera",exclude=c("ghost"),start_date,end_date=Sys.Date(),interval=NULL,all.pics=FALSE){
@@ -173,13 +169,13 @@ APFun_env <- function(x,y,sort.col="Camera",exclude=c("ghost"),start_date,end_da
     colnames(x5b3) <- colnames(x5)
     x6 <- merge.data.frame(x5b3, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
     x7 <- x6[,c(1,2,seq(2,length(y))+14,3,length(y)+length(x1)+5,11,12,13,14,length(y)+length(x1)+1,length(y)+length(x1)+2)]
-    rm(x5b2, xb53)
+    #rm(x5b2, x5b3)
   }else{
     x6 <- merge.data.frame(x5, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
     x7 <- x6[,c(2,seq(2,length(y))+14,3,length(y)+length(x1)+5,11,12,13,14,length(y)+length(x1)+1,length(y)+length(x1)+2)]
   }
   return(x7)
-  rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
+  #rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
   #rm(x, y, sort.col, exclude, start_date, end_date, interval, all.pics)
 }
 

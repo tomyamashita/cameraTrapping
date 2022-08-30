@@ -21,7 +21,7 @@
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 ctdates_fun <- function(cttable, start.col=6){
@@ -65,7 +65,7 @@ ctdates_fun <- function(cttable, start.col=6){
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 timelapseQC <- function(ds, exclude=NULL){

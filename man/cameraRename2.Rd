@@ -52,6 +52,12 @@ This function has the potential for and was built to be expanded on. If you want
 In previous versions of this function, there was an issue with file.rename not working properly for large numbers of files. This was due to issues with the paste function not properly concatenating columns. This is theoretically resolved in the current version of the function.
 }
 
+\examples{
+\dontrun{
+## No example right now
+
+}
+}
 \references{
 exiftool: \url{https://exiftool.org/}
 
@@ -60,7 +66,7 @@ exiftoolr package: \url{https://github.com/JoshOBrien/exiftoolr}
 Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
 }
 \seealso{
-\code{\link{cameraRename}}, \code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
+\code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
 }
 \concept{camera trapping}
 \concept{rename images}

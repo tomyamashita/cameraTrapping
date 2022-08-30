@@ -26,6 +26,11 @@ These functions are built for very specific purposes and may not generalize well
 I build them for my own convenience and make no promises that they will work for different situations.
 As I come across errors, I attempt to further generalize the function but this is done as I go.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \seealso{
 \code{\link{cameraRename3}}
 }

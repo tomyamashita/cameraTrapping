@@ -38,7 +38,7 @@
 ##' @importFrom fs file_move
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 removeGhosts <- function(jsonfile, in.dir, out.dir, create.dirs, conf.threshold, move = T){

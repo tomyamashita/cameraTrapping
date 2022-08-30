@@ -17,6 +17,11 @@ A data frame organized in the same way as the DataOrganize program: Camera Speci
 \description{
 This is an R version of the DataOrganize program developed by Jim Sanderson and Grant Harris. While untested, it should provide a little more flexibility in naming of folders than the original DataOrganize program. It also can do basic diagnostics so you can check camera and species names.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \references{
 Original DataOrganize program: \url{https://smallcats.org/resources/}
 }

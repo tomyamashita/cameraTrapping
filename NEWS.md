@@ -17,4 +17,6 @@
 ## Version 0.0.0.3 (2022-08-30)
 
 * Added the cameraDiagnostics function and associated documentation
+* Fixed an error with the description file
 * Fixed an error in the documentation for the timeConvert function where the lubridate package was improperly specified
+* Actually checked if the package could be built and fixed associated errors

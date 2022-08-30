@@ -60,6 +60,12 @@ If you need to fix names (or add a serial number to existing names) rather than 
 \note{
 Differences between this function and cameraRename2: There were several major changes in this function that differentiate it from the cameraRename2 function enough that it warranted its own function rather than an update. The main change and this affected everything down the line was that the function now acts on each camera directory separately. By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files. One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders. Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
 }
+\examples{
+\dontrun{
+# No example provided yet
+}
+
+}
 \references{
 exiftool: \url{https://exiftool.org/}
 
@@ -68,7 +74,7 @@ exiftoolr package: \url{https://github.com/JoshOBrien/exiftoolr}
 Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
 }
 \seealso{
-\code{\link{cameraRename}}, \code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
+\code{\link{cameraRename2}}, \code{\link[exiftoolr]{install_exiftool}}
 }
 \concept{camera trapping}
 \concept{rename images}

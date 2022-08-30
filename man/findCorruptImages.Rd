@@ -24,6 +24,12 @@ A useful, but slow function for locating the name and position of corrupt images
 \details{
 NOTE: This function is extremely slow. It uses an apply function to run exiftool on each image separately rather than as a batch group, which greatly slows down the process. Parallel processing can help improve this speed but allowing it to check multiple images at once.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+
+}
 \seealso{
 \code{\link{cameraRename3}}
 }

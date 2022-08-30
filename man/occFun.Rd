@@ -41,6 +41,11 @@ This function modifies data for use in occupancy modelling using Unmarked or a s
 \details{
 Please note that I personally have never tested the output of this function with an occupancy model although I am told that it works. Please use this with caution and test it properly before using it for any real research.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \seealso{
 \code{\link{APFun_env}}
 }

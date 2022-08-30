@@ -31,6 +31,11 @@ This function will check if there are video files (.MP4) then check the number o
 
 Once the timelapse file has passed this check, it can be used in the standard workflow for images.
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \seealso{
 \code{\link{APFun_Timelapse}}
 }

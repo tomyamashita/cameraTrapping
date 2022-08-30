@@ -34,11 +34,12 @@
 ##' @section Warning:
 ##' In previous versions of this function, there was an issue with file.rename not working properly for large numbers of files. This was due to issues with the paste function not properly concatenating columns. This is theoretically resolved in the current version of the function.
 ##'
-##' @seealso \code{\link{cameraRename}}, \code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
+##' @seealso \code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
 ##'
 ##' @importFrom exiftoolr exif_version install_exiftool exif_read
 ##' @importFrom fs file_move file_copy
 ##' @importFrom lubridate ymd_hms year month day hour minute second
+##' @importFrom methods is
 ##'
 ##' @keywords manip
 ##' @keywords files
@@ -48,7 +49,7 @@
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' ## No example right now
 ##'
 ##' }
@@ -77,7 +78,7 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
   # Check if exiftool is installed within R
   out <- tryCatch(exiftoolr::exif_version())
-  if(is(out, "try-error")){
+  if(methods::is(out, "try-error")){
     warning("Exiftool was not installed on your version of R. The most up-to-date version of exiftool was installed using defaults...")
     exiftoolr::install_exiftool()
   }
@@ -217,18 +218,18 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   # Only add serial numbers to names that are renamed
   if(isTRUE(fix.names)){
     print("Image names were only replaced if they were not in the form YYYY MM DD HH MM SS.jpg. Serial number added to all images.")
-    exif3$complete <- complete.cases(apply(do.call(rbind,strsplit(sub(".jpg", "", exif3$old.name, ignore.case = T)," ")),2,as.numeric))
+    exif3$complete <- stats::complete.cases(apply(do.call(rbind,strsplit(sub(".jpg", "", exif3$old.name, ignore.case = T)," ")),2,as.numeric))
     exif3$new.name[exif3$complete==T] <- paste(sub(".jpg", "", exif3$old.name[exif3$complete==T], ignore.case = T), " ", exif3$serial[exif3$complete==T], ".jpg", sep = "")
   }
 
   # Rename the images if desired (this cannot be undone)
   if(isTRUE(rename)){
     print(paste("Files will be renamed and replaced. If you wanted to keep originals, specify c('copy') instead. Renaming started at ", Sys.time(), sep = ""))
-    fs::file_rename(path = with(exif3, paste(inpath, old.name, sep = "/")), new_path = with(exif3, paste(outpath, new.name, sep = "/")))
+    fs::file_move(path = with(exif3, paste(inpath, old.name, sep = "/")), new_path = with(exif3, paste(outpath, new.name, sep = "/")))
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="replace"){
     print(paste("Files will be renamed and replaced. Renaming started at ", Sys.time(), sep = ""))
-    fs::file_rename(path = with(exif3, paste(inpath, old.name, sep = "/")), new_path = with(exif3, paste(outpath, new.name, sep = "/")))
+    fs::file_move(path = with(exif3, paste(inpath, old.name, sep = "/")), new_path = with(exif3, paste(outpath, new.name, sep = "/")))
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="copy"){
     print(paste("Files will be renamed and copied. Renaming started at ", Sys.time(), sep = ""))
@@ -295,14 +296,16 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##'
 ##' @note Differences between this function and cameraRename2: There were several major changes in this function that differentiate it from the cameraRename2 function enough that it warranted its own function rather than an update. The main change and this affected everything down the line was that the function now acts on each camera directory separately. By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files. One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders. Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
 ##'
-##' @seealso \code{\link{cameraRename}}, \code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
+##' @seealso \code{\link{cameraRename2}}, \code{\link[exiftoolr]{install_exiftool}}
 ##'
 ##' @importFrom dplyr bind_rows
 ##' @importFrom exiftoolr exif_version install_exiftool exif_read
 ##' @importFrom fs file_move file_copy
 ##' @importFrom lubridate ymd_hms year month day hour minute second
+##' @importFrom methods is
 ##' @importFrom parallel makeCluster clusterExport detectCores stopCluster
 ##' @importFrom pbapply pblapply
+##' @importFrom stats complete.cases
 ##'
 ##' @keywords manip
 ##' @keywords files
@@ -311,7 +314,7 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided yet
 ##' }
 ##'
@@ -343,7 +346,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
   # Check if exiftool is installed within R
   out <- tryCatch(exiftoolr::exif_version())
-  if(is(out, "try-error")){
+  if(methods::is(out, "try-error")){
     warning("Exiftool was not installed on your version of R. The most up-to-date version of exiftool was installed using defaults...")
     exiftoolr::install_exiftool()
   }
@@ -384,7 +387,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   }
   print(paste("Images loaded at ", Sys.time(), ". Checking file structure of the lowest two directories...", sep = ""))
   imagelist <- data.frame(do.call(dplyr::bind_rows, lapply(strsplit(images, split = "/"), function(x){names(x) <- paste("X", seq(1:length(x)), sep = ""); return(x)})))
-  if(!all(complete.cases(imagelist))){
+  if(!all(stats::complete.cases(imagelist))){
     stop("Your images are not at the same directory level in each folder. This function likely won't work properly")
   }else{
     message(paste(length(unique(imagelist[,ncol(imagelist)-1])), " unique folder(s) was detected at the lowest directory. Is this correct?", sep = ""))
@@ -541,7 +544,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
   if(rename=="replace"){
     print(paste("Files will be renamed and replaced. Renaming started at ", Sys.time(), sep = ""))
-    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){fs::file_rename(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))})
+    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){fs::file_move(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))})
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="copy"){
     print(paste("Files will be renamed and copied. Renaming started at ", Sys.time(), sep = ""))
@@ -599,7 +602,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' @importFrom pbapply pblapply
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 ##'

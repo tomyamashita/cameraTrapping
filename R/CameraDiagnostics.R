@@ -30,7 +30,7 @@
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 cameraDiagnostics <- function(x){
@@ -72,7 +72,7 @@ cameraDiagnostics <- function(x){
 ##' @importFrom camtrapR cameraOperation
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
@@ -140,10 +140,9 @@ trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
 ##'
 ##' @concept camera trapping
 ##'
-##' @importFrom cameraTrapping APFun_Timelapse
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 imageeffort_fun <- function(x, type){
@@ -154,7 +153,7 @@ imageeffort_fun <- function(x, type){
     x <- list(x)
   }
   if(type=="timelapse"){
-    AP <- lapply(x, cameraTrapping::APFun_Timelapse)
+    AP <- lapply(x, APFun_Timelapse)
   }else if(type=="dataorganize"){
     AP <- x
   }else{

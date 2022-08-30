@@ -4,7 +4,7 @@ Title: Managing camera trap data
 Version: 0.0.0.3
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
-                    email = "tjyamashta@gmail.com"
+                    email = "tjyamashta@gmail.com", 
                     comment = c(ORCID = "0000-0002-0213-6310")) 
           )
 Maintainer: Thomas J. Yamashita <tjyamashta@gmail.com>
@@ -27,8 +27,10 @@ Imports:
   fs,
   jsonlite,
   lubridate,
+  methods,
   parallel,
   pbapply,
+  stats,
   zoo
 Suggests: 
   ggplot2, 

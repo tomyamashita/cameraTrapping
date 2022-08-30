@@ -28,6 +28,11 @@ This function is nearly identical to the APFun_env except it is simpler because 
 
 For a detailed description of what these interactions are, see any of our or UTRGV's reports on the TxDOT camera monitoring projects
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \references{
 Tewes, M., J. Lombardi, Z. Wardle, and T. Yamashita. 2020. Ocelot and Jaguarundi Monitoring Project: Evaluating the Effectiveness of Wildlife Crossings, Cattle Guards, and Fencing on Road Facilities in Cameron County, Contract No. 57-9XXIA003, 0000018485. Feline Research Program, Caesar Kleberg Wildlife Research Institute, Texas A&M University - Kingsville.
 

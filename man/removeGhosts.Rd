@@ -42,6 +42,11 @@ R will not create directories for you unless you specify create.dirs=T. If you c
 
   Example: xcopy e:/new_20211015/images e:/new_20211015/ghosts /t /e [Use a "\" instead of a "/" for the file paths]
 }
+\examples{
+\dontrun{
+# No example provided
+}
+}
 \concept{MegaDetector}
 \concept{camera trapping}
 \keyword{files}

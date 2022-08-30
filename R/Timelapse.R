@@ -20,7 +20,7 @@
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 APFun_Timelapse <- function(x){
@@ -66,7 +66,7 @@ APFun_Timelapse <- function(x){
 ##' @param x data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use
 ##' @param in.dir String. The directory containing the unsorted images
 ##' @param out.dir String. The directory where you want to store the sorted images
-##' @param creat.dirs Logical. Should the function create the directories it needs?
+##' @param create.dirs Logical. Should the function create the directories it needs?
 ##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')
 ##'
 ##' @details When this function creates its folder structure, it uses the Individuals column in the Timelapse output. For some "species" (e.g., ghost, human, bird, rodent), we do not sort these by individual, therefore the Individuals column is a 0. These species get assigned a folder of 00 for their number of individuals. I do not know how this will affect quality control and the workflow down the line. Generally, it should not be an issue but could result in NA values in the Individuals column of the \code{\link{APFun_env}} or errors in the \code{\link{dataorganize}} functions in this package. Once this has been tested, I will update this.
@@ -90,7 +90,7 @@ APFun_Timelapse <- function(x){
 ##' @importFrom fs file_move file_copy
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 movePictures <- function(x, in.dir, out.dir, create.dirs, type = "none"){
@@ -207,7 +207,7 @@ movePictures <- function(x, in.dir, out.dir, create.dirs, type = "none"){
 ##' @importFrom fs file_exists file_move file_copy
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 bestPics <- function(x, in.dir, out.dir, copy = T, sorted = F){

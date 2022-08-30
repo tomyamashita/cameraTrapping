@@ -31,7 +31,7 @@
 ##'
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 interactionsDataOrganize <- function(x,y,exclude,start_date,end_date=Sys.Date()){
@@ -95,7 +95,7 @@ interactionsDataOrganize <- function(x,y,exclude,start_date,end_date=Sys.Date())
 ##' @importFrom fs file_copy
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 interactionsTimelapse <- function(images, envdata, exclude, create.dirs=T, copy.files=T){

@@ -1,6 +1,6 @@
 # Camera Data Analysis
 
-### Animal Diel Activity (Added 2022-08-25)
+## Animal Diel Activity (Added 2022-08-25) ####
 ##' @description A function for calculating diel activity for selected species. The function can optionally also split your data based on a user-defined column.
 ##'
 ##' @title Animal Diel Activity
@@ -36,7 +36,7 @@
 ##' @importFrom activity fitact
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 actfun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
@@ -88,7 +88,7 @@ actfun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
   #rm(x, split, splitcol, species, bw, rep)
 }
 
-### Setting up for occupancy modelling from an APFun_env output (Added 2022-08-25)
+## Setting up for occupancy modelling from an APFun_env output (Added 2022-08-25) ####
 ##' @description This function modifies data for use in occupancy modelling using Unmarked or a separate program, I think.
 ##'
 ##' @title Occupancy Analysis Data Setup
@@ -115,9 +115,10 @@ actfun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
 ##' @concept occupancy analysis
 ##'
 ##' @importFrom camtrapR cameraOperation
+##' @importFrom stats aggregate reshape
 ##' @export
 ##'
-##' @example \dontrun{
+##' @examples \dontrun{
 ##' # No example provided
 ##' }
 occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T, count=F){
@@ -184,7 +185,7 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
     stop("# Cameras * # dates does not equal total rows. Check the function. This error shouldn't be possible.")
   }
 
-  active <- aggregate(camopt, by = list(Date2 = dates$Date2), sum)
+  active <- stats::aggregate(camopt, by = list(Date2 = dates$Date2), sum)
   rownames(active) <- active[,1]
   activet <- t(active[,2:ncol(active)])
   activet[activet<=(-5*unit1)] <- NA
@@ -200,13 +201,13 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
   x2 <- x1[subset]
 
   x3 <- lapply(x2, function(a){
-    a1 <- aggregate(Individuals~camdate, data = a, sum)
+    a1 <- stats::aggregate(Individuals~camdate, data = a, sum)
     a2 <- merge.data.frame(camdate, a1, by = "camdate", all.x = T)
     a2$Individuals[is.na(a2$Individuals)] <- 0
 
-    a3 <- aggregate(Individuals~sortCol+Date2, data = a2, sum)
+    a3 <- stats::aggregate(Individuals~sortCol+Date2, data = a2, sum)
 
-    a4 <- reshape(a3, direction = "wide", timevar = "Date2", idvar = "sortCol")
+    a4 <- stats::reshape(a3, direction = "wide", timevar = "Date2", idvar = "sortCol")
     row.names(a4) <- a4[,1]
     a5 <- as.matrix(a4[,-1])
     colnames(a5) <- as.character(unique(a3$Date2))
