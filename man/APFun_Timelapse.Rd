@@ -4,10 +4,10 @@
 \alias{APFun_Timelapse}
 \title{Convert a Timelapse csv to a format for use with APFun_env}
 \usage{
-APFun_Timelapse(x)
+APFun_Timelapse(timelapse)
 }
 \arguments{
-\item{x}{data.frame. A data frame representing a properly formatted Timelapse csv file}
+\item{timelapse}{data.frame. A data frame representing a properly formatted Timelapse csv file}
 }
 \value{
 An R object formatted in the same style as a dataorganize text file.

@@ -5,19 +5,22 @@
 \title{Create an Interactions File from a Timelapse Output}
 \usage{
 interactionsTimelapse(
-  images,
+  timelapse,
   envdata,
   exclude,
+  in.dir,
   create.dirs = T,
   copy.files = T
 )
 }
 \arguments{
-\item{images}{A timelapse csv, formatted using our Timelapse template.}
+\item{timelapse}{A timelapse csv, formatted using our Timelapse template.}
 
 \item{envdata}{Environmental variables data frame. This file must have header called "Camera" containing the list of cameras, "Site" containing the site name, "Side" indicating which side the camera is on, and "Type" indicating what type of structure the camera is at.}
 
 \item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.}
+
+\item{in.dir}{Character. The directory where you want to store the Interactions data. This should be the same folder containing the images folder.}
 
 \item{create.dirs}{Logical. Defaults to TRUE. Should new directories be checked for and created by R if necessary?}
 

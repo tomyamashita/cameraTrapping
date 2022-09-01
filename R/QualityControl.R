@@ -40,7 +40,7 @@ ctdates_fun <- function(cttable, start.col=6){
 ##'
 ##' @title Quality control for timelapse
 ##'
-##' @param ds A data frame created from a csv file exported from Timelapse. Note, this function is set up to use my timelapse template.
+##' @param timelapse A data frame created from a csv file exported from Timelapse. Note, this function is set up to use my timelapse template.
 ##' @param exclude String. Which species should not be checked for number of individuals? The default is NULL which will only exclude c("ghost", "human", "", "rodent", "bird").
 ##'
 ##' @details This function will check if there are video files (.MP4) then check the number of unique species, whether any image was not sorted by species by checking if the species1 column contains any "" values, and whether any image was not sorted by individuals by checking if a column sorted into a species was not sorted by individual. Ghosts, humans, "", birds, rodents, lizards, and amphibians are not sorted by individual under the current protocol, and are therefore not included in this check. Video files are also not checked by individual.
@@ -68,30 +68,30 @@ ctdates_fun <- function(cttable, start.col=6){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-timelapseQC <- function(ds, exclude=NULL){
-  # ds <- read.csv("timelapse_out_20220117_BL.csv)
+timelapseQC <- function(timelapse, exclude=NULL){
+  # timelapse <- read.csv("timelapse_out_20220117_BL.csv)
 
   # Check for video files
-  if(isTRUE(any(grepl(".MP4", ds$File, ignore.case = T)))){
+  if(isTRUE(any(grepl(".MP4", timelapse$File, ignore.case = T)))){
     message("Video files detected. Number of individuals only analyzed for images")
-    video <- ds[grep(".MP4", ds$File, ignore.case = T),]
-    images <- ds[-grep(".MP4", ds$File, ignore.case = T),]
+    video <- timelapse[grep(".MP4", timelapse$File, ignore.case = T),]
+    images <- timelapse[-grep(".MP4", timelapse$File, ignore.case = T),]
   }else{
     print("No video files detected.")
-    images <- ds
+    images <- timelapse
   }
 
   # Check species names
   unique_spec <- list(
-    unique1 = unique(ds$Species1),
-    unique2 = if(!any(is.na(unique(ds$Species2)))){unique(ds$Species2)[unique(ds$Species2)!=""]},
-    unique3 = if(!any(is.na(unique(ds$Species3)))){unique(ds$Species3)[unique(ds$Species3)!=""]},
-    unique4 = if(!any(is.na(unique(ds$SpeciesOther)))){unique(ds$SpeciesOther)[unique(ds$SpeciesOther)!=""]}
+    unique1 = unique(timelapse$Species1),
+    unique2 = if(!any(is.na(unique(timelapse$Species2)))){unique(timelapse$Species2)[unique(timelapse$Species2)!=""]},
+    unique3 = if(!any(is.na(unique(timelapse$Species3)))){unique(timelapse$Species3)[unique(timelapse$Species3)!=""]},
+    unique4 = if(!any(is.na(unique(timelapse$SpeciesOther)))){unique(timelapse$SpeciesOther)[unique(timelapse$SpeciesOther)!=""]}
   )
   unique_species <- unique(do.call(c, unique_spec))
 
   # Check missing species data in the species 1 column
-  missing_spec <- ds[ds$Species1=="",]
+  missing_spec <- timelapse[timelapse$Species1=="",]
 
   # Check missing individuals data in species data
   if(is.null(exclude)){
@@ -123,5 +123,5 @@ timelapseQC <- function(ds, exclude=NULL){
   out <- list("Unique Species" = unique_species, "Missing Species" = missing_spec, "Missing Ind" = missing_ind)
   return(out)
   rm(unique_spec, unique_species, missing_spec, exclude, no_ind, missing_ind, out)
-  #rm(ds)
+  #rm(timelapse)
 }

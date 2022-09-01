@@ -125,7 +125,7 @@ trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
 ##'
 ##' @title Camera trapping effort (Images)
 ##'
-##' @param x List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.
+##' @param timelapse List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.
 ##' @param type String. What was the source of the input files. Choose one of c("timelapse", "dataorganize").
 ##'
 ##' @details If a timelapse file is given to the function, it will run the \code{\link{APFun_Timelapse}} function to convert it to a dataorganize file.
@@ -145,17 +145,17 @@ trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-imageeffort_fun <- function(x, type){
-  #x <- list('20220117' = read.csv("K:/Completed/new_20220117/timelapse_out_20220117.csv"), '20220214' = read.csv("K:/Completed/new_20220214/timelapse_out_20220214.csv"))
+imageeffort_fun <- function(timelapse, type){
+  #timelapse <- list('20220117' = read.csv("K:/Completed/new_20220117/timelapse_out_20220117.csv"), '20220214' = read.csv("K:/Completed/new_20220214/timelapse_out_20220214.csv"))
   #type <- "timelapse"
 
-  if(is.data.frame(x)){
-    x <- list(x)
+  if(is.data.frame(timelapse)){
+    timelapse <- list(timelapse)
   }
   if(type=="timelapse"){
-    AP <- lapply(x, APFun_Timelapse)
+    AP <- lapply(timelapse, APFun_Timelapse)
   }else if(type=="dataorganize"){
-    AP <- x
+    AP <- timelapse
   }else{
     stop("Your data must be a 'timelapse' or 'dataorganize' file.")
   }
@@ -170,8 +170,8 @@ imageeffort_fun <- function(x, type){
   ghosts <- lapply(AP, function(y){y[y[,2]=="ghost",]})
   human <- lapply(AP, function(y){y[y[,2]=="human",]})
 
-  out <- do.call(rbind, lapply(1:length(x), function(i){
-    data.frame(total = nrow(x[[i]]), animal = nrow(x[[i]]) - nrow(ghosts[[i]]) - nrow(human[[i]]), human = nrow(human[[i]]), ghost = nrow(ghosts[[i]]), success = NA)
+  out <- do.call(rbind, lapply(1:length(timelapse), function(i){
+    data.frame(total = nrow(timelapse[[i]]), animal = nrow(timelapse[[i]]) - nrow(ghosts[[i]]) - nrow(human[[i]]), human = nrow(human[[i]]), ghost = nrow(ghosts[[i]]), success = NA)
   }))
   rownames(out) <- names(AP)
 
@@ -186,6 +186,6 @@ imageeffort_fun <- function(x, type){
 
   return(out2)
   rm(AP, name, ghosts, human, out, total, out2)
-  #rm(x, type)
+  #rm(timelapse, type)
 }
 

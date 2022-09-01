@@ -51,7 +51,7 @@ dataorganize <- function(inputdir, diagnostics = T){
   #rm(inputdir, diagnostics)
 }
 
-## From a dataorganize file, create a usable output (Added 2022-08-25) ####
+## From a dataorganize file, create a usable output (Added 2022-08-25, Modified 2022-08-31) ####
 ##' @description Function for combining an AllPictures text file created by DataOrganize with environmental variables associated with individual camera traps. The No Interval version of the function uses an interval of 1 second and does not recalculate # number of individuals.
 ##'
 ##' @title All Pictures Function with Environmental Variables for a DataOrganize output
@@ -94,7 +94,7 @@ dataorganize <- function(inputdir, diagnostics = T){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-APFun_env <- function(x,y,sort.col="Camera",exclude=c("ghost"),start_date,end_date=Sys.Date(),interval=NULL,all.pics=FALSE){
+APFun_env <- function(x, y, sort.col="Camera", exclude=c("ghost"), start_date, end_date=Sys.Date(), interval=NULL, all.pics=FALSE){
   # This function takes the allpictures.txt file and changes it into a form that is usable for analyses in R
   # Inputs:
   ## x = allpictures file produced by Dataorganize
@@ -133,6 +133,9 @@ APFun_env <- function(x,y,sort.col="Camera",exclude=c("ghost"),start_date,end_da
 
   # Adding in environmental data and time of day data
   x2 <- merge.data.frame(x1,y,by = "Camera")
+  if(nrow(x2)==0){
+    stop("Something went wrong merging the camera data to the envdata. Check your column and camera names in your envdata file.")
+  }
   x2$time_numeric <- (as.numeric(x2$Hour)*3600 + as.numeric(x2$Minute)*60 + as.numeric(x2$Second))/(86400)
   x2$time_radians <-2*pi*x2$time_numeric
 
@@ -169,13 +172,12 @@ APFun_env <- function(x,y,sort.col="Camera",exclude=c("ghost"),start_date,end_da
     colnames(x5b3) <- colnames(x5)
     x6 <- merge.data.frame(x5b3, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
     x7 <- x6[,c(1,2,seq(2,length(y))+14,3,length(y)+length(x1)+5,11,12,13,14,length(y)+length(x1)+1,length(y)+length(x1)+2)]
-    #rm(x5b2, x5b3)
+    rm(x5b2, xb53)
   }else{
     x6 <- merge.data.frame(x5, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
     x7 <- x6[,c(2,seq(2,length(y))+14,3,length(y)+length(x1)+5,11,12,13,14,length(y)+length(x1)+1,length(y)+length(x1)+2)]
   }
   return(x7)
-  #rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
+  rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
   #rm(x, y, sort.col, exclude, start_date, end_date, interval, all.pics)
 }
-

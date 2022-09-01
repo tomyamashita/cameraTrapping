@@ -5,7 +5,7 @@
 ##'
 ##' @title Convert a Timelapse csv to a format for use with APFun_env
 ##'
-##' @param x data.frame. A data frame representing a properly formatted Timelapse csv file
+##' @param timelapse data.frame. A data frame representing a properly formatted Timelapse csv file
 ##'
 ##' @return An R object formatted in the same style as a dataorganize text file.
 ##'
@@ -23,26 +23,26 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-APFun_Timelapse <- function(x){
-  #x <- AP1_t
+APFun_Timelapse <- function(timelapse){
+  #timelapse <- AP1_t
 
-  images1 <- x[,c("File", "RelativePath", "Species1", "Species1_Ind")]
+  images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
   colnames(images1) <- c("File", "Path", "Species", "Individuals")
 
-  if(!all(is.na(x$Species2))){
-    images2 <- x[x$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+  if(!all(is.na(timelapse$Species2))){
+    images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
     colnames(images2) <- c("File", "Path", "Species", "Individuals")
   }else{
     images2 <- NULL
   }
-  if(!all(is.na(x$Species3))){
-    images3 <- x[x$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+  if(!all(is.na(timelapse$Species3))){
+    images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
     colnames(images3) <- c("File", "Path", "Species", "Individuals")
   }else{
     images3 <- NULL
   }
-  if(!all(is.na(x$SpeciesOther))){
-    images4 <- x[x$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+  if(!all(is.na(timelapse$SpeciesOther))){
+    images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
     colnames(images4) <- c("File", "Path", "Species", "Individuals")
   }else{
     images4 <- NULL
@@ -55,7 +55,7 @@ APFun_Timelapse <- function(x){
 
   return(x4)
   rm(images1, images2, images3, images4, x1, x2, x3, x4)
-  #rm(x)
+  #rm(timelapse)
 }
 
 ## Move all pictures into sorted folders (Added 2022-08-25) ####
@@ -63,7 +63,7 @@ APFun_Timelapse <- function(x){
 ##'
 ##' @title Move pictures from unsorted to sorted folders
 ##'
-##' @param x data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use
+##' @param timelapse data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use
 ##' @param in.dir String. The directory containing the unsorted images
 ##' @param out.dir String. The directory where you want to store the sorted images
 ##' @param create.dirs Logical. Should the function create the directories it needs?
@@ -93,8 +93,8 @@ APFun_Timelapse <- function(x){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-movePictures <- function(x, in.dir, out.dir, create.dirs, type = "none"){
-  #x <- read.csv("K:/Completed/new_20210927/timelapse_out_20210927.csv")
+movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none"){
+  #timelapse <- read.csv("K:/Completed/new_20210927/timelapse_out_20210927.csv")
   #in.dir <- "K:/Completed/new_20210927"
   #out.dir <- "K:/Completed/new_20210927/sorted"
   #create.dirs <- T
@@ -112,25 +112,25 @@ movePictures <- function(x, in.dir, out.dir, create.dirs, type = "none"){
     stop("Your out.dir does not exist. Did you forget to create it?")
   }
 
-  x$RelativePath <- gsub("\\\\", "/", x$RelativePath)
+  timelapse$RelativePath <- gsub("\\\\", "/", timelapse$RelativePath)
 
-  images1 <- x[,c("File", "RelativePath", "Species1", "Species1_Ind")]
+  images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
   colnames(images1) <- c("File", "Path", "Species", "Individuals")
 
-  if(!all(is.na(x$Species2))){
-    images2 <- x[x$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+  if(!all(is.na(timelapse$Species2))){
+    images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
     colnames(images2) <- c("File", "Path", "Species", "Individuals")
   }else{
     images2 <- NULL
   }
-  if(!all(is.na(x$Species3))){
-    images3 <- x[x$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+  if(!all(is.na(timelapse$Species3))){
+    images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
     colnames(images3) <- c("File", "Path", "Species", "Individuals")
   }else{
     images3 <- NULL
   }
-  if(!all(is.na(x$SpeciesOther))){
-    images4 <- x[x$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+  if(!all(is.na(timelapse$SpeciesOther))){
+    images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
     colnames(images4) <- c("File", "Path", "Species", "Individuals")
   }else{
     images4 <- NULL
@@ -190,7 +190,7 @@ movePictures <- function(x, in.dir, out.dir, create.dirs, type = "none"){
 ##'
 ##' @title Extract Best Pictures from Timelapse
 ##'
-##' @param x A data frame from a timelapse file
+##' @param timelapse A data frame from a timelapse file
 ##' @param in.dir String. The directory containing the pictures. This can either be an unsorted directory or a sorted directory. Keep in mind, these assume my very specific directory format.
 ##' @param out.dir String. The directory where you want the best pictures to be stored. This can be anything.
 ##' @param copy Logical. Should the images be copied into the new directory?
@@ -210,8 +210,8 @@ movePictures <- function(x, in.dir, out.dir, create.dirs, type = "none"){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-bestPics <- function(x, in.dir, out.dir, copy = T, sorted = F){
-  #x <- read.csv("timelapse_out_20220608.csv")
+bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
+  #timelapse <- read.csv("timelapse_out_20220608.csv")
   #in.dir <- "K:/new_20220608"
   #out.dir <- "K:/new_20220608/best_pics"
   #copy <- T
@@ -221,7 +221,8 @@ bestPics <- function(x, in.dir, out.dir, copy = T, sorted = F){
     stop("The out directory does not exist. Did you remember to create it?")
   }
 
-  x1 <- x[x$Best_Pic=="true",]
+  x1 <- timelapse[timelapse$Best_Pic=="true",]
+  print(paste(nrow(x1), " pictures will be exported to the best_pics folder.", sep = ""))
   x1$RelativePath <- gsub("\\\\", "/", x1$RelativePath)
   x2 <- data.frame(do.call(rbind, strsplit(x1$RelativePath, split = "/")), x1[,c("File", "Species1", "Species1_Ind")])
   colnames(x2) <- c("Folder", "Camera", "Date", "File", "Species", "Individuals")
@@ -231,6 +232,7 @@ bestPics <- function(x, in.dir, out.dir, copy = T, sorted = F){
   x2$outpath <- file.path(out.dir, x2$File)
 
   if(isTRUE(copy)){
+    print("Images will be copied to the specified out.dir.")
     if(isFALSE(sorted)){
       if(!fs::file_exists(x2$inUnsorted[1])){
         stop(paste("Something is wrong with your input directory. This is what is outputted: \n", x2$inUnsorted[1], sep = ""))
@@ -246,6 +248,6 @@ bestPics <- function(x, in.dir, out.dir, copy = T, sorted = F){
 
   return(x2)
   rm(x1, x2)
-  #rm(x, in.dir, out.dir, copy, sorted)
+  #rm(timelapse, in.dir, out.dir, copy, sorted)
 }
 

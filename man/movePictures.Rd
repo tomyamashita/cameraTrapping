@@ -4,10 +4,10 @@
 \alias{movePictures}
 \title{Move pictures from unsorted to sorted folders}
 \usage{
-movePictures(x, in.dir, out.dir, create.dirs, type = "none")
+movePictures(timelapse, in.dir, out.dir, create.dirs, type = "none")
 }
 \arguments{
-\item{x}{data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use}
+\item{timelapse}{data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use}
 
 \item{in.dir}{String. The directory containing the unsorted images}
 

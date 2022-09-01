@@ -4,10 +4,10 @@
 \alias{bestPics}
 \title{Extract Best Pictures from Timelapse}
 \usage{
-bestPics(x, in.dir, out.dir, copy = T, sorted = F)
+bestPics(timelapse, in.dir, out.dir, copy = T, sorted = F)
 }
 \arguments{
-\item{x}{A data frame from a timelapse file}
+\item{timelapse}{A data frame from a timelapse file}
 
 \item{in.dir}{String. The directory containing the pictures. This can either be an unsorted directory or a sorted directory. Keep in mind, these assume my very specific directory format.}
 

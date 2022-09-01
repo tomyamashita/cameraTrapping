@@ -34,7 +34,7 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-interactionsDataOrganize <- function(x,y,exclude,start_date,end_date=Sys.Date()){
+interactionsDataOrganize <- function(x, y, exclude, start_date, end_date=Sys.Date()){
   # Formatting the columns in the AllPictures file
   colnames(x)=c("Camera","Species","Year","Month","Day","Hour","Minute","Second","Individuals")
   x1=subset(x,!(Species %in% exclude))
@@ -62,14 +62,15 @@ interactionsDataOrganize <- function(x,y,exclude,start_date,end_date=Sys.Date())
   #rm(x,y,exclude, start_date, end_date)
 }
 
-## From a timelapse file (Added 2022-08-25) ####
+## From a timelapse file (Added 2022-08-25, Modified 2022-08-31) ####
 ##' @description This function copies images for interactions to a new folder and creates an interactions file.
 ##'
 ##' @title Create an Interactions File from a Timelapse Output
 ##'
-##' @param images A timelapse csv, formatted using our Timelapse template.
+##' @param timelapse A timelapse csv, formatted using our Timelapse template.
 ##' @param envdata Environmental variables data frame. This file must have header called "Camera" containing the list of cameras, "Site" containing the site name, "Side" indicating which side the camera is on, and "Type" indicating what type of structure the camera is at.
 ##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.
+##' @param in.dir Character. The directory where you want to store the Interactions data. This should be the same folder containing the images folder.
 ##' @param create.dirs Logical. Defaults to TRUE. Should new directories be checked for and created by R if necessary?
 ##' @param copy.files Logical. Defaults to TRUE. Should image files be copied to the appropriate directories?
 ##'
@@ -98,31 +99,31 @@ interactionsDataOrganize <- function(x,y,exclude,start_date,end_date=Sys.Date())
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-interactionsTimelapse <- function(images, envdata, exclude, create.dirs=T, copy.files=T){
-  #images <- read.csv("timelapse_out_20210830.csv")
+interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.dirs=T, copy.files=T){
+  #timelapse <- read.csv("timelapse_out_20210830.csv")
   #envdata <- openxlsx::read.xlsx(file.choose())
   #exclude <- c("ghost", "human", "bird", "rodent", "unk_lizard", "spiny_lizard", "whiptail_lizard", "leopard_frog", "unk_amphibian")
   #create.dirs <- T
   #copy.files <- T
 
   # Step 1: Combine the Species1, Species2, Species3, and SpeciesOther columns
-  images1 <- images[,c("File", "RelativePath", "Species1", "Species1_Ind")]
+  images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
   colnames(images1) <- c("File", "Path", "Species", "Individuals")
 
-  if(!all(is.na(images$Species2))){
-    images2 <- images[images$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+  if(!all(is.na(timelapse$Species2))){
+    images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
     colnames(images2) <- c("File", "Path", "Species", "Individuals")
   }else{
     images2 <- NULL
   }
-  if(!all(is.na(images$Species3))){
-    images3 <- images[images$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+  if(!all(is.na(timelapse$Species3))){
+    images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
     colnames(images3) <- c("File", "Path", "Species", "Individuals")
   }else{
     images3 <- NULL
   }
-  if(!all(is.na(images$SpeciesOther))){
-    images4 <- images[images$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+  if(!all(is.na(timelapse$SpeciesOther))){
+    images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
     colnames(images4) <- c("File", "Path", "Species", "Individuals")
   }else{
     images4 <- NULL
@@ -142,7 +143,7 @@ interactionsTimelapse <- function(images, envdata, exclude, create.dirs=T, copy.
   colnames(imagesout3) <- c("File", "Path", "Species", "Individuals", "Folder", "Camera", "Date")
   imagesout4 <- merge.data.frame(imagesout3, envdata, by = "Camera", all.x = T)
 
-  imagesout4$directory <- paste(strsplit(getwd(), "/")[[1]], collapse = "/")
+  imagesout4$directory <- in.dir
   imagesout4$oldpath <- with(imagesout4, file.path(Folder, Camera, Date))
   imagesout4$newpath <- with(imagesout4, paste("Interactions_", Date, "/", Site, "/", Side, "/", Species, sep = ""))
 
@@ -152,10 +153,10 @@ interactionsTimelapse <- function(images, envdata, exclude, create.dirs=T, copy.
   # Step 5: Create new directories and subdirectories and copy pictures into them (optional)
   if(isTRUE(create.dirs)){
     print("Creating directories")
-    dirs <- with(imagesout4, list(unique(paste("Interactions_", Date, sep = "")),
-                                  unique(paste("Interactions_", Date, "/", Site, sep = "")),
-                                  unique(paste("Interactions_", Date, "/", Site, "/", Side, sep = "")),
-                                  unique(paste("Interactions_", Date, "/", Site, "/", Side, "/", Species, sep = ""))))
+    dirs <- with(imagesout4, list(unique(file.path(in.dir, paste("Interactions_", Date, sep = ""))),
+                                  unique(file.path(in.dir, paste("Interactions_", Date, Site, sep = ""), Site)),
+                                  unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site, Side)),
+                                  unique(file.path(in.dir, paste("Interactions_", Date, "/", sep = ""), Site, Side, Species))))
     dirsTemp <- lapply(dirs, function(x){
       lapply(x, function(y){
         ifelse(!dir.exists(y), dir.create(y), print("Folder exists"))

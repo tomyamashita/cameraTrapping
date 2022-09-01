@@ -4,10 +4,10 @@
 \alias{timelapseQC}
 \title{Quality control for timelapse}
 \usage{
-timelapseQC(ds, exclude = NULL)
+timelapseQC(timelapse, exclude = NULL)
 }
 \arguments{
-\item{ds}{A data frame created from a csv file exported from Timelapse. Note, this function is set up to use my timelapse template.}
+\item{timelapse}{A data frame created from a csv file exported from Timelapse. Note, this function is set up to use my timelapse template.}
 
 \item{exclude}{String. Which species should not be checked for number of individuals? The default is NULL which will only exclude c("ghost", "human", "", "rodent", "bird").}
 }

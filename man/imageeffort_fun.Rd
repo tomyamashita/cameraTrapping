@@ -4,10 +4,10 @@
 \alias{imageeffort_fun}
 \title{Camera trapping effort (Images)}
 \usage{
-imageeffort_fun(x, type)
+imageeffort_fun(timelapse, type)
 }
 \arguments{
-\item{x}{List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.}
+\item{timelapse}{List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.}
 
 \item{type}{String. What was the source of the input files. Choose one of c("timelapse", "dataorganize").}
 }
