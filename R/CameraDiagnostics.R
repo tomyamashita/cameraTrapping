@@ -36,7 +36,8 @@
 cameraDiagnostics <- function(x){
   #x <- openxlsx::read.xlsx("new_20220801.xlsx", sheet = 1, detectDates = T)
 
-  x$Date <- lubridate::ymd(paste(lubridate::year(x$DateTimeOriginal), lubridate::month(x$DateTimeOriginal), lubridate::day(x$DateTimeOriginal)))
+  x$datetime <- lubridate::ymd_hms(x$DateTimeOriginal)
+  x$Date <- lubridate::ymd(paste(lubridate::year(x$datetime), lubridate::month(x$datetime), lubridate::day(x$datetime)))
   out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
 
   print(paste("The total number of pictures is: ", sum(out$num_pics), sep = ""))

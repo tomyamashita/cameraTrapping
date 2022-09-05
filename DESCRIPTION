@@ -33,8 +33,7 @@ Imports:
   stats (>= 4.2.0),
   zoo (>= 1.8-10)
 Suggests: 
-  ggplot2, 
-  foreach, 
-  openxlsx, 
-  tidyr
+  ggplot2 (>= 3.3.6), 
+  openxlsx (>= 4.2.5), 
+  tidyr (>= 1.2.0)
 RoxygenNote: 7.2.0

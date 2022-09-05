@@ -34,4 +34,4 @@ Aidan Branney, Chloe Bates, and Duston Duffie helped test, debug, and improve va
 
 
 ## Notes
-This package is a constant work in progress. I do not have any formal training in programming, developing R packages, or anything like that so all the things that I am adding are done as I learn more about building packages. This is the reason the NAMESPACE file is not properly formatted
+This package is a constant work in progress. I do not have any formal training in programming, developing R packages, or anything like that so all the things that I am adding are done as I learn more about building packages. I've started learning about roxygen so data formatting and installation will likely go easier as we move along.

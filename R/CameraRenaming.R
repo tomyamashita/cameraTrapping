@@ -410,7 +410,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
     if(isTRUE(is.null(trigger.info))){
       Tag <- c("CreateDate")
-    }else if(trigger.info == "Ultrafire_video"){
+    }else if(trigger.info == "Ultrafire_Video"){
       Tag <- c("CreateDate")
     }else{
       Tag <- c("CreateDate")
