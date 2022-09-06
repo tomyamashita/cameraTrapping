@@ -29,4 +29,4 @@
 ## Version 0.0.0.5 (2022-09-05)
 
 * Added version numbers to imported packages. I used my current version numbers since I have not tested on any other versions of these packages.
-* Fixed cameraDiagnostics function to compute a POSIX object from the poorly formatted exif date-times before calculating min and max dates. 
+* Fixed cameraDiagnostics function to compute a POSIX object from the poorly formatted exif date-times before calculating min and max dates. Also fixed issue when multiple cameras have the same failed end date.  

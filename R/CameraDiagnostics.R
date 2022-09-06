@@ -41,7 +41,7 @@ cameraDiagnostics <- function(x){
   out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
 
   print(paste("The total number of pictures is: ", sum(out$num_pics), sep = ""))
-  print(paste("The following cameras did not make to the end: ", paste(out$Label[out$last_pic == sort(unique(out$last_pic))[-length(unique(out$last_pic))]], collapse = ", "), sep = ""))
+  print(paste("The following cameras did not make to the end: ", paste(out$Label[out$last_pic %in% sort(unique(out$last_pic))[-length(unique(out$last_pic))]], collapse = ", "), sep = ""))
 
   return(out)
   rm(out)
