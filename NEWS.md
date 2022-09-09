@@ -30,3 +30,7 @@
 
 * Added version numbers to imported packages. I used my current version numbers since I have not tested on any other versions of these packages.
 * Fixed cameraDiagnostics function to compute a POSIX object from the poorly formatted exif date-times before calculating min and max dates. Also fixed issue when multiple cameras have the same failed end date.  
+
+## Version 0.0.0.6 (2022-09-09)
+
+* Modified the trapeffort_fun function to fix a number of errors, including with the ability to specify sessions and output camera names. 
