@@ -54,17 +54,17 @@ cameraDiagnostics <- function(x){
 ##' @title Camera trapping effort (Trap nights)
 ##'
 ##' @param cttable data.frame. A data frame formatted as a CT table.
-##' @param group A column in the CT Table indicating how camera trap nights should be calculated. Generally accepted are c("Camera", "Site", "Station").
+##' @param group String. A column in the CT Table indicating how camera trap nights should be calculated. Generally accepted are c("Camera", "Site", "Station").
 ##' @param sessions Logical. Does your data have multiple sessions (e.g., field seasons, etc.)? This defaults to FALSE.
-##' @param sessioncol (Optional). What column distinguishes sessions? This should not be needed if sessions is set to F. If you have problems, set this to NULL.
+##' @param sessioncol String. What column distinguishes sessions? This defaults to NULL. This is only needed if sessions is set to T.
 ##'
-##' @details Make sure that your CT table is formatted properly. That is the only way this function works. Also, camptrapR for some reason removed its support for dates in "Date" or "POSIXct" format so dates must be in character format. You can use my ctdates_fun function to fix this in a CT table.
+##' @details Make sure that your CT table is formatted properly. See the \code{\link[camtrapR]{camtrapR-package}} documentation for details. That is the only way this function works. Also, at some point camptrapR had removed its support for dates in "Date" or "POSIXct" format so dates had to be in character format. You can use my ctdates_fun function to fix this in a CT table. This may not be the case anymore and they may have fixed this issue.
 ##'
 ##' @return A data frame containing the items from the group column, session column (if included), active camera trap nights, and total camera trap nights.
 ##'
 ##' @note As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
 ##'
-##' @seealso \code{\link{ctdates_fun}}
+##' @seealso \code{\link{ctdates_fun}} \code{\link[camtrapR]{cameraOperation}}
 ##'
 ##' @keywords manip
 ##'
@@ -76,7 +76,7 @@ cameraDiagnostics <- function(x){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
+trapeffort_fun <- function(cttable, group, sessions=F, sessioncol=NULL){
   #cttable <- CTtable_WCS
   #group <- "Site"
   #group <- "Station"
@@ -85,40 +85,41 @@ trapeffort_fun <- function(cttable, group, sessions=F, sessioncol){
 
   #require(camtrapR)
 
-  if(sessions==T){
+  if(isTRUE(sessions)){
+    if(is.null(sessioncol)){
+      stop("You indicated that there are sessions in you ct table. You must specify a sessioncol.")
+    }
     CamOp <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T,
                                          cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE,
-                                         sessionCol = "timeperiod"))
+                                         sessionCol = sessioncol))
     CamOp2 <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = FALSE,
                                           cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE,
-                                          sessionCol = "timeperiod"))
-  }else{
+                                          sessionCol = sessioncol))
+  }else if(isFALSE(sessions)){
     CamOp <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T,
                                          cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE))
     CamOp2 <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = FALSE,
                                           cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE))
-  }
-
-  # Active Camera Trap Nights
-  activenights <- apply(CamOp,2,function(x){sum(x,na.rm=T)})
-
-  # Total Camera Trapping Nights
-  totalnights <- apply(CamOp2,2,function(x){sum(x,na.rm=T)})
-
-  # Cleaning and merging the camera trap nights
-  if(sessions==T){
-    name <- unique(cttable[,c(group,sessioncol)])
-
   }else{
-    name <- unique(cttable[,c(group)])
+    stop("Sessions must be logical. Choose c(T,F).")
   }
 
-  trapnights <- data.frame(name, activenights, totalnights)
-  rownames(trapnights) <- NULL
+  # Active and Total Camera Trap Nights
+  trapnights1 <- data.frame(activenights = apply(CamOp,2,function(x){sum(x,na.rm=T)}),
+                            totalnights = apply(CamOp2,2,function(x){sum(x,na.rm=T)}))
 
-  return(trapnights)
-  rm(CamOp, CamOp2, activenights, totalnights,name, trapnights)
-  #rm(cttable, group)
+  if(is.null(sessioncol)){
+    trapnights2 <- data.frame(rownames(trapnights1), trapnights1)
+    colnames(trapnights2) <- c(group, "activenights", "totalnights")
+  }else{
+    trapnights2 <- data.frame(do.call(rbind, strsplit(rownames(trapnights1), "__")), trapnights1)
+    colnames(trapnights2) <- c(group, sessioncol, "activenights", "totalnights")
+  }
+  rownames(trapnights2) <- NULL
+
+  return(trapnights2)
+  rm(CamOp, CamOp2, trapnights1, trapnights2)
+  #rm(cttable, group, sessions, sessioncol)
 }
 
 ## Number of Photos (Added 2022-08-25) ####
