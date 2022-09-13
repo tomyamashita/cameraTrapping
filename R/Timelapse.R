@@ -5,7 +5,9 @@
 ##'
 ##' @title Convert a Timelapse csv to a format for use with APFun_env
 ##'
-##' @param timelapse data.frame. A data frame representing a properly formatted Timelapse csv file
+##' @param timelapse data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.
+##'
+##' @details The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
 ##'
 ##' @return An R object formatted in the same style as a dataorganize text file.
 ##'
@@ -58,7 +60,7 @@ APFun_Timelapse <- function(timelapse){
   #rm(timelapse)
 }
 
-## Move all pictures into sorted folders (Added 2022-08-25) ####
+## Move all pictures into sorted folders (Added 2022-08-25, Modified 2022-09-13) ####
 ##' @description This function uses a Timelapse csv file to move or copy images from an unsorted folder to sorted folders based on species and number of individuals (in the same format as required for \code{link{dataorganize}}), although see details.
 ##'
 ##' @title Move pictures from unsorted to sorted folders
@@ -68,8 +70,13 @@ APFun_Timelapse <- function(timelapse){
 ##' @param out.dir String. The directory where you want to store the sorted images
 ##' @param create.dirs Logical. Should the function create the directories it needs?
 ##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')
+##' @param exclude String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species
 ##'
-##' @details When this function creates its folder structure, it uses the Individuals column in the Timelapse output. For some "species" (e.g., ghost, human, bird, rodent), we do not sort these by individual, therefore the Individuals column is a 0. These species get assigned a folder of 00 for their number of individuals. I do not know how this will affect quality control and the workflow down the line. Generally, it should not be an issue but could result in NA values in the Individuals column of the \code{\link{APFun_env}} or errors in the \code{\link{dataorganize}} functions in this package. Once this has been tested, I will update this.
+##' @details When this function creates its folder structure, it uses the Individuals column in the Timelapse output.
+##' For some "species" (e.g., ghost, human, bird, rodent), we do not sort these by individual, therefore the Individuals column is a 0.
+##' These species get assigned a folder of 00 for their number of individuals. I do not know how this will affect quality control and the workflow down the line.
+##' Generally, it should not be an issue but could result in NA values in the Individuals column of the \code{\link{APFun_env}} or errors in the \code{\link{dataorganize}} functions in this package.
+##' Once this has been tested, I will update this.
 ##'
 ##' @return list of the full file path to the in files and out files
 ##' @return in.files:
@@ -93,7 +100,7 @@ APFun_Timelapse <- function(timelapse){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none"){
+movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none", exclude = NULL){
   #timelapse <- read.csv("K:/Completed/new_20210927/timelapse_out_20210927.csv")
   #in.dir <- "K:/Completed/new_20210927"
   #out.dir <- "K:/Completed/new_20210927/sorted"
@@ -139,8 +146,10 @@ movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none")
   x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "/")), x1[,c("File", "Species", "Individuals")])
   colnames(x2)[-c(ncol(x2)-2,ncol(x2)-1,ncol(x2))] <- c("Folder", "Camera", "Date")
   x2$Individuals <- formatC(x2$Individuals, flag = "0", width = 2)
-  x3in <- with(x2, file.path(Folder, Camera, Date, File))
-  x3out <- with(x2, file.path(Camera, Species, Individuals, File))
+  x3 <- x2[!(x2$Species %in% exclude), ]  # Remove species from list of those to be sorted
+
+  x3in <- with(x3, file.path(Folder, Camera, Date, File))
+  x3out <- with(x3, file.path(Camera, Species, Individuals, File))
 
   if(length(x3in) != length(x3out)){
     stop("You have different numbers of files in the 'in' and 'out' directories. You broke my function...")
@@ -153,7 +162,7 @@ movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none")
 
   if(isTRUE(create.dirs)){
     print("Creating Directories")
-    dirs <- with(x2, list(unique(paste(out.dir, Camera, sep = "/")),
+    dirs <- with(x3, list(unique(paste(out.dir, Camera, sep = "/")),
                           unique(paste(out.dir, Camera, Species, sep = "/")),
                           unique(paste(out.dir, Camera, Species, Individuals, sep = "/"))))
     dirsTemp <- lapply(dirs, function(x){

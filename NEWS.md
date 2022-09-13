@@ -34,3 +34,10 @@
 ## Version 0.0.0.6 (2022-09-09)
 
 * Modified the trapeffort_fun function to fix a number of errors, including with the ability to specify sessions and output camera names. 
+
+## Version 0.0.0.7 (2022-09-13)
+
+* Modified the timelapseQC function to also check for situations where Species that should not be labelled by individuals are
+* Modified the movePictures function to allow users to exclude certain species from being "sorted". 
+* Updated the documentation for the APFun_timelapse function to better describe the timelapse template requirements.
+* Renamed several functions to have names more in line with other functions in this package.

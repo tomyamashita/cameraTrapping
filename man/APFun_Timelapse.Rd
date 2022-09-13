@@ -7,13 +7,16 @@
 APFun_Timelapse(timelapse)
 }
 \arguments{
-\item{timelapse}{data.frame. A data frame representing a properly formatted Timelapse csv file}
+\item{timelapse}{data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.}
 }
 \value{
 An R object formatted in the same style as a dataorganize text file.
 }
 \description{
 This function converts a Timelapse csv file to the dataorganize file output format. This was done this way because many of my core functions for processing camera trap data depend on the existence of a data frame created by APFun_env. Converting a timelapse file to this format is just the easiest way to maintain consistency.
+}
+\details{
+The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
 }
 \note{
 This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package

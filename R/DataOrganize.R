@@ -26,7 +26,7 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-dataorganize <- function(inputdir, diagnostics = T){
+dataOrganize <- function(inputdir, diagnostics = T){
   #inputdir <- "J:/AI_Test_Microsoft/Test/AI_test"
   #diagnostics <- TRUE
 

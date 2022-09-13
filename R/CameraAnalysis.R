@@ -39,7 +39,7 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-actfun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
+actFun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
   #x <- AP2_1min$FM1847
   #split <- F
   #splitcol <- "timeperiod"

@@ -48,7 +48,7 @@ cameraDiagnostics <- function(x){
   #rm(x)
 }
 
-## Camera Trap Nights (Added 2022-08-25) ####
+## Camera Trap Nights (Added 2022-08-25, Renamed 2022-09-13) ####
 ##' @description This function calculates the number of active camera trap nights and total camera trap nights using an inputted CT table, formatted based on camtrapR specifications.Required columns are setup date and retrieval date and theoretically, the table should have problems. I have never tested it on a dataset without any problems.
 ##'
 ##' @title Camera trapping effort (Trap nights)
@@ -76,7 +76,7 @@ cameraDiagnostics <- function(x){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-trapeffort_fun <- function(cttable, group, sessions=F, sessioncol=NULL){
+trapEffort <- function(cttable, group, sessions=F, sessioncol=NULL){
   #cttable <- CTtable_WCS
   #group <- "Site"
   #group <- "Station"
@@ -147,7 +147,7 @@ trapeffort_fun <- function(cttable, group, sessions=F, sessioncol=NULL){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-imageeffort_fun <- function(timelapse, type){
+imageEffort <- function(timelapse, type){
   #timelapse <- list('20220117' = read.csv("K:/Completed/new_20220117/timelapse_out_20220117.csv"), '20220214' = read.csv("K:/Completed/new_20220214/timelapse_out_20220214.csv"))
   #type <- "timelapse"
 
