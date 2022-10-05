@@ -154,9 +154,9 @@ interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.di
   if(isTRUE(create.dirs)){
     print("Creating directories")
     dirs <- with(imagesout4, list(unique(file.path(in.dir, paste("Interactions_", Date, sep = ""))),
-                                  unique(file.path(in.dir, paste("Interactions_", Date, Site, sep = ""), Site)),
+                                  unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site)),
                                   unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site, Side)),
-                                  unique(file.path(in.dir, paste("Interactions_", Date, "/", sep = ""), Site, Side, Species))))
+                                  unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site, Side, Species))))
     dirsTemp <- lapply(dirs, function(x){
       lapply(x, function(y){
         ifelse(!dir.exists(y), dir.create(y), print("Folder exists"))
