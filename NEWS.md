@@ -41,3 +41,7 @@
 * Modified the movePictures function to allow users to exclude certain species from being "sorted". 
 * Updated the documentation for the APFun_timelapse function to better describe the timelapse template requirements.
 * Renamed several functions to have names more in line with other functions in this package.
+
+## Version 0.0.0.8 (2022-10-05)
+
+* Fixed the interactionsTimelapse function to properly create directories
