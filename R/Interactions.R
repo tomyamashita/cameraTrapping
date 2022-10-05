@@ -146,6 +146,14 @@ interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.di
   imagesout4$directory <- in.dir
   imagesout4$oldpath <- with(imagesout4, file.path(Folder, Camera, Date))
   imagesout4$newpath <- with(imagesout4, paste("Interactions_", Date, "/", Site, "/", Side, "/", Species, sep = ""))
+  imagesout4$fileold <- imagesout4$File
+  dups <- which(duplicated(file.path(imagesout4$newpath, imagesout4$File)))
+  if(length(dups)>0){
+    message(paste("There were ", length(dups), " files with the same name as other files in the folder. \nA (#) will be appended to the duplicated file names.", sep = ""))
+    imagesout4$filenew <- ifelse(duplicated(file.path(imagesout4$newpath, imagesout4$File)), sapply(1:length(dups), function(i){imagesout4$File[dups[i]] <- paste(sub(".jpg", "", imagesout4$File[dups[i]], ignore.case = T), " (", i, ").jpg", sep = "")}), imagesout4$File)
+  }else{
+    imagesout4$filenew <- imagesout4$File
+  }
 
   # Step 4: Create the interactions file
   intfile1 <- data.frame(imagesout4[,c("Type", "Site", "Camera", "Species")], Date_time = sub(".jpg", "", imagesout4$File, ignore.case = T), Individuals = imagesout4$Individuals, Class = NA, Direction = NA)
@@ -166,7 +174,7 @@ interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.di
 
   if(isTRUE(copy.files)){
     print("Copying images")
-    with(imagesout4, fs::file_copy(path = file.path(directory, oldpath, File), new_path = file.path(directory, newpath, File)))
+    with(imagesout4, fs::file_copy(path = file.path(directory, oldpath, fileold), new_path = file.path(directory, newpath, filenew)))
   }
 
   return(list(Interactions = intfile1, Files = imagesout4))

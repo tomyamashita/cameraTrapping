@@ -44,4 +44,4 @@
 
 ## Version 0.0.0.8 (2022-10-05)
 
-* Fixed the interactionsTimelapse function to properly create directories
+* Fixed the interactionsTimelapse function to properly create directories and accommodate duplicate file names
