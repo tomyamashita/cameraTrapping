@@ -1,11 +1,16 @@
 # Wildlife Interactions
-## From a Dataorganize file (Added 2022-08-25) ####
+## This script contains functions for preparing for doing wildlife interactions
+  #on wildlife crossing cameras.
+
+################################################################################
+
+### From a Dataorganize file (Added 2022-08-25) ####
 ##' @description This function uses the old workflow based on DataOrganize and will create an object for use in computing Wildlife Interactions.
 ##'
 ##' @title Create an interactions file from a dataorganize file
 ##'
-##' @param x An AllPictures file produced by DataOrganize.
-##' @param y Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.
+##' @param do An AllPictures file produced by DataOrganize.
+##' @param envdata Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.
 ##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.
 ##' @param start_date Start date for the AllPictures file.
 ##' @param end_date End date for pictures. This defaults to the current date.
@@ -34,21 +39,21 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-interactionsDataOrganize <- function(x, y, exclude, start_date, end_date=Sys.Date()){
+interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=Sys.Date()){
   # Formatting the columns in the AllPictures file
-  colnames(x)=c("Camera","Species","Year","Month","Day","Hour","Minute","Second","Individuals")
-  x1=subset(x,!(Species %in% exclude))
-  x1[,4]=formatC(x1[,4], width = 2, format = "d", flag = "0")
-  x1[,5]=formatC(x1[,5], width = 2, format = "d", flag = "0")
-  x1[,6]=formatC(x1[,6], width = 2, format = "d", flag = "0")
-  x1[,7]=formatC(x1[,7], width = 2, format = "d", flag = "0")
-  x1[,8]=formatC(x1[,8], width = 2, format = "d", flag = "0")
+  colnames(do) <- c("Camera","Species","Year","Month","Day","Hour","Minute","Second","Individuals")
+  x1=subset(do, !(Species %in% exclude))
+  x1[,4] <- formatC(x1[,4], width = 2, format = "d", flag = "0")
+  x1[,5] <- formatC(x1[,5], width = 2, format = "d", flag = "0")
+  x1[,6] <- formatC(x1[,6], width = 2, format = "d", flag = "0")
+  x1[,7] <- formatC(x1[,7], width = 2, format = "d", flag = "0")
+  x1[,8] <- formatC(x1[,8], width = 2, format = "d", flag = "0")
 
   x1$Date_Time <- with(x1, paste(Year, Month, Day, Hour, Minute, Second))
   x1$DateTimeOriginal=as.POSIXct(strptime(x1$Date_Time,'%Y %m %d %H %M %S'))
   x1$Date=as.POSIXct(strptime(x1$Date_Time,'%Y %m %d'))
 
-  x2 <- merge.data.frame(x1, y, by = "Camera")
+  x2 <- merge.data.frame(x1, envdata, by = "Camera")
   x2a=subset(x2,Date >= start_date)
   x2b=subset(x2a,Date <= as.character(end_date))
   x3 <- x2b
@@ -62,7 +67,7 @@ interactionsDataOrganize <- function(x, y, exclude, start_date, end_date=Sys.Dat
   #rm(x,y,exclude, start_date, end_date)
 }
 
-## From a timelapse file (Added 2022-08-25, Modified 2022-08-31) ####
+### From a timelapse file (Added 2022-08-25, Modified 2022-08-31) ####
 ##' @description This function copies images for interactions to a new folder and creates an interactions file.
 ##'
 ##' @title Create an Interactions File from a Timelapse Output

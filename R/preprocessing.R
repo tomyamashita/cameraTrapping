@@ -1,4 +1,8 @@
-# Raw Camera Trap Data
+# Pre-processing
+## This script contains functions for pre-processing camera data, including
+  #renaming pictures and finding corrupt images.
+
+################################################################################
 
 ## Image renaming function (Added 2022-8-25) ####
 ##' @description The cameraRename2 version seeks to avoid using the camtrapR package to rename images and does so by directly reading the exif data using the exiftoolr package, then renaming based on the datetimeoriginal column of the exif data. This version has the advantage of being able to spit out any exif data the user wants (including information on the trigger number, whether images were external or internal trigger, camera name, etc.). This function is also more generalizable than the original cameraRename function and allows for performing specialRenamer like adjustment on images.
@@ -284,7 +288,7 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' @param trigger.info String or NULL. Should additional information besides the date-time be included in the output?
 ##' This defaults to NULL where no additional information is included, only date-time information.
 ##' Because camera-specific information is variable between camera models, you must specify the camera model if you want additional information.
-##' Currently, only c("Hyperfire2", "Ultrafire_Video") are supported. Note that Reconyx Ultrafire pictures use the same metadata tags as the Reconyx Hyperfire2.
+##' Currently, only c("Hyperfire2", "Ultrafire_Video", "Browning") are supported. Note that Reconyx Ultrafire pictures use the same metadata tags as the Reconyx Hyperfire2.
 ##' Additional camera models could be added. See details for more information on this.
 ##' @param rename String. The default is none. Other options include c("replace", "copy").
 ##' This specifies how images should be renamed.
@@ -396,6 +400,8 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
       Tag <- c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber")
     }else if(trigger.info == "Ultrafire_image"){
       Tag <- c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber")
+    }else if(trigger.info == "Browning"){
+      Tag <- c("DateTimeOriginal", "UserComment")
     }else{
       Tag <- c("DateTimeOriginal")
       message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor image file types, choose one of c('Hyperfire2', 'Ultrafire_image').")
@@ -499,6 +505,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   exif1 <- pbapply::pblapply(1:length(images_split2), cl = cl1, function(i){
     tryCatch(exiftoolr::exif_read(images_split2[[i]], tags = Tag),
              error = function(e){message(paste("There is likely a corrupt file in: \n", names(images_split2)[i], "\nThe original error is: ", sep = "")); message(e); return(names(images_split2)[i])})
+    print(paste("Exiftool completed on ", names(images_split2)[i], ".", sep = ""))
   })
 
   if(isTRUE(pp)){
@@ -611,11 +618,17 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
   if(rename=="replace"){
     print(paste("Files will be renamed and replaced. Renaming started at ", Sys.time(), sep = ""))
-    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){fs::file_move(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))})
+    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){
+      fs::file_move(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))
+      print("Completed renaming for an item")
+    })
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="copy"){
     print(paste("Files will be renamed and copied. Renaming started at ", Sys.time(), sep = ""))
-    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){fs::file_copy(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))})
+    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){
+      fs::file_copy(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))
+      print("Completed renaming for an item")
+    })
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="none"){
     message("No files were renamed")
@@ -709,4 +722,3 @@ findCorruptImages <- function(in.dir, file.type, pp, cores.left = NULL){
   rm(files, all, corrupt, all.corrupt)
   #rm(in.dir, file.type)
 }
-

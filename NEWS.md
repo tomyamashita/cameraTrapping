@@ -50,3 +50,7 @@
 
 * Made multiple fixes to cameraRename3 function for ease of use and greater ability to track progress
 * Reorganized scripts to better keep track of functions
+* Added save option to the dataOrganize function
+* Clarified help text in movePictures functions
+* Updated cameraDiagnostics to work when the UserLabel field does not exist
+* Continued updating input names for consistency across functions

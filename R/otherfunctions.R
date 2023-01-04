@@ -1,14 +1,17 @@
 # Other Functions
+## This script contains functions that are not related to working with camera data.
 
-## Working with GPS collar data ####
-### Converting time zones to local time (Added 2022-08-25)
+################################################################################
+
+## Working with GPS collar data
+### Converting time zones to local time (Added 2022-08-25) ####
 ##' @description This function converts date-time information from a GPS collar from UTC time to your local time zone. This should be used when GPS collar data is not already converted and you need to keep separate "date" and "time" columns in your data.
 ##'
 ##' @title Convert Time Zones from GPS collar data
 ##'
 ##' @param ds The original GPS collar data.
-##' @param date.col The column containing the original dates that need to be converted.
-##' @param time.col The column containing the original times that need to be converted.
+##' @param dateCol The column containing the original dates that need to be converted.
+##' @param timeCol The column containing the original times that need to be converted.
 ##' @param LocalTZ The time zone that you want to convert to. This must an R-recognized string for a given time zone. This function utilizes the with_tz function from the lubridate package. See the help for that package for details.
 ##'
 ##' @return Your original data frame with the new date and time columns appended to the end as LocalDate and LocalTime
@@ -25,14 +28,14 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-timeConvert <- function(ds, date.col, time.col, LocalTZ){
+timeConvert <- function(ds, dateCol, timeCol, LocalTZ){
   #ds <- bob
-  #date.col <- "RTC.date"
-  #time.col <- "RTC.time"
+  #dateCol <- "RTC.date"
+  #timeCol <- "RTC.time"
   #LocalTZ <- "America/Chicago"
 
-  date1 <- lubridate::ymd(ds[,date.col])
-  time1 <- lubridate::hms(ds[,time.col])
+  date1 <- lubridate::ymd(ds[,dateCol])
+  time1 <- lubridate::hms(ds[,timeCol])
 
   datetime1 <- paste(lubridate::year(date1), lubridate::month(date1), lubridate::day(date1), lubridate::hour(time1), lubridate::minute(time1), lubridate::second(time1), sep = " ")
   datetime2 <- lubridate::ymd_hms(datetime1)
@@ -49,5 +52,5 @@ timeConvert <- function(ds, date.col, time.col, LocalTZ){
 
   return(ds)
   rm(date1, date2, time1, time2, datetime1, datetime2, tzconv)
-  #rm(ds, date.col, time.col, LocalTZ)
+  #rm(ds, dateCol, timeCol, LocalTZ)
 }

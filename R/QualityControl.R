@@ -1,4 +1,64 @@
 # Quality Control Functions
+## This script contains quality control and diagnostic functions for camera data.
+## This includes trap nights, quality control for timelapse, basic diagnostics
+  #on raw images, and fixes for handling CT tables using the camtrapR package.
+## This script also contains functions for handling "unsorting" of images.
+
+################################################################################
+
+### First and Last Pictures (Added 2022-08-30) ####
+##' @description This function computes the first and last pictures from the output of the \code{\link{cameraRename3}} function for basic diagnostic purposes.
+##'
+##' @title Camera basic diagnostics
+##'
+##' @param x data.frame. A data frame outputted from the \code{\link{cameraRename3}} function
+##'
+##' @details This function has only been tested to work with the output of \code{\link{cameraRename3}}.
+##' Theoretically it could work with any input that has an outpath, UserLabel, and DateTimeOriginal column but I don't know what it will do.
+##' Update: The above fields seem to be required to ensure that the function does not throw an error. If no UserLabel exists, this function will leave the Label as NA
+##'
+##' @return A data frame containing the outpath for the images, the user label, number of pictures, first picture date, and last picture date
+##'
+##' @note As with all of my functions, this assumes a very particular formatting for your data.
+##' This function is designed to help you create a CT table by identifying problems.
+##' I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own convenience and make no promises that they will work for different situations.
+##' As I come across errors, I attempt to further generalize the function but this is done as I go.
+##'
+##' @seealso \code{\link{cameraRename3}}
+##'
+##' @keywords manip
+##'
+##' @concept camera trapping
+##' @concept diagnostics
+##'
+##' @importFrom dplyr summarize group_by n
+##' @importFrom lubridate ymd year month day
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+cameraDiagnostics <- function(x){
+  #x <- openxlsx::read.xlsx("new_20220801.xlsx", sheet = 1, detectDates = T)
+
+  x$datetime <- lubridate::ymd_hms(x$DateTimeOriginal)
+  x$Date <- lubridate::ymd(paste(lubridate::year(x$datetime), lubridate::month(x$datetime), lubridate::day(x$datetime)))
+  if(any(colnames(x)=="UserLabel")){
+    out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
+  }else{
+    out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = NA, num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
+  }
+
+  print(paste("The total number of pictures is: ", sum(out$num_pics), sep = ""))
+  print(paste("The following cameras did not make to the end: ", paste(out$Label[out$last_pic %in% sort(unique(out$last_pic))[-length(unique(out$last_pic))]], collapse = ", "), sep = ""))
+
+  return(out)
+  rm(out)
+  #rm(x)
+}
 
 ### Converting date-time information in a CT Table to character format (Added 2022-08-25) ####
 ##' @description This function will convert properly formatted date objects to characters. This is so camtrapR can read the character date. For some reason, the package does not like date-formatted dates.
@@ -33,6 +93,75 @@ ctDates <- function(cttable, start.col=6){
   }
   return(cttable)
   rm(cttable, start.col)
+}
+
+### Number of Photos (Added 2022-08-25) ####
+##' @description This function calculates the total number of pictures, number of animals, ghosts, and humans from one or more timelapse or dataorganize files.
+##'
+##' @title Camera trapping effort (Images)
+##'
+##' @param timelapse List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.
+##' @param type String. What was the source of the input files. Choose one of c("timelapse", "dataorganize").
+##'
+##' @details If a timelapse file is given to the function, it will run the \code{\link{APFun_Timelapse}} function to convert it to a dataorganize file.
+##'
+##' @return A data frame containing total number of pictures, number of pictures of animals, ghosts, and humans, and the success rate for animal pictures in each file added as well as a row for the total number of pictures.
+##'
+##' @note As with all of my functions, this assumes a very particular formatting for your data. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+##'
+##' @seealso \code{\link{dataorganize}}
+##'
+##' @keywords manip
+##'
+##' @concept camera trapping
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+imageEffort <- function(timelapse, type){
+  #timelapse <- list('20220117' = read.csv("K:/Completed/new_20220117/timelapse_out_20220117.csv"), '20220214' = read.csv("K:/Completed/new_20220214/timelapse_out_20220214.csv"))
+  #type <- "timelapse"
+
+  if(is.data.frame(timelapse)){
+    timelapse <- list(timelapse)
+  }
+  if(type=="timelapse"){
+    AP <- lapply(timelapse, APFun_Timelapse)
+  }else if(type=="dataorganize"){
+    AP <- timelapse
+  }else{
+    stop("Your data must be a 'timelapse' or 'dataorganize' file.")
+  }
+
+  if(is.null(names(AP))){
+    name <- F
+    message("Your items do not have names. They will be outputted in the order they were inputted")
+  }else{
+    name <- T
+  }
+
+  ghosts <- lapply(AP, function(y){y[y[,2]=="ghost",]})
+  human <- lapply(AP, function(y){y[y[,2]=="human",]})
+
+  out <- do.call(rbind, lapply(1:length(timelapse), function(i){
+    data.frame(total = nrow(timelapse[[i]]), animal = nrow(timelapse[[i]]) - nrow(ghosts[[i]]) - nrow(human[[i]]), human = nrow(human[[i]]), ghost = nrow(ghosts[[i]]), success = NA)
+  }))
+  rownames(out) <- names(AP)
+
+  total <- apply(out, 2, sum)
+  out2 <- rbind(out,total = apply(out, 2, sum))
+  if(isFALSE(name)){
+    rownames(out2) <- c(1:nrow(out), "total")
+  }else{
+    rownames(out2) <- c(names(AP), "total")
+  }
+  out2[,"success"] <- with(out2, animal/total)
+
+  return(out2)
+  rm(AP, name, ghosts, human, out, total, out2)
+  #rm(timelapse, type)
 }
 
 ### Quality control for timelapse-sorted images (Added 2022-08-25, Modified 2022-09-13) ####
@@ -159,4 +288,225 @@ timelapseQC <- function(timelapse, exclude=NULL, detailed_res=F){
   return(out)
   rm(images, unique_spec, unique_species, missing_spec, exclude, no_ind, missing_ind, yes_ind, wrong_ind, out)
   #rm(timelapse, exclude, detailed_res)
+}
+
+### Camera Trap Nights (Added 2022-08-25, Renamed 2022-09-13) ####
+##' @description This function calculates the number of active camera trap nights and total camera trap nights using an inputted CT table, formatted based on camtrapR specifications.Required columns are setup date and retrieval date and theoretically, the table should have problems. I have never tested it on a dataset without any problems.
+##'
+##' @title Camera trapping effort (Trap nights)
+##'
+##' @param cttable data.frame. A data frame formatted as a CT table.
+##' @param group String. A column in the CT Table indicating how camera trap nights should be calculated. Generally accepted are c("Camera", "Site", "Station").
+##' @param sessions Logical. Does your data have multiple sessions (e.g., field seasons, etc.)? This defaults to FALSE.
+##' @param sessioncol String. What column distinguishes sessions? This defaults to NULL. This is only needed if sessions is set to T.
+##'
+##' @details Make sure that your CT table is formatted properly. See the \code{\link[camtrapR]{camtrapR-package}} documentation for details. That is the only way this function works. Also, at some point camptrapR had removed its support for dates in "Date" or "POSIXct" format so dates had to be in character format. You can use my ctdates_fun function to fix this in a CT table. This may not be the case anymore and they may have fixed this issue.
+##'
+##' @return A data frame containing the items from the group column, session column (if included), active camera trap nights, and total camera trap nights.
+##'
+##' @note As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+##'
+##' @seealso \code{\link{ctdates_fun}} \code{\link[camtrapR]{cameraOperation}}
+##'
+##' @keywords manip
+##'
+##' @concept camera trapping
+##'
+##' @importFrom camtrapR cameraOperation
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+trapEffort <- function(cttable, group, sessions=F, sessioncol=NULL){
+  #cttable <- CTtable_WCS
+  #group <- "Site"
+  #group <- "Station"
+  #sessions <- T
+  #sessioncol <- "timeperiod"
+
+  #require(camtrapR)
+
+  if(isTRUE(sessions)){
+    if(is.null(sessioncol)){
+      stop("You indicated that there are sessions in you ct table. You must specify a sessioncol.")
+    }
+    CamOp <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T,
+                                         cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE,
+                                         sessionCol = sessioncol))
+    CamOp2 <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = FALSE,
+                                          cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE,
+                                          sessionCol = sessioncol))
+  }else if(isFALSE(sessions)){
+    CamOp <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T,
+                                         cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE))
+    CamOp2 <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = FALSE,
+                                          cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE))
+  }else{
+    stop("Sessions must be logical. Choose c(T,F).")
+  }
+
+  # Active and Total Camera Trap Nights
+  trapnights1 <- data.frame(activenights = apply(CamOp,2,function(x){sum(x,na.rm=T)}),
+                            totalnights = apply(CamOp2,2,function(x){sum(x,na.rm=T)}))
+
+  if(is.null(sessioncol)){
+    trapnights2 <- data.frame(rownames(trapnights1), trapnights1)
+    colnames(trapnights2) <- c(group, "activenights", "totalnights")
+  }else{
+    trapnights2 <- data.frame(do.call(rbind, strsplit(rownames(trapnights1), "__")), trapnights1)
+    colnames(trapnights2) <- c(group, sessioncol, "activenights", "totalnights")
+  }
+  rownames(trapnights2) <- NULL
+
+  return(trapnights2)
+  rm(CamOp, CamOp2, trapnights1, trapnights2)
+  #rm(cttable, group, sessions, sessioncol)
+}
+
+### Unsort Images to Raw data structure
+##' @description This function is designed to take sorted images and return them to Raw data structure format. It is the reverse process to the movePictures function
+##'
+##' @title Move pictures from sorted to unsorted folders
+##'
+##' @param in.dir string. The directory containing the sorted camera folders. This can have lengths greater than 1
+##' @param out.dir string. The directory where you want to unsort files to. This can have length 1 or equal to the in.dir
+##' @param datecol string. The date collected of the batch/es of pictures that need to be unsorted. This must be the same length as the in.dir
+##' @param create.dirs Logical. Should the function create the directories it needs?
+##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')
+##'
+##' @details This function assumes that the sorted pictures are sorted in the same way as what is created by the movePictures function.
+##' Therefore, it can be considered a reverse procedure to the movePictures function. This can be used to create new backups of raw data if any are lost or if the raw data is otherwise unavailable.
+##'
+##' This function has not gone through full testing and may have problems. Please report issues as they come up.
+##'
+##' @return list of the full file path to the in files and out files
+##' @return in.files:
+##' String. Full file paths to the in files
+##' @return out.files:
+##' String. Full file paths to the out files
+##'
+##' @seealso \code{\link{movePictures}}
+##'
+##' @keywords files
+##' @keywords manip
+##'
+##' @concept camera trapping
+##' @concept sorting
+##'
+##' @importFrom fs file_move file_copy
+##' @importFrom pbapply pblapply
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
+  #in.dir <- list.dirs(path = getwd(), recursive = F)[3:6]  # The location containing the camera folders
+  #out.dir <- "I:/Hixon/images2"
+  #datecol <- c("2021_08_13", "2021_07_05", "2021_05_06", "2021_06_12")
+  #type <- "none"
+  #create.dirs <- T
+
+  print(paste("This function started at ", Sys.time(), sep = ""))
+
+  # Initial error checking
+  if(length(in.dir) != length(datecol)){
+    stop("You must specify the same number of elements in in.dir as datecol")
+  }
+
+  if(length(out.dir) > 1){
+    if(length(out.dir) != length(in.dir)){
+      stop("You specified different number of elements in in.dir as out.dir. out.dir can be length 1 or the same length as in.dir")
+    }
+  }
+
+  if(length(in.dir) == 1){
+    if(!dir.exists(in.dir)){
+      stop("Your in directory does not exist. Did you specify it correctly?")
+    }
+  }else if(length(in.dir) > 1){
+    print("Multiple directories specified. Will run each directory iteratively.")
+    if(any(!sapply(in.dir, dir.exists))){
+      stop("At least one of your in directories do not exist. Did you specify them correctly?")
+    }
+  }else{
+    stop("Somehow you broke this function.")
+  }
+
+  # Loading files and preparing for renaming
+  ds1 <- pbapply::pblapply(1:length(in.dir), function(i){
+    indir <- in.dir[i]
+    dc <- datecol[i]
+
+    files <- list.files(path = indir, pattern = ".jpg", ignore.case = T, full.names = T, recursive = T)
+
+    if(length(files) == 0){
+      stop("You included a folder that contains no images. Check this")
+    }
+
+    x1 <- data.frame(do.call(rbind, strsplit(files, "/")), oldname = files)
+    colnames(x1)[c(ncol(x1)-4, ncol(x1)-1)] <- c("Camera", "Image")
+    x1$dc <- dc
+    if(length(out.dir) == 1){
+      x1$newname <- with(x1, paste(out.dir, Camera, dc, Image, sep = "/"))
+    }else{
+      x1$newname <- with(x1, paste(out.dir[i], Camera, dc, Image, sep = "/"))
+    }
+
+    return(x1)
+    #rm(indir, dc, files, x1)
+    #rm(i)
+  })
+  names(ds1) <- do.call(rbind, strsplit(in.dir, "/"))[,ncol(do.call(rbind, strsplit(in.dir, "/")))]
+
+  # Error checking
+  print(paste("Image processing completed at ", Sys.time(), ". Checking for errors...", sep = ""))
+
+  e <- lapply(ds1, function(x){which(grepl(":", x$Image))})
+  if(any(sapply(e, length)>0)){
+    message("Some files are not fully sorted. You need to fix these before continuing. Incorrect files are outputted. Function stopped")
+    e1 <- lapply(1:length(ds1), function(i){ds1[[i]][e[i],]})
+    names(e1) <- names(ds1)
+    return(e1)
+    #rm(e1)
+  }
+
+  # Preparing for and renaming files
+  print(paste("Error check complete. Cleaning up and renaming..."))
+
+  ## Create a rename object
+  ds2 <- do.call(rbind, ds1)
+  rename <- lapply(ds1, function(x){data.frame(in.files = x$oldname, out.files = x$newname)})
+
+  ## Create Directories
+  if(isTRUE(create.dirs)){
+    print("Creating directories")
+    dirs <- with(ds2, list(unique(file.path(out.dir, Camera)),
+                           unique(file.path(out.dir, Camera, dc))))
+
+    dirsTemp <- lapply(dirs, function(x1){
+      lapply(x1, function(y){
+        ifelse(!dir.exists(y), dir.create(y), print("Directory exists"))
+      })
+    })
+    #rm(dirs, dirsTemp)
+  }
+
+  if(type=="move"){
+    print("File transfer in progress. Images are moved from in.dir to out.dir")
+    out <- fs::file_move(path = ds2[["in.files"]], new_path = ds2[["out.files"]])
+  }else if(type=="copy"){
+    print("File transfer in progress. Images are copied from in.dir to out.dir")
+    out <- fs::file_copy(path = ds2[["in.files"]], new_path = ds2[["out.files"]])
+  }else if(type == "none"){
+    print("No file transfer specified")
+  }else{
+    message("You chose an invalid type. No file transfer will occur. Choose one of c('move', 'copy', 'none') to avoid this warning")
+  }
+
+  return(rename)
+  rm(ds1, ds2, e, rename, out)
+  rm(in.dir, out.dir, datecol, type, create.dirs)
 }

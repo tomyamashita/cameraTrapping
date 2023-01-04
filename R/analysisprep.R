@@ -1,6 +1,10 @@
-# Camera Data Analysis
+# Camera Data Analysis Preparation
+## This script contains functions for prepping and running camera specific
+  #analyses including diel activity analysis and occupancy analysis.
 
-## Animal Diel Activity (Added 2022-08-25) ####
+################################################################################
+
+### Animal Diel Activity (Added 2022-08-25) ####
 ##' @description A function for calculating diel activity for selected species. The function can optionally also split your data based on a user-defined column.
 ##'
 ##' @title Animal Diel Activity
@@ -88,7 +92,7 @@ actFun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
   #rm(x, split, splitcol, species, bw, rep)
 }
 
-## Setting up for occupancy modelling from an APFun_env output (Added 2022-08-25) ####
+### Setting up for occupancy modelling from an APFun_env output (Added 2022-08-25) ####
 ##' @description This function modifies data for use in occupancy modelling using Unmarked or a separate program, I think.
 ##'
 ##' @title Occupancy Analysis Data Setup
