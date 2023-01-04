@@ -45,3 +45,8 @@
 ## Version 0.0.0.8 (2022-10-05)
 
 * Fixed the interactionsTimelapse function to properly create directories and accommodate duplicate file names
+
+## Version 0.0.0.9 (2023-01-04)
+
+* Made multiple fixes to cameraRename3 function for ease of use and greater ability to track progress
+* Reorganized scripts to better keep track of functions
