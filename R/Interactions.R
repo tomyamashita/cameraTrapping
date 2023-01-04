@@ -1,6 +1,8 @@
-# Wildlife Interactions
+# Wildlife Interactions functions ####
 ## This script contains functions for preparing for doing wildlife interactions
-  #on wildlife crossing cameras.
+## This script contains the following functions:
+  ## interactionsDataOrganize
+  ## interactionsTimelapse
 
 ################################################################################
 

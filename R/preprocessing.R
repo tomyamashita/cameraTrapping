@@ -1,6 +1,9 @@
-# Pre-processing
-## This script contains functions for pre-processing camera data, including
-  #renaming pictures and finding corrupt images.
+# Pre-processing functions ####
+## This script contains functions for pre-processing camera data
+## This script includes the following functions:
+  ## cameraRename2
+  ## cameraRename3
+  ## findCorruptImages
 
 ################################################################################
 

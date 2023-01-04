@@ -1,5 +1,7 @@
 # Other Functions
 ## This script contains functions that are not related to working with camera data.
+## This script contains the following functions:
+  ## timeConvert
 
 ################################################################################
 

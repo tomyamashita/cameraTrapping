@@ -1,6 +1,8 @@
-# Camera Data Analysis Preparation
-## This script contains functions for prepping and running camera specific
-  #analyses including diel activity analysis and occupancy analysis.
+# Camera Data Analysis Preparation functions ####
+## This script contains functions for prepping and running camera specific analyses
+## This script includes the following functions:
+  ## actFun
+  ## occFun
 
 ################################################################################
 

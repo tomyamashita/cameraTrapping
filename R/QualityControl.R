@@ -1,8 +1,13 @@
-# Quality Control Functions
+# Quality Control Functions ####
 ## This script contains quality control and diagnostic functions for camera data.
-## This includes trap nights, quality control for timelapse, basic diagnostics
-  #on raw images, and fixes for handling CT tables using the camtrapR package.
-## This script also contains functions for handling "unsorting" of images.
+## This script includes the following functions:
+  ## cameraDiagnostics
+  ## ctDates
+  ## imageEffort
+  ## mergeFiles
+  ## timelapseQC
+  ## trapEffort
+  ## unsortImages
 
 ################################################################################
 
@@ -162,6 +167,76 @@ imageEffort <- function(timelapse, type){
   return(out2)
   rm(AP, name, ghosts, human, out, total, out2)
   #rm(timelapse, type)
+}
+
+### Merge Files with the same extension (Added 2022-01-04) ####
+##' @description This function will find all files in a directory with a specified extension and merge them into a single file. It is useful for merge dataorganize or timelapse files for quicker access
+##'
+##' @title Merge Files
+##'
+##' @param in.dir string. The directory containing the files you want to merge
+##' @param pattern string. The file extension of the files you want to merge. Currently this can only be c(".txt", ".csv", ".xlsx"). The period must be included in the extension name. Note that the ".xlsx" file extension uses the \code{\link[openxlsx]{openxlsx}} package for reading and writing.
+##' @param save. logical. Should the output be saved to the current working directory? This defaults to FALSE.
+##'
+##' @details This function assumes that you are only merging files that have the same data structure. It does not do any checking of this so please make sure that your data structure is consistent among files before using this function.
+##' This makes it especially useful for merging DataOrganize files or Timelapse outputs.
+##'
+##' Currently, this function only allows for the above file extensions. Other extensions could be included in the future. Please let me know if you want a different file extension to be available.
+##'
+##' @return data frame containing the merged files
+##'
+##' @seealso \code{\link{dataOrganize}}, \code{\link{APFun_Timelapse}}
+##'
+##' \code{\link[openxlsx]{read.xlsx}}, \code{\link[openxlsx]{write.xlsx}}
+##'
+##' @keywords files
+##' @keywords manip
+##' @keywords datagen
+##'
+##' @concept camera trapping
+##' @concept timelapse
+##' @concept DataOrganize
+##'
+##' @importFrom openxlsx read.xlsx
+##' @importFrom openxlsx write.xlsx
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+mergeFiles <- function(in.dir, pattern, save = F){
+  #in.dir <- getwd()
+  #pattern <- ".txt"
+  #save <- F
+
+  files <- list.files(path = in.dir, pattern = pattern, full.names = T)
+
+  if(pattern == ".txt"){
+    x1 <- lapply(files, read.table)
+  }else if(pattern == ".csv"){
+    x1 <- lapply(files, read.csv)
+  }else if(pattern == ".xlsx"){
+    x1 <- lapply(files, openxlsx::read.xlsx)
+  }else{
+    stop("You chose an incompatible file extension. Make sure you include the period. Choose one of c('.txt', '.csv', '.xlsx')")
+  }
+
+  x2 <- do.call(rbind, x1)
+
+  if(isTRUE(save)){
+    if(pattern == ".txt"){
+      write.table(x2, file = "mergedfile.txt", row.names = F)
+    }else if(pattern == ".csv"){
+      write.csv(x2, file = "mergedfile.csv", row.names = F)
+    }else if(pattern == ".xlsx"){
+      openxlsx::write.xlsx(x2, file = "mergedfile.xlsx")
+    }
+  }
+
+  return(x2)
+  rm(files, x1, x2)
+  #rm(in.dir, pattern, save)
 }
 
 ### Quality control for timelapse-sorted images (Added 2022-08-25, Modified 2022-09-13) ####
@@ -364,7 +439,7 @@ trapEffort <- function(cttable, group, sessions=F, sessioncol=NULL){
   #rm(cttable, group, sessions, sessioncol)
 }
 
-### Unsort Images to Raw data structure
+### Unsort Images to Raw data structure (Added 2023-01-04) ####
 ##' @description This function is designed to take sorted images and return them to Raw data structure format. It is the reverse process to the movePictures function
 ##'
 ##' @title Move pictures from sorted to unsorted folders

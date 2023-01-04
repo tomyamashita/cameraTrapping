@@ -1,7 +1,12 @@
-# Post-processing
-## This script contains functions for post-sorting processing of camera data,
-  #including "auto"-sorting pictures, extracting best pics from a timelapse file,
-  #removing ghosts, and running data organize.
+# Post-processing functions ####
+## This script contains functions for post-sorting processing of camera data
+## This script includes the following functions:
+  ## APFun_env
+  ## APFun_Timelapse
+  ## bestPics
+  ## dataOrganize
+  ## movePictures
+  ## removeGhosts
 
 ################################################################################
 
