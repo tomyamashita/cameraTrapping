@@ -54,3 +54,9 @@
 * Clarified help text in movePictures functions
 * Updated cameraDiagnostics to work when the UserLabel field does not exist
 * Continued updating input names for consistency across functions
+* Added the unsortImages function and associated documentation
+
+## Version 0.0.0.10 (2023-01-04)
+
+* Added the mergeFiles function and associated documentation
+* Script updates to make it easier for me to find which file a function is in
