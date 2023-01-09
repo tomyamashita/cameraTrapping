@@ -453,13 +453,17 @@ trapEffort <- function(cttable, group, sessions=F, sessioncol=NULL){
 ##' @details This function assumes that the sorted pictures are sorted in the same way as what is created by the movePictures function.
 ##' Therefore, it can be considered a reverse procedure to the movePictures function. This can be used to create new backups of raw data if any are lost or if the raw data is otherwise unavailable.
 ##'
+##' This function will only copy the first instance of an image and will ignore duplicates. This is because duplicate images can arise in sorted images when more than one species is detected in a single image.
+##'
 ##' This function has not gone through full testing and may have problems. Please report issues as they come up.
 ##'
-##' @return list of the full file path to the in files and out files
+##' @return list of data frames of each each in.dir directory. Each data frame contains the following information:
 ##' @return in.files:
 ##' String. Full file paths to the in files
 ##' @return out.files:
 ##' String. Full file paths to the out files
+##' @return duplicate:
+##' Logical. Is the file a duplicate file
 ##'
 ##' @seealso \code{\link{movePictures}}
 ##'
@@ -530,6 +534,8 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
       x1$newname <- with(x1, paste(out.dir[i], Camera, dc, Image, sep = "/"))
     }
 
+    x1$dup <- duplicated(x1$newname)
+
     return(x1)
     #rm(indir, dc, files, x1)
     #rm(i)
@@ -553,12 +559,20 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
 
   ## Create a rename object
   ds2 <- do.call(rbind, ds1)
-  rename <- lapply(ds1, function(x){data.frame(in.files = x$oldname, out.files = x$newname)})
+  rename <- lapply(ds1, function(x){data.frame(in.files = x$oldname, out.files = x$newname, duplicate = x$dup)})
+
+  ## Remove duplicate images
+  ds3 <- ds2[ds2$dup == FALSE,]
+
+  if(length(ds2) > length(ds3)){
+    message("There were duplicate files in the sorted.  Duplicate files will not be unsorted.")
+  }
+
 
   ## Create Directories
   if(isTRUE(create.dirs)){
     print("Creating directories")
-    dirs <- with(ds2, list(unique(file.path(out.dir, Camera)),
+    dirs <- with(ds3, list(unique(file.path(out.dir, Camera)),
                            unique(file.path(out.dir, Camera, dc))))
 
     dirsTemp <- lapply(dirs, function(x1){
@@ -571,10 +585,10 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
 
   if(type=="move"){
     print("File transfer in progress. Images are moved from in.dir to out.dir")
-    out <- fs::file_move(path = ds2[["in.files"]], new_path = ds2[["out.files"]])
+    out <- fs::file_move(path = ds3[["in.files"]], new_path = ds3[["out.files"]])
   }else if(type=="copy"){
     print("File transfer in progress. Images are copied from in.dir to out.dir")
-    out <- fs::file_copy(path = ds2[["in.files"]], new_path = ds2[["out.files"]])
+    out <- fs::file_copy(path = ds3[["in.files"]], new_path = ds3[["out.files"]])
   }else if(type == "none"){
     print("No file transfer specified")
   }else{
@@ -582,6 +596,6 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
   }
 
   return(rename)
-  rm(ds1, ds2, e, rename, out)
-  rm(in.dir, out.dir, datecol, type, create.dirs)
+  #rm(ds1, ds2, ds3, e, rename, out)
+  #rm(in.dir, out.dir, datecol, type, create.dirs)
 }
