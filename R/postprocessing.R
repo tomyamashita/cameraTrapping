@@ -130,15 +130,15 @@ APFun_env <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), start_
     x5b3 <- x5b2[,c(3:ncol(x5b2)-1,1,ncol(x5b2))]
     colnames(x5b3) <- colnames(x5)
     x6 <- merge.data.frame(x5b3, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
-    x7 <- x6[,c(1,2,seq(2,length(y))+14,3,length(y)+length(x1)+5,11,12,13,14,length(y)+length(x1)+1,length(y)+length(x1)+2)]
+    x7 <- x6[,c(1,2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
     rm(x5b2, xb53)
   }else{
     x6 <- merge.data.frame(x5, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
-    x7 <- x6[,c(2,seq(2,length(y))+14,3,length(y)+length(x1)+5,11,12,13,14,length(y)+length(x1)+1,length(y)+length(x1)+2)]
+    x7 <- x6[,c(2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
   }
   return(x7)
   rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
-  #rm(x, y, sort.col, exclude, start_date, end_date, interval, all.pics)
+  #rm(do, envdata, sort.col, exclude, start_date, end_date, interval, all.pics)
 }
 
 ### Convert a Timelapse file to a dataorganize output (Added 2022-08-25) ####

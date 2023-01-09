@@ -64,3 +64,4 @@
 ## Version 0.0.0.11 (2023-01-09)
 
 * Added duplicate removal from the unsortImages function so the unsorted version of the files will all be unique
+* Fixed input name problem with APFun_env function
