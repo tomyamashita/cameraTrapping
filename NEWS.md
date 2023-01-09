@@ -60,3 +60,7 @@
 
 * Added the mergeFiles function and associated documentation
 * Script updates to make it easier for me to find which file a function is in
+
+## Version 0.0.0.11 (2023-01-09)
+
+* Added duplicate removal from the unsortImages function so the unsorted version of the files will all be unique
