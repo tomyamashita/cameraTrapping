@@ -76,12 +76,13 @@ interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=
 ##'
 ##' @param timelapse A timelapse csv, formatted using our Timelapse template.
 ##' @param envdata Environmental variables data frame. This file must have header called "Camera" containing the list of cameras, "Site" containing the site name, "Side" indicating which side the camera is on, and "Type" indicating what type of structure the camera is at.
-##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.
-##' @param in.dir Character. The directory where you want to store the Interactions data. This should be the same folder containing the images folder.
+##' @param in.dir String. The directory where the original image data is. This should be the same folder containing the images folder.
+##' @param out.dir String. Defaults to NULL. The directory where you want to store the Interactions images. The default specifies the in.dir. Options include c("in.dir") to more explicitly refer to the in.dir.
 ##' @param create.dirs Logical. Defaults to TRUE. Should new directories be checked for and created by R if necessary?
-##' @param copy.files Logical. Defaults to TRUE. Should image files be copied to the appropriate directories?
+##' @param type String. Defaults to "none". Should image files be copied or not to the appropriate directories?
+##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.
 ##'
-##' @details NOTE: R has no good way of handling duplicate file names so it will skip duplicates when copying. Depending on how images are named, this could be an issue. The easiest way to check is to check the number of images in the main folder.
+##' @details NOTE: This function will add a (#) to duplicate file names, similar to the way Windows handles copying files with the same name into the same folder.  of handling duplicate file names so it will skip duplicates when copying.
 ##'
 ##' @return A list containing the data file and a file of the old and new paths and names.
 ##' @return Interactions:
@@ -106,14 +107,31 @@ interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.dirs=T, copy.files=T){
-  #timelapse <- read.csv("timelapse_out_20210830.csv")
-  #envdata <- openxlsx::read.xlsx(file.choose())
-  #exclude <- c("ghost", "human", "bird", "rodent", "unk_lizard", "spiny_lizard", "whiptail_lizard", "leopard_frog", "unk_amphibian")
-  #create.dirs <- T
-  #copy.files <- T
 
-  # Step 1: Combine the Species1, Species2, Species3, and SpeciesOther columns
+interactionsTimelapse <- function(timelapse, envdata, in.dir, out.dir = NULL, create.dirs = T, type = "copy", exclude = c("ghost")){
+  #timelapse <- read.csv("timelapse_out_20221201.csv")
+  #envdata <- openxlsx::read.xlsx(file.choose())
+  #in.dir <- getwd()
+  #out.dir <- NULL
+  #create.dirs <- F
+  #type <- "none"
+  #exclude <- c("ghost", "human", "bird", "rodent", "unk_lizard", "spiny_lizard", "whiptail_lizard", "leopard_frog", "unk_amphibian")
+
+  # Check if in.dir and out.dir exist
+  ## in.dir
+  if(!dir.exists(in.dir)){
+    stop("in.dir does not exist. Check your directory name")
+  }
+  ## out.dir
+  if(is.null(out.dir)){
+    out.dir <- in.dir
+  }else if(out.dir == "in.dir"){
+    out.dir <- in.dir
+  }else if(!dir.exists(out.dir)){
+    stop("out.dir does not exist. Do you need to create it? If you want out.dir==in.dir, specify either c(NULL,'in.dir').")
+  }
+
+  # Step 1: Combine the Species1, Species2, Species3, and SpeciesOther columns (run APFun_timelapse basically)
   images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
   colnames(images1) <- c("File", "Path", "Species", "Individuals")
 
@@ -150,7 +168,8 @@ interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.di
   colnames(imagesout3) <- c("File", "Path", "Species", "Individuals", "Folder", "Camera", "Date")
   imagesout4 <- merge.data.frame(imagesout3, envdata, by = "Camera", all.x = T)
 
-  imagesout4$directory <- in.dir
+  imagesout4$in.dir <- in.dir
+  imagesout4$out.dir <- out.dir
   imagesout4$oldpath <- with(imagesout4, file.path(Folder, Camera, Date))
   imagesout4$newpath <- with(imagesout4, paste("Interactions_", Date, "/", Site, "/", Side, "/", Species, sep = ""))
   imagesout4$fileold <- imagesout4$File
@@ -168,10 +187,10 @@ interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.di
   # Step 5: Create new directories and subdirectories and copy pictures into them (optional)
   if(isTRUE(create.dirs)){
     print("Creating directories")
-    dirs <- with(imagesout4, list(unique(file.path(in.dir, paste("Interactions_", Date, sep = ""))),
-                                  unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site)),
-                                  unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site, Side)),
-                                  unique(file.path(in.dir, paste("Interactions_", Date, sep = ""), Site, Side, Species))))
+    dirs <- with(imagesout4, list(unique(file.path(out.dir, paste("Interactions_", Date, sep = ""))),
+                                  unique(file.path(out.dir, paste("Interactions_", Date, sep = ""), Site)),
+                                  unique(file.path(out.dir, paste("Interactions_", Date, sep = ""), Site, Side)),
+                                  unique(file.path(out.dir, paste("Interactions_", Date, sep = ""), Site, Side, Species))))
     dirsTemp <- lapply(dirs, function(x){
       lapply(x, function(y){
         ifelse(!dir.exists(y), dir.create(y), print("Folder exists"))
@@ -179,13 +198,17 @@ interactionsTimelapse <- function(timelapse, envdata, exclude, in.dir, create.di
     })
   }
 
-  if(isTRUE(copy.files)){
-    print("Copying images")
-    with(imagesout4, fs::file_copy(path = file.path(directory, oldpath, fileold), new_path = file.path(directory, newpath, filenew)))
+  if(type == "copy"){
+    print("File transfer in progress. Images are copied from in.dir to out.dir")
+    with(imagesout4, fs::file_copy(path = file.path(in.dir, oldpath, fileold), new_path = file.path(out.dir, newpath, filenew)))
+  }else if(type == "none"){
+    print("No file transfer specified")
+  }else{
+    message("You chose an invalid type. No file transfer will occur. Choose one of c('copy', 'none') to avoid this warning. Please note, the option 'move' does not exist for this function.")
   }
 
   return(list(Interactions = intfile1, Files = imagesout4))
-  rm(images1, images2, images3, images4, imagesout1, imagesout2, imagesout3, imagesout4, intfile1, dirs, dirsTemp)
-  #rm(images, envdata, exclude, create.dirs, copy.files)
+  rm(images1, images2, images3, images4, imagesout1, imagesout2, imagesout3, imagesout4, dups, intfile1, dirs, dirsTemp)
+  #rm(timelapse, envdata, in.dir, out.dir, create.dirs, type, exclude)
 }
 

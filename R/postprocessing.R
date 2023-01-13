@@ -273,14 +273,30 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##' @title DataOrganize
 ##'
 ##' @param in.dir data.frame. The directory containing the camera folders.
-##' @param save logical. Should the file be saved to the working directory? The default is FALSE. If TRUE, this will create a file called dataorganize.txt containing the output. Be careful, as this can overwrite other files with this name.
-##' @param diagnostics logical. Should diagnostic information be outputted to the console? This is set to TRUE by default.
+##' @param ext String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for to run DataOrganize on?
+##' @param do_format String. Defaults to "serial". Should dataOrganize include the camera's serial number if it has one? Choose one of c("serial", "original"). See details below.
+##' @param save Logical. Should the file be saved to the working directory? The default is FALSE. If TRUE, this will create a file called dataorganize.txt containing the output. Be careful, as this can overwrite other files with this name.
+##' @param diagnostics Logical. Should diagnostic information be outputted to the console? This is set to TRUE by default.
 ##'
-##' @return A data frame organized in the same way as the DataOrganize program: Camera Species Year Month Day Hour Minute Second Num_of_Individuals.
+##' @details This function's original intention was to replicate the results of the DataOrganize program and its file format.
+##' Due to a modification with the \code{\link{movePictures}} to accommodate a DataOrganize file as an input, this function was modified to allow the inclusion of the camera serial number in the output.
+##' While, this should not have any downstream effects, the addition of the serial number column could impact future processes.
+##' This is something that I am checking and will confirm a smooth transition to this method.
+##'
+##' In addition, this function can now accommodate image names that are in "yyyy mm dd hh mm ss" (the standard in Renamer and SpecialRenamer) or "yyyy mm dd hh mm ss serial" (the standard in this package).
+##' This should help improve compatibility with images that were formatted using Renamer or SpecialRenamer.
+##'
+##' @return original:
+##' A data frame formatted in the same way as the DataOrganize program:
+##' site species individuals year month day hour minute second.
+##'
+##' @return serial:
+##' A data frame including the same information as DataOrganize but with the addition of the image serial number:
+##' site species individuals year month day hour minute second serial.
 ##'
 ##' @references Original DataOrganize program: \url{https://smallcats.org/resources/}
 ##'
-##' @seealso \code{\link{APFun_env}}
+##' @seealso \code{\link{APFun_env}} \code{\link{movePictures}}
 ##'
 ##' @keywords files
 ##' @keywords manip
@@ -289,39 +305,75 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##' @concept DataOrganize
 ##'
 ##' @importFrom dplyr summarise group_by n
+##' @importFrom pbapply pblapply
 ##' @export
 ##'
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-dataOrganize <- function(in.dir, save = F, diagnostics = T){
-  #in.dir <- "J:/AI_Test_Microsoft/Test/AI_test"
+dataOrganize <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save = F, diagnostics = T){
+  #in.dir <- "I:/new_20221201/sorted"
+  #ext <- c(".jpg", "mp4")
+  #do_format <- "serial"
+  #save <- FALSE
   #diagnostics <- TRUE
 
-  filelist <- list.files(in.dir, pattern = "jpg", ignore.case = T, full.names = T, recursive = T)
-  files1 <- do.call(rbind, strsplit(filelist, "/"))
-  files2 <- files1[,(ncol(files1)-3):ncol(files1)]
-  images1 <- sub(".jpg", "", ignore.case = T, files2[,4])
-  images2 <- do.call(rbind, strsplit(images1, " "))
+  if(any(!grepl("[.]", ext))){
+    message("Some of your file extensions did not include the '.'. This is being added. Add a '.' to each ext to avoid this message")
+    ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
+  }
 
-  out <- data.frame(files2[,1:3], images2[,1:6])
-  colnames(out) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+  out1 <- pbapply::pblapply(ext, function(x){
+    files1 <- list.files(in.dir, pattern = x, ignore.case = T, full.names = T, recursive = T)
+    files2 <- data.frame(do.call(rbind, strsplit(files1, "/")))
+    files3 <- data.frame(files2[,(ncol(files2)-3):(ncol(files2)-1)], do.call(rbind, strsplit(sub(x, "", files2[,ncol(files2)], ignore.case = T), " ")))
+
+    if(ncol(files3)==10){
+      if(!exists("do_format")){
+        files4 <- files3[,-ncol(files3)]
+        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+      }else if(do_format == "serial"){
+        files4 <- files3
+        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
+      }else if(do_format == "original"){
+        files4 <- files3[,-ncol(files3)]
+        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }else{
+        files4 <- files3[,-ncol(files3)]
+        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+      }
+    }else if(ncol(files3)==9){
+      files4 <- files3
+      colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+    }else{
+      message("Your file and folder structure in your input directory does not have an expected number of columns. If you are attempting to use this function with a different structure, the function may not work properly.")
+      files4 <- files3
+    }
+
+    return(files4)
+    rm(files1, files2, files3, files4)
+  })
+  out2 <- do.call(rbind, out1)
+
   if(diagnostics == T){
-    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(out, site), species = length(unique(species)), pictures = dplyr::n())),
-                  "Unique Species" = sort(unique(out$species)),
-                  "Unique Number of Individuals" = sort(unique(out$individuals)))
+    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(out2, site), species = length(unique(species)), images = dplyr::n())),
+                  "Unique Species" = sort(unique(out2$species)),
+                  "Unique Number of Individuals" = sort(unique(out2$individuals)))
     print(diagn)
     rm(diagn)
   }
 
   if(isTRUE(save)){
-    write.table(out, file = "dataorganize.txt", row.names = F)
+    print("Writing a text file to the in.dir.")
+    write.table(out, file = file.path(in.dir, "dataorganize.txt"), row.names = F)
   }
 
-  return(out)
+  return(out2)
 
-  rm(filelist, files1, files2, images1, images2, out)
-  #rm(in.dir, diagnostics)
+  rm(out1, out2)
+  #rm(in.dir, ext, save, diagnostics)
 }
 
 ## Move all pictures into sorted folders (Added 2022-08-25, Modified 2022-09-13) ####
@@ -329,12 +381,14 @@ dataOrganize <- function(in.dir, save = F, diagnostics = T){
 ##'
 ##' @title Move pictures from unsorted to sorted folders
 ##'
-##' @param timelapse data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use
+##' @param timelapse data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use. You cannot specify both a timelapse file and a Dataorganize file using this function
+##' @param do data.frame. A data frame of a DataOrganze file. This can be either from the DataOrganize program or from the \code{\link{dataOrganize}} function in this package. You cannot specify both a timelapse and DataOrganize file using this function.
 ##' @param in.dir String. The directory containing the root folder for the timelapse file. For example, if all your images were a folder called "images" which sits in an external drive, labelled "F:", then you would specify the in.dir as "F:".
 ##' @param out.dir String. The directory where you want to store the sorted images
 ##' @param create.dirs Logical. Should the function create the directories it needs?
 ##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')
 ##' @param exclude String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species
+##' @param ... Additional arguments used when specifying a DataOrganize file. Only img_format and do_format are used. All other inputs are ignored. Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.
 ##'
 ##' @details When this function creates its folder structure, it uses the Individuals column in the Timelapse output.
 ##' For some "species" (e.g., ghost, human, bird, rodent), we do not sort these by individual, therefore the Individuals column is a 0.
@@ -342,13 +396,16 @@ dataOrganize <- function(in.dir, save = F, diagnostics = T){
 ##' Generally, it should not be an issue but could result in NA values in the Individuals column of the \code{\link{APFun_env}} or errors in the \code{\link{dataorganize}} functions in this package.
 ##' Once this has been tested, I will update this.
 ##'
+##' This function can "sort" pictures using either a timelapse csv or a dataorganize text file.
+##' The inclusion of a dataorganize file was to better accommodate data sorted manually (i.e., not using Timelapse) and its primary use is when sorted images need to be replaced (e.g., the images got corrupted or lost somehow).
+##'
 ##' @return list of the full file path to the in files and out files
 ##' @return in.files:
 ##' String. Full file paths to the in files
 ##' @return out.files:
 ##' String. Full file paths to the out files
 ##'
-##' @seealso \code{\link{dataorganize}}
+##' @seealso \code{\link{dataOrganize}}
 ##'
 ##' \code{\link{APFun_env}}
 ##'
@@ -364,56 +421,135 @@ dataOrganize <- function(in.dir, save = F, diagnostics = T){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none", exclude = NULL){
-  #timelapse <- read.csv("K:/Completed/new_20210927/timelapse_out_20210927.csv")
-  #in.dir <- "K:/Completed/new_20210927"
-  #out.dir <- "K:/Completed/new_20210927/sorted"
-  #create.dirs <- T
+movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, type = "none", exclude = NULL, ...){
+  #timelapse <- read.csv("timelapse_out_20221201.csv")
+  #do <- test
+  #in.dir <- "I:/new_20221201/images"
+  #out.dir <- "I:/new_20221201/sorted"
+  #create.dirs <- F
   #type <- "none"
+  #exclude <- NULL
 
   print(paste("This function started at ", Sys.time(), sep = ""))
 
   if(!dir.exists(in.dir)){
     stop("Your in.dir does not exist. Did you specify the correct path")
   }
-  if(grepl("images", in.dir, ignore.case = T)){
-    message("Your in.dir path includes the images folder. File transfer may not work properly if timelapse also references this folder")
-  }
   if(!dir.exists(out.dir)){
     stop("Your out.dir does not exist. Did you forget to create it?")
   }
 
-  timelapse$RelativePath <- gsub("\\\\", "/", timelapse$RelativePath)
+  if(!is.null(timelapse) & !is.null(do)){
+    stop("Both a timelapse file and a dataorganize file were provided. Please only provide one.")
+  }else if(!is.null(timelapse) & is.null(do)){
+    print("Using a timelapse file. Loading images...")
+    if(grepl("images", in.dir, ignore.case = T)){
+      message("Your in.dir path includes the images folder. File transfer may not work properly if timelapse also references this folder")
+    }
 
-  images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
-  colnames(images1) <- c("File", "Path", "Species", "Individuals")
+    timelapse$RelativePath <- gsub("\\\\", "/", timelapse$RelativePath)
 
-  if(!all(is.na(timelapse$Species2))){
-    images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
-    colnames(images2) <- c("File", "Path", "Species", "Individuals")
-  }else{
-    images2 <- NULL
-  }
-  if(!all(is.na(timelapse$Species3))){
-    images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
-    colnames(images3) <- c("File", "Path", "Species", "Individuals")
-  }else{
-    images3 <- NULL
-  }
-  if(!all(is.na(timelapse$SpeciesOther))){
-    images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
-    colnames(images4) <- c("File", "Path", "Species", "Individuals")
-  }else{
-    images4 <- NULL
-  }
-  x1 <- rbind(images1,images2,images3,images4)
-  x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "/")), x1[,c("File", "Species", "Individuals")])
-  colnames(x2)[-c(ncol(x2)-2,ncol(x2)-1,ncol(x2))] <- c("Folder", "Camera", "Date")
-  x2$Individuals <- formatC(x2$Individuals, flag = "0", width = 2)
-  x3 <- x2[!(x2$Species %in% exclude), ]  # Remove species from list of those to be sorted
+    images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
+    colnames(images1) <- c("File", "Path", "Species", "Individuals")
 
-  x3in <- with(x3, file.path(Folder, Camera, Date, File))
-  x3out <- with(x3, file.path(Camera, Species, Individuals, File))
+    if(!all(is.na(timelapse$Species2))){
+      images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+      colnames(images2) <- c("File", "Path", "Species", "Individuals")
+    }else{
+      images2 <- NULL
+    }
+    if(!all(is.na(timelapse$Species3))){
+      images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+      colnames(images3) <- c("File", "Path", "Species", "Individuals")
+    }else{
+      images3 <- NULL
+    }
+    if(!all(is.na(timelapse$SpeciesOther))){
+      images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+      colnames(images4) <- c("File", "Path", "Species", "Individuals")
+    }else{
+      images4 <- NULL
+    }
+    x1 <- rbind(images1,images2,images3,images4)
+    x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "/")), x1[,c("File", "Species", "Individuals")])
+    colnames(x2)[-c(ncol(x2)-2,ncol(x2)-1,ncol(x2))] <- c("Folder", "Camera", "Date")
+    x2$Individuals <- formatC(x2$Individuals, flag = "0", width = 2)
+    x3 <- x2[!(x2$Species %in% exclude), ]  # Remove species from list of those to be sorted
+
+    x3in <- with(x3, file.path(Folder, Camera, Date, File))
+    x3out <- with(x3, file.path(Camera, Species, Individuals, File))
+
+    #rm(images1, images2, images3, images4)
+  }else if(is.null(timelapse) & !is.null(do)){
+    #do_ins <- list(img_format = "serial", do_format = "serial")
+
+    print("Using a DataOrganize file. Loading images...")
+    do_ins <- list(...)
+
+    if(!any(any(names(do_ins)=="img_format"), any(names(do_ins)=="do_format"))){
+      stop("To use a DataOrganize file for movePictures, you must specify c(img_format, do_format).")
+    }
+    img_format <- do_ins$img_format
+    do_format <- do_ins$do_format
+
+    if(!(grepl("images", in.dir, ignore.case = T))){
+      in.dir <- file.path(in.dir, "images")
+      message("Your in.dir path does not include the images folder. File transfer from a dataOrganize file will likely not work properly. 'images' is being appended to the in.dir")
+    }
+
+    if(img_format == "serial" & do_format == "original"){
+      message("You specified that your images have serial numbers but your DataOrganize file does not. This function may not work properly")
+    }else if(img_format == "original" & do_format == "serial"){
+      message("You specified that your images do not have serial numbers but your DataOrganize does. This function may not work properly")
+    }
+
+    if(img_format == "serial"){
+      files1 <- pbapply::pblapply(c(".jpg", ".mp4"), function(x){
+        a1 <- list.files(in.dir, pattern = x, full.names = T, recursive = T, ignore.case = T)
+        a2 <- data.frame(oldname = a1, do.call(rbind, strsplit(a1, "/")))
+        colnames(a2)[(ncol(a2)-3):ncol(a2)] <- c("Folder", "Camera", "Date", "File")
+        a3 <- data.frame(a2[,c("Folder", "Camera", "Date", "File")], do.call(rbind, strsplit(sub(x, "", a2$File), " ")))
+        colnames(a3)[(ncol(a3)-6):ncol(a3)] <- c("year", "month", "day", "hour", "minute", "second", "serial")
+        return(a3)
+        rm(a1, a2, a3)
+      })
+    }else if(img_format == "original"){
+      files1 <- pbapply::pblapply(c(".jpg", ".mp4"), function(x){
+        a1 <- list.files(in.dir, pattern = x, full.names = T, recursive = T, ignore.case = T)
+        a2 <- data.frame(do.call(rbind, strsplit(a1, "/")))
+        colnames(a2)[(ncol(a2)-3):ncol(a2)] <- c("Folder", "Camera", "Date", "File")
+        a3 <- data.frame(a2[,c("Folder", "Camera", "Date", "File")], do.call(rbind, strsplit(sub(x, "", a2$File), " ")))
+        colnames(a3)[(ncol(a3)-6):ncol(a3)] <- c("year", "month", "day", "hour", "minute", "second")
+        return(a3)
+        rm(a1, a2, a3)
+      })
+    }else{
+      stop("You did not specify a valid img_format. Choose one of c('serial', 'original').")
+    }
+    files2 <- do.call(rbind, files1)
+
+    x1 <- do
+
+    if(do_format == "serial"){
+      files2$ID <- with(files2, paste(Camera, year, month, day, hour, minute, second, serial, sep = "_"))
+      x1$ID <- with(x1, paste(site, year, month, day, hour, minute, second, serial, sep = "_"))
+    }else if(do_format == "original"){
+      files2$ID <- with(files2, paste(Camera, year, month, day, hour, minute, second, sep=""))
+      x1$ID <- with(x1, paste(site, year, month, day, hour, minute, second, ".jpg", sep = ""))
+    }else{
+      stop("You specified an incorrect do_format. Choose one of c('serial', 'original').")
+    }
+
+    x2 <- merge.data.frame(files2, x1, by = "ID")
+    x3 <- x2[!(x2$species %in% exclude), ]
+
+    x3in <- with(x3, file.path(Camera, Date, File))
+    x3out <- with(x3, file.path(site, species, individuals, File))
+
+    #rm(do_ins, img_format, do_format, files1, files2)
+  }else{
+    stop("Both the timelapse and do arguments cannot be left NULL. A timelapse file is specified using the 'timelapse' argument and a dataorganize file is specified using the 'do' argument. Do not specify both")
+  }
 
   if(length(x3in) != length(x3out)){
     stop("You have different numbers of files in the 'in' and 'out' directories. You broke my function...")
@@ -440,13 +576,13 @@ movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none",
     message("You have a different number of in and out files, likely because more than one species was detected in a single picture. \nSuggest using 'copy' instead of 'move' for images.")
   }
 
-  if(type=="move"){
+  if(type == "move"){
     print("File transfer in progress. Images are moved from in.dir to out.dir")
     test <- fs::file_move(path = rename[["in.files"]], new_path = rename[["out.files"]])
-  }else if(type=="copy"){
+  }else if(type == "copy"){
     print("File transfer in progress. Images are copied from in.dir to out.dir")
     test <- fs::file_copy(path = rename[["in.files"]], new_path = rename[["out.files"]])
-  }else if(type=="none"){
+  }else if(type == "none"){
     print("No file transfer specified")
   }else{
     message("You chose an invalid type. No file transfer will occur. Choose one of c('move', 'copy', 'none') to avoid this warning")
@@ -454,8 +590,8 @@ movePictures <- function(timelapse, in.dir, out.dir, create.dirs, type = "none",
 
   print(paste("This function completed at ", Sys.time(), sep = ""))
   return(rename)
-  #rm(timelapse, images1, images2, images3, images4, x1, x2, x3in, x3out, dirs, dirsTemp, rename)
-  #rm(timelapsefile, in.dir, out.dir, create.dirs, type)
+  rm(x1, x2, x3, x3in, x3out, dirs, dirsTemp, rename)
+  #rm(timelapse, do, in.dir, out.dir, create.dirs, type, exclude)
 }
 
 ### Move ghosts identified by the Microsoft Megadetector AI to a sorted ghosts folder (Added 2022-08-25) ####
