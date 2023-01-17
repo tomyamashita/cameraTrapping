@@ -7,10 +7,11 @@
 interactionsTimelapse(
   timelapse,
   envdata,
-  exclude,
   in.dir,
+  out.dir = NULL,
   create.dirs = T,
-  copy.files = T
+  type = "copy",
+  exclude = c("ghost")
 )
 }
 \arguments{
@@ -18,13 +19,15 @@ interactionsTimelapse(
 
 \item{envdata}{Environmental variables data frame. This file must have header called "Camera" containing the list of cameras, "Site" containing the site name, "Side" indicating which side the camera is on, and "Type" indicating what type of structure the camera is at.}
 
-\item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.}
+\item{in.dir}{String. The directory where the original image data is. This should be the same folder containing the images folder.}
 
-\item{in.dir}{Character. The directory where you want to store the Interactions data. This should be the same folder containing the images folder.}
+\item{out.dir}{String. Defaults to NULL. The directory where you want to store the Interactions images. The default specifies the in.dir. Options include c("in.dir") to more explicitly refer to the in.dir.}
 
 \item{create.dirs}{Logical. Defaults to TRUE. Should new directories be checked for and created by R if necessary?}
 
-\item{copy.files}{Logical. Defaults to TRUE. Should image files be copied to the appropriate directories?}
+\item{type}{String. Defaults to "none". Should image files be copied or not to the appropriate directories?}
+
+\item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.}
 }
 \value{
 A list containing the data file and a file of the old and new paths and names.
@@ -39,7 +42,7 @@ File used for copying files.
 This function copies images for interactions to a new folder and creates an interactions file.
 }
 \details{
-NOTE: R has no good way of handling duplicate file names so it will skip duplicates when copying. Depending on how images are named, this could be an issue. The easiest way to check is to check the number of images in the main folder.
+NOTE: This function will add a (#) to duplicate file names, similar to the way Windows handles copying files with the same name into the same folder.  of handling duplicate file names so it will skip duplicates when copying.
 }
 \examples{
 \dontrun{

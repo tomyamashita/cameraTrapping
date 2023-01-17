@@ -38,7 +38,8 @@ This function can theoretically take any image format, although I do not know ho
 \item{trigger.info}{String or NULL. Should additional information besides the date-time be included in the output?
 This defaults to NULL where no additional information is included, only date-time information.
 Because camera-specific information is variable between camera models, you must specify the camera model if you want additional information.
-Currently, only c("Hyperfire2", "Ultrafire_Video", "Browning") are supported. Note that Reconyx Ultrafire pictures use the same metadata tags as the Reconyx Hyperfire2.
+Currently, for image formats c("Reconyx", "PC900", "Hyperfire2","Ultrafire_image", "Browning", "Cuddyback") are supported and for video formats, c("Ultrafire_video") are supported.
+Note that all Reconyx camera models tested (PC900, Hyperfire2, Ultrafire) use the same metadata.
 Additional camera models could be added. See details for more information on this.}
 
 \item{rename}{String. The default is none. Other options include c("replace", "copy").

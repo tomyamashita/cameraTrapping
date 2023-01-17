@@ -18,13 +18,16 @@ unsortImages(in.dir, out.dir, date.col, type, create.dirs = T)
 \item{datecol}{string. The date collected of the batch/es of pictures that need to be unsorted. This must be the same length as the in.dir}
 }
 \value{
-list of the full file path to the in files and out files
+list of data frames of each each in.dir directory. Each data frame contains the following information:
 
 in.files:
 String. Full file paths to the in files
 
 out.files:
 String. Full file paths to the out files
+
+duplicate:
+Logical. Is the file a duplicate file
 }
 \description{
 This function is designed to take sorted images and return them to Raw data structure format. It is the reverse process to the movePictures function
@@ -32,6 +35,8 @@ This function is designed to take sorted images and return them to Raw data stru
 \details{
 This function assumes that the sorted pictures are sorted in the same way as what is created by the movePictures function.
 Therefore, it can be considered a reverse procedure to the movePictures function. This can be used to create new backups of raw data if any are lost or if the raw data is otherwise unavailable.
+
+This function will only copy the first instance of an image and will ignore duplicates. This is because duplicate images can arise in sorted images when more than one species is detected in a single image.
 
 This function has not gone through full testing and may have problems. Please report issues as they come up.
 }

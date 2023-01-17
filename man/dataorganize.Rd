@@ -4,20 +4,45 @@
 \alias{dataOrganize}
 \title{DataOrganize}
 \usage{
-dataOrganize(in.dir, save = F, diagnostics = T)
+dataOrganize(
+  in.dir,
+  ext = c(".jpg", ".mp4"),
+  do_format = "serial",
+  save = F,
+  diagnostics = T
+)
 }
 \arguments{
 \item{in.dir}{data.frame. The directory containing the camera folders.}
 
-\item{save}{logical. Should the file be saved to the working directory? The default is FALSE. If TRUE, this will create a file called dataorganize.txt containing the output. Be careful, as this can overwrite other files with this name.}
+\item{ext}{String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for to run DataOrganize on?}
 
-\item{diagnostics}{logical. Should diagnostic information be outputted to the console? This is set to TRUE by default.}
+\item{do_format}{String. Defaults to "serial". Should dataOrganize include the camera's serial number if it has one? Choose one of c("serial", "original"). See details below.}
+
+\item{save}{Logical. Should the file be saved to the working directory? The default is FALSE. If TRUE, this will create a file called dataorganize.txt containing the output. Be careful, as this can overwrite other files with this name.}
+
+\item{diagnostics}{Logical. Should diagnostic information be outputted to the console? This is set to TRUE by default.}
 }
 \value{
-A data frame organized in the same way as the DataOrganize program: Camera Species Year Month Day Hour Minute Second Num_of_Individuals.
+original:
+A data frame formatted in the same way as the DataOrganize program:
+site species individuals year month day hour minute second.
+
+serial:
+A data frame including the same information as DataOrganize but with the addition of the image serial number:
+site species individuals year month day hour minute second serial.
 }
 \description{
 This is an R version of the DataOrganize program developed by Jim Sanderson and Grant Harris. While untested, it should provide a little more flexibility in naming of folders than the original DataOrganize program. It also can do basic diagnostics so you can check camera and species names.
+}
+\details{
+This function's original intention was to replicate the results of the DataOrganize program and its file format.
+Due to a modification with the \code{\link{movePictures}} to accommodate a DataOrganize file as an input, this function was modified to allow the inclusion of the camera serial number in the output.
+While, this should not have any downstream effects, the addition of the serial number column could impact future processes.
+This is something that I am checking and will confirm a smooth transition to this method.
+
+In addition, this function can now accommodate image names that are in "yyyy mm dd hh mm ss" (the standard in Renamer and SpecialRenamer) or "yyyy mm dd hh mm ss serial" (the standard in this package).
+This should help improve compatibility with images that were formatted using Renamer or SpecialRenamer.
 }
 \examples{
 \dontrun{
@@ -28,7 +53,7 @@ This is an R version of the DataOrganize program developed by Jim Sanderson and 
 Original DataOrganize program: \url{https://smallcats.org/resources/}
 }
 \seealso{
-\code{\link{APFun_env}}
+\code{\link{APFun_env}} \code{\link{movePictures}}
 }
 \concept{DataOrganize}
 \concept{camera trapping}

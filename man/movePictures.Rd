@@ -5,16 +5,20 @@
 \title{Move pictures from unsorted to sorted folders}
 \usage{
 movePictures(
-  timelapse,
+  timelapse = NULL,
+  do = NULL,
   in.dir,
   out.dir,
   create.dirs,
   type = "none",
-  exclude = NULL
+  exclude = NULL,
+  ...
 )
 }
 \arguments{
-\item{timelapse}{data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use}
+\item{timelapse}{data.frame. A data frame of a timelapse file. Note, this should follow the timelapse template that I typically use. You cannot specify both a timelapse file and a Dataorganize file using this function}
+
+\item{do}{data.frame. A data frame of a DataOrganze file. This can be either from the DataOrganize program or from the \code{\link{dataOrganize}} function in this package. You cannot specify both a timelapse and DataOrganize file using this function.}
 
 \item{in.dir}{String. The directory containing the root folder for the timelapse file. For example, if all your images were a folder called "images" which sits in an external drive, labelled "F:", then you would specify the in.dir as "F:".}
 
@@ -25,6 +29,8 @@ movePictures(
 \item{type}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')}
 
 \item{exclude}{String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species}
+
+\item{...}{Additional arguments used when specifying a DataOrganize file. Only img_format and do_format are used. All other inputs are ignored. Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.}
 }
 \value{
 list of the full file path to the in files and out files
@@ -44,6 +50,9 @@ For some "species" (e.g., ghost, human, bird, rodent), we do not sort these by i
 These species get assigned a folder of 00 for their number of individuals. I do not know how this will affect quality control and the workflow down the line.
 Generally, it should not be an issue but could result in NA values in the Individuals column of the \code{\link{APFun_env}} or errors in the \code{\link{dataorganize}} functions in this package.
 Once this has been tested, I will update this.
+
+This function can "sort" pictures using either a timelapse csv or a dataorganize text file.
+The inclusion of a dataorganize file was to better accommodate data sorted manually (i.e., not using Timelapse) and its primary use is when sorted images need to be replaced (e.g., the images got corrupted or lost somehow).
 }
 \examples{
 \dontrun{
@@ -51,7 +60,7 @@ Once this has been tested, I will update this.
 }
 }
 \seealso{
-\code{\link{dataorganize}}
+\code{\link{dataOrganize}}
 
 \code{\link{APFun_env}}
 }
