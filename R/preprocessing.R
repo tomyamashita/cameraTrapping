@@ -505,9 +505,10 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   }
 
   exif1 <- pbapply::pblapply(1:length(images_split2), cl = cl1, function(i){
-    tryCatch(exiftoolr::exif_read(images_split2[[i]], tags = Tag),
+    x <- tryCatch(exiftoolr::exif_read(images_split2[[i]], tags = Tag),
              error = function(e){message(paste("There is likely a corrupt file in: \n", names(images_split2)[i], "\nThe original error is: ", sep = "")); message(e); return(names(images_split2)[i])})
     print(paste("Exiftool completed on ", names(images_split2)[i], ".", sep = ""))
+    return(x)
   })
 
   if(isTRUE(pp)){

@@ -66,9 +66,11 @@
 * Added duplicate removal from the unsortImages function so the unsorted version of the files will all be unique
 * Fixed input name problem with APFun_env function
 
-## Version 0.0.0.12 (2023-01-11, 2023-01-13)
+## Version 0.0.0.12 (2023-01-11, 2023-01-13, 2023-01-17)
 
 * Added additional camera models for the cameraRename3 function
 * Updated the interactionsTimelapse function to allow users to specify an out.dir. Input names were also updated for consistency across functions
 * Made multiple fixes to dataOrganize to also search for video files and accommodate image names that do not include a serial number and added option to output serial number in the output.
 * Added ability to use movePictures from a DataOrganize file. 
+* Fixed problem in cameraRename3 where it didn't output exif data properly. 
+
