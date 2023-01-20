@@ -45,7 +45,7 @@ Frey, S., J. T. Fisher, A. C. Burton, and J. P. Volpe. 2017. Investigating anima
 Ramesh, T., R. Kalle, K. Sankar, and Q. Qureshi. 2012. Spatio-temporal partitioning among large carnivores in relation to major prey species in Western Ghats. Journal of Zoology 287:269-275. 10.1111/j.1469-7998.2012.00908.x
 }
 \seealso{
-activity package: \url{https://cran.r-project.org/web/packages/activity/index.html}
+activity package: \url{https://cran.r-project.org/web/packages/activity/index.html} \code{\link[activity]{activity}}
 }
 \concept{camera trapping}
 \concept{diel activity}

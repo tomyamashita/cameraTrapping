@@ -2,7 +2,7 @@
 % Please edit documentation in R/analysisprep.R
 \name{occFun}
 \alias{occFun}
-\title{Occupancy Analysis Data Setup}
+\title{(Deprecated) Occupancy Analysis Data Setup}
 \usage{
 occFun(
   x,
@@ -40,6 +40,8 @@ This function modifies data for use in occupancy modelling using Unmarked or a s
 }
 \details{
 Please note that I personally have never tested the output of this function with an occupancy model although I am told that it works. Please use this with caution and test it properly before using it for any real research.
+
+This function is now deprecated due to the existence of \code{\link{summarizeEvents}}. That function does everything this one does in a better and more effecient way.
 }
 \examples{
 \dontrun{
@@ -47,7 +49,7 @@ Please note that I personally have never tested the output of this function with
 }
 }
 \seealso{
-\code{\link{APFun_env}}
+\code{\link{APFun_env}} \code{\link{summarizeEvents}}
 }
 \concept{camera trapping}
 \concept{occupancy analysis}

@@ -73,7 +73,14 @@ APFun_env <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), start_
   }
 
   # Formatting the columns in the AllPictures file
-  colnames(do) <- c("Camera","Species","Year","Month","Day","Hour","Minute","Second","N.Individuals")
+  if(ncol(do)==9){
+    colnames(do) <- c("Camera","Species", "N.Individuals", "Year","Month","Day","Hour","Minute","Second")
+  }else if(ncol(do)==10){
+    colnames(do) <- c("Camera","Species", "N.Individuals", "Year","Month","Day","Hour","Minute","Second","Serial")
+  }else{
+    stop("Your DataOrganize file does not have the correct number of columns. Check your input file.")
+  }
+
   if(isTRUE(is.na(exclude))){
     x1 <- do
   }else{
@@ -91,6 +98,10 @@ APFun_env <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), start_
   x1$delta.time.secs[1] <- 0
 
   # Adding in environmental data and time of day data
+  if(!any(colnames(envdata)=="Camera")){
+    stop("Your EnvData file must contain a column called 'Camera'.")
+  }
+
   x2 <- merge.data.frame(x1, envdata, by = "Camera")
   if(nrow(x2)==0){
     stop("Something went wrong merging the camera data to the envdata. Check your column and camera names in your envdata file.")

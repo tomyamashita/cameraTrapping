@@ -74,3 +74,10 @@
 * Added ability to use movePictures from a DataOrganize file. 
 * Fixed problem in cameraRename3 where it didn't output exif data properly. 
 
+## Version 0.0.0.13 (2023-01-20)
+
+* Added the summarizeEvents function to better handle converting raw events into data usable in regression models. 
+* Fixed APFun_env to be in line with the changes to the dataOrganize function. 
+* Deprecated the occFun function in favor of summarizeEvents. 
+* Updated documentation in the actFun function to properly link to the activity package.
+
