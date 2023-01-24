@@ -23,17 +23,23 @@ This function calculates the number of active camera trap nights and total camer
 }
 \details{
 Make sure that your CT table is formatted properly. See the \code{\link[camtrapR]{camtrapR-package}} documentation for details. That is the only way this function works. Also, at some point camptrapR had removed its support for dates in "Date" or "POSIXct" format so dates had to be in character format. You can use my ctdates_fun function to fix this in a CT table. This may not be the case anymore and they may have fixed this issue.
+
+A CT table formatted for \code{\link[camtrapR]{camtrapR}} is required. This CT table is used in other functions that utilize the camtrapR package and must be formatted properly.
 }
-\note{
-As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
 }
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{ctdates_fun}} \code{\link[camtrapR]{cameraOperation}}
+\code{\link{ctDates}} \code{\link[camtrapR]{cameraOperation}}
 }
 \concept{camera trapping}
 \keyword{manip}

@@ -29,9 +29,14 @@ These are the estimations of diel activity for each species.
 \description{
 A function for calculating diel activity for selected species. The function can optionally also split your data based on a user-defined column.
 }
-\note{
-As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
 }
+
 \examples{
 \dontrun{
 # No example provided
@@ -45,7 +50,9 @@ Frey, S., J. T. Fisher, A. C. Burton, and J. P. Volpe. 2017. Investigating anima
 Ramesh, T., R. Kalle, K. Sankar, and Q. Qureshi. 2012. Spatio-temporal partitioning among large carnivores in relation to major prey species in Western Ghats. Journal of Zoology 287:269-275. 10.1111/j.1469-7998.2012.00908.x
 }
 \seealso{
-activity package: \url{https://cran.r-project.org/web/packages/activity/index.html} \code{\link[activity]{activity}}
+activity package: \url{https://cran.r-project.org/web/packages/activity/index.html}, \code{\link[activity]{activity}}
+
+\code{\link{calculateEvents}}
 }
 \concept{camera trapping}
 \concept{diel activity}

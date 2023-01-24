@@ -20,16 +20,20 @@ This function calculates the total number of pictures, number of animals, ghosts
 \details{
 If a timelapse file is given to the function, it will run the \code{\link{APFun_Timelapse}} function to convert it to a dataorganize file.
 }
-\note{
-As with all of my functions, this assumes a very particular formatting for your data. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
 }
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{dataorganize}}
+\code{\link{doFolder}}, \code{\link{doTimelapse}}
 }
 \concept{camera trapping}
 \keyword{manip}

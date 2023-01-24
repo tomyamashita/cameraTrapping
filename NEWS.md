@@ -81,3 +81,12 @@
 * Deprecated the occFun function in favor of summarizeEvents. 
 * Updated documentation in the actFun function to properly link to the activity package.
 
+## Version 0.0.0.14 (2023-01-23)
+
+* Fixed documentation of cameraRename2 to properly deprecate the function in favor of cameraRename3
+* Changed function names for APFun_env (calculateEvents), APFun_timelapse (doTimelapse), and dataOrganize (doFolder) to better represent what those functions do
+* Fixed and updated documentation for several functions related to changed function names and clarified documentation and function relatedness
+* Changed argument names on ctDates function for consistency across functions
+* Added a check for an inability to return a data.frame when outputting cameraRename3 so that the function will always output at least a list object.
+* Added disclaimer section to all functions that assume my standard workflow for image processing. 
+

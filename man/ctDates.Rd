@@ -4,10 +4,10 @@
 \alias{ctDates}
 \title{CT Table date conversion}
 \usage{
-ctDates(cttable, start.col = 6)
+ctDates(ct, start.col = 6)
 }
 \arguments{
-\item{cttable}{data frame representing a CT Table.}
+\item{ct}{data frame representing a CT Table.}
 
 \item{start.col}{Defaults to 6. This is the column number in the ct table where dates first appear. It is assumed that all columns after this contain dates.}
 }
@@ -17,16 +17,27 @@ The same as the input except with character dates instead of date dates.
 \description{
 This function will convert properly formatted date objects to characters. This is so camtrapR can read the character date. For some reason, the package does not like date-formatted dates.
 }
-\note{
-As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+\details{
+This function may not be necessary anymore as camtrapR seems to have fixed their issue where you couldn't use date-formatted dates in its input.
+
+A CT table formatted for \code{\link[camtrapR]{camtrapR}} is required. This CT table is used in other functions that utilize the camtrapR package and must be formatted properly.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{trapeffort_fun}}
+\code{\link{trapEffort}}
+
+\code{\link{summarizeEvents}}
 }
 \concept{CT tables}
 \concept{camera trapping}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing.R
 \name{cameraRename2}
 \alias{cameraRename2}
-\title{Rename Camera Trap Images (Deprecated)}
+\title{(Deprecated) Rename Camera Trap Images}
 \usage{
 cameraRename2(
   in.dir,
@@ -36,20 +36,41 @@ A data frame containing the input directory, output directory, the old image nam
 The cameraRename2 version seeks to avoid using the camtrapR package to rename images and does so by directly reading the exif data using the exiftoolr package, then renaming based on the datetimeoriginal column of the exif data. This version has the advantage of being able to spit out any exif data the user wants (including information on the trigger number, whether images were external or internal trigger, camera name, etc.). This function is also more generalizable than the original cameraRename function and allows for performing specialRenamer like adjustment on images.
 
 Before running this function for the first time on a new machine see the details below.
+
+This function has been deprecated by the \code{\link{cameraRename3}} function.
 }
 \details{
-Important: You need to load the exiftoolr library and run the function, exiftoolr::install_exiftool(), before running this function. This is because the package does not have a default version of exiftool available before you run the function. See the help documentation in exiftoolr for more details about this and the reasoning behind it. This function will check if your system has exiftool installed and if it doesn't, it will warn you and install exiftool using default settings.
+Important: You need to load the exiftoolr library and run the function, \code{\link[exiftoolr]{install_exiftool}}, before running this function.
+This is because the package does not have a default version of exiftool available before you run the function.
+See the help documentation in exiftoolr for more details about this and the reasoning behind it.
+This function will check if your system has exiftool installed and if it doesn't, it will warn you and install exiftool using default settings.
 
-If you are interested in additional metadata information that is not provided, please run exiftoolr::exif_read("a few images") and choose the columns you are interested in. Send me the exact column names, and your camera model and I can add an option to trigger.info. Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
+If you are interested in additional metadata information that is not provided, please run \code{\link[exiftoolr]{exif_read}} on a few images and choose the columns you are interested in.
+Send me the exact column names, and your camera model and I can add an option to trigger.info.
+Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
 
 If you need to fix names (or add a serial number to existing names) rather than replace names, then you should specify fix.names to TRUE. By specifying this, it is telling the tool to check if the images are in the form YYYY MM DD HH MM SS.jpg (or, more likely some consistent form with spaces but I don't know for sure). When it does this, if an image does not fit this form, it replaces the name with the new date-time information derived from the metadata. The reason for this is that sometimes camera date-times are wrong so we needed to make an adjustment, similar to what is done with the adjust call except using SpecialRenamer. Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust inproperly named images.
 }
 \note{
-This function has the potential for and was built to be expanded on. If you want to add something related to what information you want from the function or want to be able to turn on/off certain aspects of the function, let me know and I can hopefully modify it. Thanks, Duston, for being the guinea pig for some of these adjustments.
+This function has the potential for and was built to be expanded on.
+If you want to add something related to what information you want from the function or want to be able to turn on/off certain aspects of the function, let me know and I can hopefully modify it.
+Thanks, Duston, for being the guinea pig for some of these adjustments.
 }
-\section{Warning}{
+\section{{Warning}}{
 
-In previous versions of this function, there was an issue with file.rename not working properly for large numbers of files. This was due to issues with the paste function not properly concatenating columns. This is theoretically resolved in the current version of the function.
+In previous versions of this function, there was an issue with file.rename not working properly for large numbers of files.
+This was due to issues with the paste function not properly concatenating columns.
+This is theoretically resolved in the current version of the function.
+
+I switched my file directory functions to those in the fs package so issues with renaming should be resolved now.
+}
+
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
 }
 
 \examples{
@@ -61,12 +82,16 @@ In previous versions of this function, there was an issue with file.rename not w
 \references{
 exiftool: \url{https://exiftool.org/}
 
-exiftoolr package: \url{https://github.com/JoshOBrien/exiftoolr}
+exiftoolr package: \code{\link[exiftoolr]{exif_read}}, \url{https://github.com/JoshOBrien/exiftoolr}
 
 Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
 }
 \seealso{
-\code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
+\code{\link{cameraRename3}}
+
+\code{\link[exiftoolr]{install_exiftool}}
+
+\code{\link[fs]{file_copy}}, \code{\link[fs]{file_move}}
 }
 \concept{camera trapping}
 \concept{rename images}

@@ -14,7 +14,7 @@ if(!require(devtools)){install.packages("devtools")}
 devtools::install_github("tomyamashta/cameraTrapping")
 ```
 
-This package is currently not available on CRAN and likely will not be updated on CRAN unless I find someone who actually knows how to develop packages. 
+This package is currently not available on CRAN and likely will not be updated on CRAN unless I find someone who actually knows how to develop packages and submit them to CRAN. I'm not going to put my time into this.
 
 ## Example
 
@@ -28,7 +28,7 @@ library(cameraTrapping)
 ```
 
 ## Acknowledgements
-Kevin Ryer developed early versions of the APFun_env function, from which all of this is built on. 
+Kevin Ryer developed early versions of the APFun_env function (now calculateEvents), from which all of this is originally built on. 
 
 Aidan Branney, Chloe Bates, and Duston Duffie helped test, debug, and improve various functions in this package. 
 

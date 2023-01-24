@@ -19,15 +19,17 @@ This function computes the first and last pictures from the output of the \code{
 This function has only been tested to work with the output of \code{\link{cameraRename3}}.
 Theoretically it could work with any input that has an outpath, UserLabel, and DateTimeOriginal column but I don't know what it will do.
 Update: The above fields seem to be required to ensure that the function does not throw an error. If no UserLabel exists, this function will leave the Label as NA
-}
-\note{
-As with all of my functions, this assumes a very particular formatting for your data.
+
 This function is designed to help you create a CT table by identifying problems.
 I would recommend either adjusting your formatting or using this function as a template to build your own.
-These functions are built for very specific purposes and may not generalize well to whatever you need it for.
-I build them for my own convenience and make no promises that they will work for different situations.
-As I come across errors, I attempt to further generalize the function but this is done as I go.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided

@@ -25,15 +25,22 @@ This makes it especially useful for merging DataOrganize files or Timelapse outp
 
 Currently, this function only allows for the above file extensions. Other extensions could be included in the future. Please let me know if you want a different file extension to be available.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{dataOrganize}}, \code{\link{APFun_Timelapse}}
+\code{\link{doFolder}}, \code{\link{doTimelapse}}
 
-\code{\link[openxlsx]{read.xlsx}}, \code{\link[openxlsx]{write.xlsx}}
+\code{\link[openxlsx]{openxlsx}}
 }
 \concept{DataOrganize}
 \concept{camera trapping}

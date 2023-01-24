@@ -12,7 +12,9 @@
 ##'
 ##' Before running this function for the first time on a new machine see the details below.
 ##'
-##' @title Rename Camera Trap Images (Deprecated)
+##' This function has been deprecated by the \code{\link{cameraRename3}} function.
+##'
+##' @title (Deprecated) Rename Camera Trap Images
 ##'
 ##' @param in.dir String. The directory where the pictures are located. I typically specify a folder containing the camera folders although theoretically any folder could work. The function can look for either ".jpg" or ".mp4" files.
 ##' @param out.dir multiple. The directory where the pictures will be renamed to. If left unspecified, this will default to the in.dir. Use this if you want to change the location of the images. You can specify this as NULL or "in.dir" to keep out.dir the same as in.dir or you can specify a vector of length 1 or length "number of pictures" to output your images to a new location.
@@ -22,9 +24,14 @@
 ##' @param adjust String or NULL. Do the image date-times need adjustment? This defaults to NULL, indicating no adjustment needed. You only need to specify this if your image date-times need to be adjusted. This could arise due to daylight savings time or misentered date-time on the camera. This can be thought of as an R version of SpecialRenamer. You can either specify a difftime object or a character vector of the original and new date-times.
 ##' @param fix.names Logical. The default is FALSE. Do you need to rename all file names or just update those that don't have serial numbers and replace those that were not originally renamed? Only specify this to TRUE if you are using this function to update/fix images that were originally renamed by Renamer/SpecialRenamer and are in the old format. Only use this option if you know what you are doing. See details below.
 ##'
-##' @details Important: You need to load the exiftoolr library and run the function, exiftoolr::install_exiftool(), before running this function. This is because the package does not have a default version of exiftool available before you run the function. See the help documentation in exiftoolr for more details about this and the reasoning behind it. This function will check if your system has exiftool installed and if it doesn't, it will warn you and install exiftool using default settings.
+##' @details Important: You need to load the exiftoolr library and run the function, \code{\link[exiftoolr]{install_exiftool}}, before running this function.
+##' This is because the package does not have a default version of exiftool available before you run the function.
+##' See the help documentation in exiftoolr for more details about this and the reasoning behind it.
+##' This function will check if your system has exiftool installed and if it doesn't, it will warn you and install exiftool using default settings.
 ##'
-##' If you are interested in additional metadata information that is not provided, please run exiftoolr::exif_read("a few images") and choose the columns you are interested in. Send me the exact column names, and your camera model and I can add an option to trigger.info. Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
+##' If you are interested in additional metadata information that is not provided, please run \code{\link[exiftoolr]{exif_read}} on a few images and choose the columns you are interested in.
+##' Send me the exact column names, and your camera model and I can add an option to trigger.info.
+##' Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
 ##'
 ##' If you need to fix names (or add a serial number to existing names) rather than replace names, then you should specify fix.names to TRUE. By specifying this, it is telling the tool to check if the images are in the form YYYY MM DD HH MM SS.jpg (or, more likely some consistent form with spaces but I don't know for sure). When it does this, if an image does not fit this form, it replaces the name with the new date-time information derived from the metadata. The reason for this is that sometimes camera date-times are wrong so we needed to make an adjustment, similar to what is done with the adjust call except using SpecialRenamer. Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust inproperly named images.
 ##'
@@ -32,16 +39,32 @@
 ##'
 ##' @references exiftool: \url{https://exiftool.org/}
 ##'
-##' exiftoolr package: \url{https://github.com/JoshOBrien/exiftoolr}
+##' exiftoolr package: \code{\link[exiftoolr]{exif_read}}, \url{https://github.com/JoshOBrien/exiftoolr}
 ##'
 ##' Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
 ##'
-##' @note This function has the potential for and was built to be expanded on. If you want to add something related to what information you want from the function or want to be able to turn on/off certain aspects of the function, let me know and I can hopefully modify it. Thanks, Duston, for being the guinea pig for some of these adjustments.
+##' @note This function has the potential for and was built to be expanded on.
+##' If you want to add something related to what information you want from the function or want to be able to turn on/off certain aspects of the function, let me know and I can hopefully modify it.
+##' Thanks, Duston, for being the guinea pig for some of these adjustments.
 ##'
-##' @section Warning:
-##' In previous versions of this function, there was an issue with file.rename not working properly for large numbers of files. This was due to issues with the paste function not properly concatenating columns. This is theoretically resolved in the current version of the function.
+##' @section {Warning}:
+##' In previous versions of this function, there was an issue with file.rename not working properly for large numbers of files.
+##' This was due to issues with the paste function not properly concatenating columns.
+##' This is theoretically resolved in the current version of the function.
 ##'
-##' @seealso \code{\link{cameraRename3}}, \code{\link[exiftoolr]{install_exiftool}}
+##' I switched my file directory functions to those in the fs package so issues with renaming should be resolved now.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{cameraRename3}}
+##'
+##' \code{\link[exiftoolr]{install_exiftool}}
+##'
+##' \code{\link[fs]{file_copy}}, \code{\link[fs]{file_move}}
 ##'
 ##' @importFrom exiftoolr exif_version install_exiftool exif_read
 ##' @importFrom fs file_move file_copy
@@ -327,11 +350,13 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' Previous versions of this function required you to manually check this but this requirement has been removed.
 ##'
 ##' When running this function on video files, you need to make sure you specify a trigger.info that accommodates videos.
+##' This function will check if your trigger.info is associated with a video format. If not, it will warn you about this.
 ##' Video files doe not have a DateTimeOriginal field in their metadata so it will fail to run if you do not properly specify the correct field.
 ##' Right now, the "Ultrafire_video" option only accesses the "CreateDate" field which is used for video files.
 ##'
-##' If you are interested in additional metadata information that is not provided, please run exiftoolr::exif_read(["at least one image"]) and choose the columns you are interested in.
-##' Send me the exact column names, and your camera model and I can add an option to trigger.info. Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
+##' If you are interested in additional metadata information that is not provided, please run \code{\link[exiftoolr]{exif_read}} on a few images and choose the columns you are interested in.
+##' Send me the exact column names, and your camera model and I can add an option to trigger.info.
+##' Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
 ##'
 ##' If you need to fix names (or add a serial number to existing names) rather than replace names, then you should specify fix.names to TRUE.
 ##' By specifying this, it is telling the tool to check if the images are in the form YYYY MM DD HH MM SS.jpg (or, more likely some consistent form with spaces but I don't know for sure).
@@ -344,16 +369,33 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' If a list, each camera directory will be kept in a separate item in the list. This allows for easy checking if there is a problem which would have thrown an error when running exiftool, namely from a corrupt file. After outputting a list, you can combine the items into a single data.frame using do.call(rbind, out) where out is the name of the list object outputted by this function.
 ##' @return df:
 ##' If a data.frame, all camera directories will be combined into a single output file.
+##' If a data.frame cannot be outputted (usually because you have two different camera models that have different exif tags), a list will be outputted instead.
 ##'
 ##' @references exiftool: \url{https://exiftool.org/}
 ##'
-##' exiftoolr package: \url{https://github.com/JoshOBrien/exiftoolr}
+##' exiftoolr package: \code{\link[exiftoolr]{exif_read}}, \url{https://github.com/JoshOBrien/exiftoolr}
 ##'
 ##' Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
 ##'
-##' @note Differences between this function and cameraRename2: There were several major changes in this function that differentiate it from the cameraRename2 function enough that it warranted its own function rather than an update. The main change and this affected everything down the line was that the function now acts on each camera directory separately. By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files. One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders. Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
+##' @note Differences between this function and \code{\link{cameraRename2}}:
 ##'
-##' @seealso \code{\link{cameraRename2}}, \code{\link[exiftoolr]{install_exiftool}}
+##' There were several major changes in this function that differentiate it from the \code{\link{cameraRename2}} function enough that it warranted its own function rather than an update.
+##' The main change and this affected everything down the line was that the function now acts on each camera directory separately.
+##' By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files.
+##' One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
+##' Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{cameraRename2}}
+##'
+##' \code{\link[exiftoolr]{install_exiftool}}
+##'
+##' \code{\link[fs]{file_copy}}, \code{\link[fs]{file_move}}
 ##'
 ##' @importFrom dplyr bind_rows
 ##' @importFrom exiftoolr exif_version install_exiftool exif_read
@@ -366,6 +408,7 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##'
 ##' @keywords manip
 ##' @keywords files
+##'
 ##' @concept camera trapping
 ##' @concept rename images
 ##'
@@ -406,7 +449,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
       Tag <- c("DateTimeOriginal", "UserComment")
     }else{
       Tag <- c("DateTimeOriginal")
-      message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor image file types, choose one of c('Hyperfire2', 'Ultrafire_image').")
+      message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor image file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback').")
     }
   }else if(file.type %in% c(".mp4", ".MP4", "video")){
     if(file.type=="video"){
@@ -648,7 +691,10 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   if(return.type == "list"){
     exif3 <- exif2
   }else if(return.type == "df"){
-    exif3 <- do.call(rbind, exif2)
+    exif3 <- tryCatch(do.call(rbind, exif2), error = function(e){exif2})
+    if(!is.data.frame(exif3)){
+      warning("You tried to recombine your camera folders into a single data frame but your data has incompatible columns. \nThis is likely because you have different camera models the in.dir and used a camera-specific trigger.info. \nA list will be returned.")
+    }
   }else{
     message("You chose an invalid return type. A list is returned. Choose one of c('list', 'df').")
     exif3 <- exif2
@@ -672,6 +718,12 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' @details NOTE: This function is extremely slow. It uses an apply function to run exiftool on each image separately rather than as a batch group, which greatly slows down the process. Parallel processing can help improve this speed but allowing it to check multiple images at once.
 ##'
 ##' @return A list of the corrupt files and the non-corrupt files on either side of it for easy locating within the file directory.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
 ##' @seealso \code{\link{cameraRename3}}
 ##'

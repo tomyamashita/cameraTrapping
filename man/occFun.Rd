@@ -43,13 +43,23 @@ Please note that I personally have never tested the output of this function with
 
 This function is now deprecated due to the existence of \code{\link{summarizeEvents}}. That function does everything this one does in a better and more effecient way.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{APFun_env}} \code{\link{summarizeEvents}}
+\code{\link{calculateEvents}}
+
+\code{\link{summarizeEvents}}
 }
 \concept{camera trapping}
 \concept{occupancy analysis}

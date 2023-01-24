@@ -1,216 +1,13 @@
 # Post-processing functions ####
 ## This script contains functions for post-sorting processing of camera data
 ## This script includes the following functions:
-  ## APFun_env
-  ## APFun_Timelapse
   ## bestPics
-  ## dataOrganize
+  ## doFolder
+  ## doTimelapse
   ## movePictures
   ## removeGhosts
 
 ################################################################################
-
-### From a dataorganize file, create a usable output (Added 2022-08-25, Modified 2022-08-31) ####
-##' @description Function for combining an AllPictures text file created by DataOrganize with environmental variables associated with individual camera traps. The No Interval version of the function uses an interval of 1 second and does not recalculate # number of individuals.
-##'
-##' @title All Pictures Function with Environmental Variables for a DataOrganize output
-##'
-##' @param do data frame. A DataOrganize file produced by the DataOrganize program or the dataOrganize function in this package.
-##' @param envdata Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.
-##' @param sort.col string. Column that you want to sort pictures by to create independent events. This should be one of c("Camera", "Site", "Station") depending on your wording for sites. This defaults to "Camera".
-##' @param exclude string. species to exclude from the output data frame. Use c() to specify species. This defaults to excluding ghosts. If you want keep all items use c("").
-##' @param start_date string. Start date for the AllPictures file. If you want all data, set this to an arbitrarily early date.
-##' @param end_date string. End date for pictures. This defaults to the current date.
-##' @param interval integer. Time in seconds between pictures for an independent event. See Details for some normal interval times. This is only necessary for the main function. It defaults to no interval.
-##' @param all.pics Logical. Whether or not you want to return all the pictures or just independent events. If all.pics = TRUE, all pictures will be returned with an index number associated with independent events. This defaults to FALSE.
-##'
-##' @details Suggested interval times: 61 = 1 minute, 1801 = 30 minutes. 3601 = 1 hour
-##'
-##' One second should be added to the total to ensure the full interval is included.
-##'
-##' @return A data frame of camera data. Output varies depending on whether or not all.pics is true or false.
-##' @return all.pics = FALSE:
-##' Returns a data frame of only independent events at the specified interval.
-##' @return all.pics = TRUE:
-##' Returns a data frame of all pictures from the input file. A index number is added associated with independent events.
-##'
-##' @note As with all of the functions in this package, this assumes a very particular formatting for your data. If the EnvData table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
-##'
-##' @seealso \code{\link{APFun_Timelapse}}
-##'
-##' \code{\link{dataorganize}}
-##'
-##' @keywords datagen
-##'
-##' @concept camera trapping
-##' @concept dataorganize
-##'
-##' @importFrom dplyr arrange summarise group_by
-##' @importFrom pbapply pbsapply
-##' @importFrom zoo na.locf
-##' @export
-##'
-##' @examples \dontrun{
-##' # No example provided
-##' }
-APFun_env <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), start_date, end_date=Sys.Date(), interval=NULL, all.pics=FALSE){
-  # This function takes a DataOrganize file and changes it into a form that is usable for analyses in R
-  # Inputs:
-  ## do = file produced by Dataorganize program or dataOrganize function
-  ## envdata = environmental variables file. This file must have header called "Camera" containing the list of cameras
-  ## sort.col = Column which you want to sort your pictures by. It should most likely either be site or camera. Defaults to camera
-  ## exclude = The species you want to subset out so that you don't get information on them. Defaults to ghost
-  ## start_date = start date for the AllPictures file
-  ## end_date = end date for pictures. Defaults to current date
-  ## interval = time in seconds between pictures for an independent event. Defaults to none
-  ## all.pics = Logical on whether you want all the pictures or just the independent events
-  # Outputs:
-  ## A data frame containing independent events in date-time format + camera/site specific variables
-
-  # Defining an interval if interval left as default
-  if(is.null(interval)==TRUE){
-    interval <- 1
-  }
-
-  # Formatting the columns in the AllPictures file
-  if(ncol(do)==9){
-    colnames(do) <- c("Camera","Species", "N.Individuals", "Year","Month","Day","Hour","Minute","Second")
-  }else if(ncol(do)==10){
-    colnames(do) <- c("Camera","Species", "N.Individuals", "Year","Month","Day","Hour","Minute","Second","Serial")
-  }else{
-    stop("Your DataOrganize file does not have the correct number of columns. Check your input file.")
-  }
-
-  if(isTRUE(is.na(exclude))){
-    x1 <- do
-  }else{
-    x1=subset(do, !(Species %in% exclude))
-  }
-  x1$Month_Day <- paste(formatC(x1[,"Year"], width = 4, format = "d", flag = "0"),
-                        formatC(x1[,"Month"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Day"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Hour"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Minute"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Second"], width = 2, format = "d", flag = "0"), sep = "")
-  x1$DateTimeOriginal <- as.POSIXct(strptime(x1$Month_Day,'%Y%m%d%H%M%S'))
-  x1$Date <- as.POSIXct(strptime(x1$Month_Day,'%Y%m%d'))
-  x1$hms <- format(x1$DateTimeOriginal,format="%H:%M:%S")
-  x1$delta.time.secs[1] <- 0
-
-  # Adding in environmental data and time of day data
-  if(!any(colnames(envdata)=="Camera")){
-    stop("Your EnvData file must contain a column called 'Camera'.")
-  }
-
-  x2 <- merge.data.frame(x1, envdata, by = "Camera")
-  if(nrow(x2)==0){
-    stop("Something went wrong merging the camera data to the envdata. Check your column and camera names in your envdata file.")
-  }
-  x2$time_numeric <- (as.numeric(x2$Hour)*3600 + as.numeric(x2$Minute)*60 + as.numeric(x2$Second))/(86400)
-  x2$time_radians <-2*pi*x2$time_numeric
-
-  # Subsetting the data by date
-  x2a <- subset(x2,Date >= start_date)
-  x2b <- subset(x2a,Date <= as.character(end_date))
-  if(nrow(x2b)==0){
-    stop("The specified date range is outside the range of the data")
-  }
-  x3 <- x2b
-
-  # Calculating the time difference between pictures
-  x3["Sort"] <- x3[sort.col]
-  x4=dplyr::arrange(x3, Sort, Species, Month_Day)
-  x4$delta.time.secs <- pbapply::pbsapply(1:(nrow(x4)), FUN = function(i){
-    ifelse(i-1==0, interval,
-           ifelse(x4$Species[i]==x4$Species[i-1],
-                  difftime(x4$DateTimeOriginal[i], x4$DateTimeOriginal[i-1], units = "secs"), interval))
-    #rm(i)
-  })
-  x4$Ident <- seq(1,nrow(x4))
-
-  # Identifying and subsetting out independent events
-  x5 <- x4[!(x4$delta.time.secs < interval),]
-  x5$Ident2 <- seq(1, nrow(x5))
-  x5a <- merge.data.frame(x5, x4, by="Ident", all.y=TRUE, sort.y=TRUE)
-  x5b <- data.frame(x5a[,c(1,(ncol(x5)+1):ncol(x5a))], Ident2 = zoo::na.locf(x5a$Ident2, fromLast=FALSE))
-  x5c <- dplyr::summarise(dplyr::group_by(x5b, Ident2), Individuals = max(`N.Individuals.y`))
-
-  # Sorting the columns and removing unnecessary columns
-  if(all.pics==TRUE){
-    x5b2 <- x5b[,1:ncol(x5)]
-    x5b3 <- x5b2[,c(3:ncol(x5b2)-1,1,ncol(x5b2))]
-    colnames(x5b3) <- colnames(x5)
-    x6 <- merge.data.frame(x5b3, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
-    x7 <- x6[,c(1,2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
-    rm(x5b2, xb53)
-  }else{
-    x6 <- merge.data.frame(x5, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
-    x7 <- x6[,c(2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
-  }
-  return(x7)
-  rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
-  #rm(do, envdata, sort.col, exclude, start_date, end_date, interval, all.pics)
-}
-
-### Convert a Timelapse file to a dataorganize output (Added 2022-08-25) ####
-##' @description This function converts a Timelapse csv file to the dataorganize file output format. This was done this way because many of my core functions for processing camera trap data depend on the existence of a data frame created by APFun_env. Converting a timelapse file to this format is just the easiest way to maintain consistency.
-##'
-##' @title Convert a Timelapse csv to a format for use with APFun_env
-##'
-##' @param timelapse data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.
-##'
-##' @details The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
-##'
-##' @return An R object formatted in the same style as a dataorganize text file.
-##'
-##' @note This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package
-##'
-##' @seealso \code{\link{APFun_env}}
-##'
-##' @keywords datagen
-##'
-##' @concept camera trapping
-##' @concept timelapse
-##'
-##' @export
-##'
-##' @examples \dontrun{
-##' # No example provided
-##' }
-APFun_Timelapse <- function(timelapse){
-  #timelapse <- AP1_t
-
-  images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
-  colnames(images1) <- c("File", "Path", "Species", "Individuals")
-
-  if(!all(is.na(timelapse$Species2))){
-    images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
-    colnames(images2) <- c("File", "Path", "Species", "Individuals")
-  }else{
-    images2 <- NULL
-  }
-  if(!all(is.na(timelapse$Species3))){
-    images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
-    colnames(images3) <- c("File", "Path", "Species", "Individuals")
-  }else{
-    images3 <- NULL
-  }
-  if(!all(is.na(timelapse$SpeciesOther))){
-    images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
-    colnames(images4) <- c("File", "Path", "Species", "Individuals")
-  }else{
-    images4 <- NULL
-  }
-  x1 <- rbind(images1,images2,images3,images4)
-  x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "\\\\")), do.call(rbind, strsplit(sub(".JPG", "", x1$File, ignore.case = T), split = " ")), x1[,3:4])
-  x3 <- x2[,c(2,11,4:9,12)]
-  colnames(x3) <- paste("V", seq(1:ncol(x3)), sep = "")
-  x4 <- data.frame(x3[,1:2], apply(x3[,3:ncol(x3)], 2, as.integer))
-
-  return(x4)
-  rm(images1, images2, images3, images4, x1, x2, x3, x4)
-  #rm(timelapse)
-}
 
 ### Extract best pictures from the timelapse file (Added 2022-08-25) ####
 ##' @description This function uses a timelapse csv to extract photos tagged as a best picture and copies them to a specified location.
@@ -224,6 +21,14 @@ APFun_Timelapse <- function(timelapse){
 ##' @param sorted Logical. Is the in.dir an unsorted folder or a sorted folder?
 ##'
 ##' @return A data frame containing the file path info of the best pics.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{movePictures}}
 ##'
 ##' @keywords files
 ##' @keywords manip
@@ -307,7 +112,17 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##'
 ##' @references Original DataOrganize program: \url{https://smallcats.org/resources/}
 ##'
-##' @seealso \code{\link{APFun_env}} \code{\link{movePictures}}
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{calculateEvents}}
+##'
+##' \code{\link{movePictures}}
+##'
+##' \code{\link{doTimelapse}}
 ##'
 ##' @keywords files
 ##' @keywords manip
@@ -322,7 +137,7 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-dataOrganize <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save = F, diagnostics = T){
+doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save = F, diagnostics = T){
   #in.dir <- "I:/new_20221201/sorted"
   #ext <- c(".jpg", "mp4")
   #do_format <- "serial"
@@ -387,6 +202,75 @@ dataOrganize <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", 
   #rm(in.dir, ext, save, diagnostics)
 }
 
+### Convert a Timelapse file to a dataorganize output (Added 2022-08-25) ####
+##' @description This function converts a Timelapse csv file to the dataorganize file output format. This was done this way because many of my core functions for processing camera trap data depend on the existence of a data frame created by APFun_env. Converting a timelapse file to this format is just the easiest way to maintain consistency.
+##'
+##' @title Convert a Timelapse csv to a format for use with APFun_env
+##'
+##' @param timelapse data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.
+##'
+##' @details The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
+##'
+##' @return An R object formatted in the same style as a dataorganize text file.
+##'
+##' @note This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{calculateEvents}}
+##'
+##' \code{\link{doFolder}}
+##'
+##' @keywords datagen
+##'
+##' @concept camera trapping
+##' @concept timelapse
+##' @concept DataOrganize
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+doTimelapse <- function(timelapse){
+  #timelapse <- AP1_t
+
+  images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
+  colnames(images1) <- c("File", "Path", "Species", "Individuals")
+
+  if(!all(is.na(timelapse$Species2))){
+    images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+    colnames(images2) <- c("File", "Path", "Species", "Individuals")
+  }else{
+    images2 <- NULL
+  }
+  if(!all(is.na(timelapse$Species3))){
+    images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+    colnames(images3) <- c("File", "Path", "Species", "Individuals")
+  }else{
+    images3 <- NULL
+  }
+  if(!all(is.na(timelapse$SpeciesOther))){
+    images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+    colnames(images4) <- c("File", "Path", "Species", "Individuals")
+  }else{
+    images4 <- NULL
+  }
+  x1 <- rbind(images1,images2,images3,images4)
+  x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "\\\\")), do.call(rbind, strsplit(sub(".JPG", "", x1$File, ignore.case = T), split = " ")), x1[,3:4])
+  x3 <- x2[,c(2,11,4:9,12)]
+  colnames(x3) <- paste("V", seq(1:ncol(x3)), sep = "")
+  x4 <- data.frame(x3[,1:2], apply(x3[,3:ncol(x3)], 2, as.integer))
+
+  return(x4)
+  rm(images1, images2, images3, images4, x1, x2, x3, x4)
+  #rm(timelapse)
+}
+
 ## Move all pictures into sorted folders (Added 2022-08-25, Modified 2022-09-13) ####
 ##' @description This function uses a Timelapse csv file to move or copy images from an unsorted folder to sorted folders based on species and number of individuals (in the same format as required for \code{link{dataorganize}}), although see details.
 ##'
@@ -415,6 +299,12 @@ dataOrganize <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", 
 ##' String. Full file paths to the in files
 ##' @return out.files:
 ##' String. Full file paths to the out files
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
 ##' @seealso \code{\link{dataOrganize}}
 ##'
@@ -632,6 +522,14 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
 ##' The full file paths to the input ghost images.
 ##' @return out.files:
 ##' The full file paths to the output ghost images.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{movePictures}}, \code{\link{doFolder}}
 ##'
 ##' @keywords files
 ##' @keywords manip

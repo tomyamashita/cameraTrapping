@@ -44,6 +44,14 @@ This function copies images for interactions to a new folder and creates an inte
 \details{
 NOTE: This function will add a (#) to duplicate file names, similar to the way Windows handles copying files with the same name into the same folder.  of handling duplicate file names so it will skip duplicates when copying.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided

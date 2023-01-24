@@ -22,14 +22,15 @@
 ##' Theoretically it could work with any input that has an outpath, UserLabel, and DateTimeOriginal column but I don't know what it will do.
 ##' Update: The above fields seem to be required to ensure that the function does not throw an error. If no UserLabel exists, this function will leave the Label as NA
 ##'
-##' @return A data frame containing the outpath for the images, the user label, number of pictures, first picture date, and last picture date
-##'
-##' @note As with all of my functions, this assumes a very particular formatting for your data.
 ##' This function is designed to help you create a CT table by identifying problems.
 ##' I would recommend either adjusting your formatting or using this function as a template to build your own.
+##'
+##' @return A data frame containing the outpath for the images, the user label, number of pictures, first picture date, and last picture date
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 ##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
-##' I build them for my own convenience and make no promises that they will work for different situations.
-##' As I come across errors, I attempt to further generalize the function but this is done as I go.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
 ##' @seealso \code{\link{cameraRename3}}
 ##'
@@ -70,14 +71,23 @@ cameraDiagnostics <- function(x){
 ##'
 ##' @title CT Table date conversion
 ##'
-##' @param cttable data frame representing a CT Table.
+##' @param ct data frame representing a CT Table.
 ##' @param start.col Defaults to 6. This is the column number in the ct table where dates first appear. It is assumed that all columns after this contain dates.
+##'
+##' @details This function may not be necessary anymore as camtrapR seems to have fixed their issue where you couldn't use date-formatted dates in its input.
+##'
+##' A CT table formatted for \code{\link[camtrapR]{camtrapR}} is required. This CT table is used in other functions that utilize the camtrapR package and must be formatted properly.
 ##'
 ##' @return The same as the input except with character dates instead of date dates.
 ##'
-##' @note As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
-##' @seealso \code{\link{trapeffort_fun}}
+##' @seealso \code{\link{trapEffort}}
+##'
+##' \code{\link{summarizeEvents}}
 ##'
 ##' @keywords manip
 ##'
@@ -89,15 +99,15 @@ cameraDiagnostics <- function(x){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-ctDates <- function(cttable, start.col=6){
-  #cttable = CT_FM1847
+ctDates <- function(ct, start.col=6){
+  #ct = CT_FM1847
   #start.col = 6
 
-  for(i in start.col:ncol(cttable)){
-    cttable[,i] <- as.character(cttable[,i])
+  for(i in start.col:ncol(ct)){
+    ct[,i] <- as.character(ct[,i])
   }
-  return(cttable)
-  rm(cttable, start.col)
+  return(ct)
+  #rm(ct, start.col)
 }
 
 ### Number of Photos (Added 2022-08-25) ####
@@ -112,9 +122,12 @@ ctDates <- function(cttable, start.col=6){
 ##'
 ##' @return A data frame containing total number of pictures, number of pictures of animals, ghosts, and humans, and the success rate for animal pictures in each file added as well as a row for the total number of pictures.
 ##'
-##' @note As with all of my functions, this assumes a very particular formatting for your data. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
-##' @seealso \code{\link{dataorganize}}
+##' @seealso \code{\link{doFolder}}, \code{\link{doTimelapse}}
 ##'
 ##' @keywords manip
 ##'
@@ -185,9 +198,14 @@ imageEffort <- function(timelapse, type){
 ##'
 ##' @return data frame containing the merged files
 ##'
-##' @seealso \code{\link{dataOrganize}}, \code{\link{APFun_Timelapse}}
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
-##' \code{\link[openxlsx]{read.xlsx}}, \code{\link[openxlsx]{write.xlsx}}
+##' @seealso \code{\link{doFolder}}, \code{\link{doTimelapse}}
+##'
+##' \code{\link[openxlsx]{openxlsx}}
 ##'
 ##' @keywords files
 ##' @keywords manip
@@ -260,7 +278,12 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @return Missing Ind:
 ##' Data frame. Any entries that should have been but were not sorted by individual are included here.
 ##'
-##' @seealso \code{\link{APFun_Timelapse}}
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{doTimelapse}}
 ##'
 ##' @keywords debugging
 ##' @keywords manip
@@ -377,11 +400,16 @@ timelapseQC <- function(timelapse, exclude=NULL, detailed_res=F){
 ##'
 ##' @details Make sure that your CT table is formatted properly. See the \code{\link[camtrapR]{camtrapR-package}} documentation for details. That is the only way this function works. Also, at some point camptrapR had removed its support for dates in "Date" or "POSIXct" format so dates had to be in character format. You can use my ctdates_fun function to fix this in a CT table. This may not be the case anymore and they may have fixed this issue.
 ##'
+##' A CT table formatted for \code{\link[camtrapR]{camtrapR}} is required. This CT table is used in other functions that utilize the camtrapR package and must be formatted properly.
+##'
 ##' @return A data frame containing the items from the group column, session column (if included), active camera trap nights, and total camera trap nights.
 ##'
-##' @note As with all of my functions, this assumes a very particular formatting for your data. If the CT table is not formatted in this way, then this function will not work. I would recommend either adjusting your formatting or using this function as a template to build your own. These functions are built for very specific purposes and may not generalize well to whatever you need it for. I build them for my own convenience and make no promises that they will work for different situations. As I come across errors, I attempt to further generalize the function but this is done as I go.
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
-##' @seealso \code{\link{ctdates_fun}} \code{\link[camtrapR]{cameraOperation}}
+##' @seealso \code{\link{ctDates}} \code{\link[camtrapR]{cameraOperation}}
 ##'
 ##' @keywords manip
 ##'
@@ -464,6 +492,11 @@ trapEffort <- function(cttable, group, sessions=F, sessioncol=NULL){
 ##' String. Full file paths to the out files
 ##' @return duplicate:
 ##' Logical. Is the file a duplicate file
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
 ##' @seealso \code{\link{movePictures}}
 ##'

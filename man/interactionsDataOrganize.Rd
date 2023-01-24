@@ -34,6 +34,14 @@ This function is nearly identical to the APFun_env except it is simpler because 
 
 For a detailed description of what these interactions are, see any of our or UTRGV's reports on the TxDOT camera monitoring projects
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided
@@ -45,7 +53,7 @@ Tewes, M., J. Lombardi, Z. Wardle, and T. Yamashita. 2020. Ocelot and Jaguarundi
 Kline, R., K. Ryer, A. Rivera, T. Yamashita, and T. Hopkins. 2020. Post-construction Monitoring Bi-annual Report for SH 100: May 2019 thru October 2019 (Contract No 57-9XXIA001). The University of Texas Rio Grande Valley.
 }
 \seealso{
-\code{\link{APFun_env}}
+\code{\link{calculateEvents}}
 
 \code{\link{interactionsTimelapse}}
 }

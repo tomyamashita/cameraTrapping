@@ -53,13 +53,23 @@ This function deprecates the \code{\link{occFun}} function. All capabilities fro
 
 A note about the outputs: This function will output up to 18 items (2 forms, 3 datas, and 3 corrections) and does a combination of each. Currently it is not possible to request specific outputs of multiple forms, datas, and corrections.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{APFun_env}} \code{\link{occFun}}
+\code{\link{calculateEvents}}
+
+\code{\link{occFun}}
 }
 \concept{camera trapping}
 \concept{n-mixture model}

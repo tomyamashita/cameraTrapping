@@ -83,6 +83,7 @@ If a list, each camera directory will be kept in a separate item in the list. Th
 
 df:
 If a data.frame, all camera directories will be combined into a single output file.
+If a data.frame cannot be outputted (usually because you have two different camera models that have different exif tags), a list will be outputted instead.
 }
 \description{
 This function is used to extract metadata information and rename camera trap images using date-times and an assigned serial number to each image.
@@ -96,11 +97,13 @@ This function will check for exiftool and install it into the default directory 
 Previous versions of this function required you to manually check this but this requirement has been removed.
 
 When running this function on video files, you need to make sure you specify a trigger.info that accommodates videos.
+This function will check if your trigger.info is associated with a video format. If not, it will warn you about this.
 Video files doe not have a DateTimeOriginal field in their metadata so it will fail to run if you do not properly specify the correct field.
 Right now, the "Ultrafire_video" option only accesses the "CreateDate" field which is used for video files.
 
-If you are interested in additional metadata information that is not provided, please run exiftoolr::exif_read(["at least one image"]) and choose the columns you are interested in.
-Send me the exact column names, and your camera model and I can add an option to trigger.info. Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
+If you are interested in additional metadata information that is not provided, please run \code{\link[exiftoolr]{exif_read}} on a few images and choose the columns you are interested in.
+Send me the exact column names, and your camera model and I can add an option to trigger.info.
+Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
 
 If you need to fix names (or add a serial number to existing names) rather than replace names, then you should specify fix.names to TRUE.
 By specifying this, it is telling the tool to check if the images are in the form YYYY MM DD HH MM SS.jpg (or, more likely some consistent form with spaces but I don't know for sure).
@@ -109,8 +112,22 @@ The reason for this is that sometimes camera date-times are wrong so we needed t
 Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust improperly named images.
 }
 \note{
-Differences between this function and cameraRename2: There were several major changes in this function that differentiate it from the cameraRename2 function enough that it warranted its own function rather than an update. The main change and this affected everything down the line was that the function now acts on each camera directory separately. By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files. One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders. Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
+Differences between this function and \code{\link{cameraRename2}}:
+
+There were several major changes in this function that differentiate it from the \code{\link{cameraRename2}} function enough that it warranted its own function rather than an update.
+The main change and this affected everything down the line was that the function now acts on each camera directory separately.
+By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files.
+One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
+Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided yet
@@ -120,12 +137,16 @@ Differences between this function and cameraRename2: There were several major ch
 \references{
 exiftool: \url{https://exiftool.org/}
 
-exiftoolr package: \url{https://github.com/JoshOBrien/exiftoolr}
+exiftoolr package: \code{\link[exiftoolr]{exif_read}}, \url{https://github.com/JoshOBrien/exiftoolr}
 
 Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
 }
 \seealso{
-\code{\link{cameraRename2}}, \code{\link[exiftoolr]{install_exiftool}}
+\code{\link{cameraRename2}}
+
+\code{\link[exiftoolr]{install_exiftool}}
+
+\code{\link[fs]{file_copy}}, \code{\link[fs]{file_move}}
 }
 \concept{camera trapping}
 \concept{rename images}

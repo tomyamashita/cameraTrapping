@@ -33,13 +33,20 @@ This function will check if there are video files (.MP4) then check the number o
 
 Once the timelapse file has passed this check, it can be used in the standard workflow for images.
 }
+\section{{Standard Disclaimer}}{
+ As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+I build them for my own use and make no promises that they will work for different data formatting situations.
+As I come across errors, I attempt to further generalize the functions but this is done as I go.
+}
+
 \examples{
 \dontrun{
 # No example provided
 }
 }
 \seealso{
-\code{\link{APFun_Timelapse}}
+\code{\link{doTimelapse}}
 }
 \concept{camera trapping}
 \concept{timelapse}
