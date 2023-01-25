@@ -16,7 +16,7 @@
 ##' @param x data.frame. This should be the output from running the APFun_env function.
 ##' @param split Logical. Whether you want to split your data by a column in the data frame. This defaults to FALSE.
 ##' @param splitcol (Optional). Defaults to NULL. Which column to use to split the data. Only required if split=T.
-##' @param species String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
+##' @param include String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
 ##' @param bw Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.
 ##' @param rep Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.
 ##'
@@ -54,11 +54,11 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-actFun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
+actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
   #x <- AP2_1min$FM1847
   #split <- F
   #splitcol <- "timeperiod"
-  #species <- c("bobcat", "coyote")
+  #include <- c("bobcat", "coyote")
   #bw = NULL
   #rep = 99
 
@@ -70,7 +70,7 @@ actFun <- function(x, split=F, splitcol=NULL, species, bw = NULL, rep = 999){
 
   #require(activity)
 
-  specs_all <- lapply(AP, function(x){subset(x, x$Species %in% species)})
+  specs_all <- lapply(AP, function(x){subset(x, x$Species %in% include)})
   specs <- lapply(specs_all, function(x){split(x, as.factor(x[,"Species"]))})
 
   act <- lapply(specs, function(X){lapply(1:length(X), function(s){

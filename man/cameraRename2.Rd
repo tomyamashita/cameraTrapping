@@ -76,7 +76,6 @@ As I come across errors, I attempt to further generalize the functions but this 
 \examples{
 \dontrun{
 ## No example right now
-
 }
 }
 \references{

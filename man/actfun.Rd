@@ -4,7 +4,7 @@
 \alias{actFun}
 \title{Animal Diel Activity}
 \usage{
-actFun(x, split = F, splitcol = NULL, species, bw = NULL, rep = 999)
+actFun(x, split = F, splitcol = NULL, include, bw = NULL, rep = 999)
 }
 \arguments{
 \item{x}{data.frame. This should be the output from running the APFun_env function.}
@@ -13,7 +13,7 @@ actFun(x, split = F, splitcol = NULL, species, bw = NULL, rep = 999)
 
 \item{splitcol}{(Optional). Defaults to NULL. Which column to use to split the data. Only required if split=T.}
 
-\item{species}{String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").}
+\item{include}{String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").}
 
 \item{bw}{Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.}
 
