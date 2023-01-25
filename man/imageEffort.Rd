@@ -2,14 +2,14 @@
 % Please edit documentation in R/qualitycontrol.R
 \name{imageEffort}
 \alias{imageEffort}
-\title{Camera trapping effort (Images)}
+\title{Camera trapping image effort}
 \usage{
-imageEffort(timelapse, type)
+imageEffort(timelapse = NULL, do = NULL)
 }
 \arguments{
-\item{timelapse}{List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.}
+\item{timelapse}{List. A list object containing a list of timelapse files. If you name your files, the names will be outputted in the result.}
 
-\item{type}{String. What was the source of the input files. Choose one of c("timelapse", "dataorganize").}
+\item{do}{List. A list object containing a list of DataOrganize files. If you name your files, the names will be outputted in the result.}
 }
 \value{
 A data frame containing total number of pictures, number of pictures of animals, ghosts, and humans, and the success rate for animal pictures in each file added as well as a row for the total number of pictures.
@@ -18,7 +18,9 @@ A data frame containing total number of pictures, number of pictures of animals,
 This function calculates the total number of pictures, number of animals, ghosts, and humans from one or more timelapse or dataorganize files.
 }
 \details{
-If a timelapse file is given to the function, it will run the \code{\link{APFun_Timelapse}} function to convert it to a dataorganize file.
+If a timelapse file is given to the function, it will run an internal version of the \code{\link{doTimelapse}} function to convert it to a DataOrganize file.
+
+This function can accept either a timelapse file or a DataOrganize file, not both. Be sure to only specify one.
 }
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.

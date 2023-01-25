@@ -119,7 +119,6 @@ interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-
 interactionsTimelapse <- function(timelapse, envdata, in.dir, out.dir = NULL, create.dirs = T, type = "copy", exclude = c("ghost")){
   #timelapse <- read.csv("timelapse_out_20221201.csv")
   #envdata <- openxlsx::read.xlsx(file.choose())

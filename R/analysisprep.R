@@ -3,7 +3,7 @@
 ## This script includes the following functions:
   ## actFun
   ## calculateEvents
-  ## occFun
+  ## occFun (Deprecated)
   ## summarizeEvents
 
 ################################################################################
@@ -48,6 +48,7 @@
 ##' @concept diel activity
 ##'
 ##' @importFrom activity fitact
+##'
 ##' @export
 ##'
 ##' @examples \dontrun{

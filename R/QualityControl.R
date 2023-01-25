@@ -113,12 +113,14 @@ ctDates <- function(ct, start.col=6){
 ### Number of Photos (Added 2022-08-25) ####
 ##' @description This function calculates the total number of pictures, number of animals, ghosts, and humans from one or more timelapse or dataorganize files.
 ##'
-##' @title Camera trapping effort (Images)
+##' @title Camera trapping image effort
 ##'
-##' @param timelapse List. A list object containing either timelapse files or dataorganize files. If you name your files, the names will be outputted in the result.
-##' @param type String. What was the source of the input files. Choose one of c("timelapse", "dataorganize").
+##' @param timelapse List. A list object containing a list of timelapse files. If you name your files, the names will be outputted in the result.
+##' @param do List. A list object containing a list of DataOrganize files. If you name your files, the names will be outputted in the result.
 ##'
-##' @details If a timelapse file is given to the function, it will run the \code{\link{APFun_Timelapse}} function to convert it to a dataorganize file.
+##' @details If a timelapse file is given to the function, it will run an internal version of the \code{\link{doTimelapse}} function to convert it to a DataOrganize file.
+##'
+##' This function can accept either a timelapse file or a DataOrganize file, not both. Be sure to only specify one.
 ##'
 ##' @return A data frame containing total number of pictures, number of pictures of animals, ghosts, and humans, and the success rate for animal pictures in each file added as well as a row for the total number of pictures.
 ##'
@@ -138,47 +140,78 @@ ctDates <- function(ct, start.col=6){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-imageEffort <- function(timelapse, type){
-  #timelapse <- list('20220117' = read.csv("K:/Completed/new_20220117/timelapse_out_20220117.csv"), '20220214' = read.csv("K:/Completed/new_20220214/timelapse_out_20220214.csv"))
-  #type <- "timelapse"
+imageEffort <- function(timelapse = NULL, do = NULL){
+  #timelapse <- timelapse_test; do <- do_test
+  #timelapse <- NULL; do <- NULL
+  #timelapse <- timelapse_test; do <- NULL
+  #timelapse <- NULL; do <- do_test
 
-  if(is.data.frame(timelapse)){
-    timelapse <- list(timelapse)
+  if(all(is.null(timelapse), is.null(do))){
+    stop("Both the timelapse and do arguments cannot be left NULL. A timelapse file is specified using the 'timelapse' argument and a dataorganize file is specified using the 'do' argument. Do not specify both")
+  }else if(all(!is.null(timelapse), !is.null(do))){
+    stop("Both a timelapse file and a dataorganize file were provided. Please only provide one.")
+  }else if(!is.null(timelapse) & is.null(do)){
+    print("Using a timelapse file. Loading images...")
+
+    if(is.data.frame(timelapse)){
+      timelapse <- list(timelapse)
+    }
+
+    AP <- lapply(timelapse, function(x){
+      images1 <- x[,c("File", "RelativePath", "Species1", "Species1_Ind")]
+      colnames(images1) <- c("File", "Path", "Species", "Individuals")
+
+      if(!all(is.na(x$Species2))){
+        images2 <- x[x$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+        colnames(images2) <- c("File", "Path", "Species", "Individuals")
+      }else{
+        images2 <- NULL
+      }
+      if(!all(is.na(x$Species3))){
+        images3 <- x[x$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+        colnames(images3) <- c("File", "Path", "Species", "Individuals")
+      }else{
+        images3 <- NULL
+      }
+      if(!all(is.na(x$SpeciesOther))){
+        images4 <- x[x$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+        colnames(images4) <- c("File", "Path", "Species", "Individuals")
+      }else{
+        images4 <- NULL
+      }
+      x1 <- rbind(images1,images2,images3,images4)
+      x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "\\\\")), do.call(rbind, strsplit(sub(".JPG", "", x1$File, ignore.case = T), split = " ")), x1[,3:4])
+      x3 <- x2[,c(2,11,4:9,12)]
+      colnames(x3) <- paste("V", seq(1:ncol(x3)), sep = "")
+      x4 <- data.frame(x3[,1:2], apply(x3[,3:ncol(x3)], 2, as.integer))
+      return(x4)
+      rm(images1, images2, images3, images4, x1, x2, x3, x4)
+    })
+  }else if(is.null(timelapse) & !is.null(do)){
+    print("Using a DataOrganize file. Loading images...")
+
+    if(is.data.frame(do)){
+      do <- list(do)
+    }
+    AP <- do
   }
-  if(type=="timelapse"){
-    AP <- lapply(timelapse, APFun_Timelapse)
-  }else if(type=="dataorganize"){
-    AP <- timelapse
-  }else{
-    stop("Your data must be a 'timelapse' or 'dataorganize' file.")
+  print("Image loading completed. Summarizing capture rates...")
+
+  out1 <- lapply(AP, function(x){
+    ghost <- nrow(x[x[,2]=="ghost",])
+    human <- nrow(x[x[,2]=="human",])
+    animal <- nrow(x) - ghost - human
+    c(total = nrow(x), animal = animal, human = human, ghost = ghost, success = animal/nrow(x))
+  })
+  if(is.null(names(out1))){
+    message("Your items do not have names. They will be outputted in the order they were inputted.")
+    names(out1) <- paste("item", seq(1,length(out1),1), sep = "")
   }
-
-  if(is.null(names(AP))){
-    name <- F
-    message("Your items do not have names. They will be outputted in the order they were inputted")
-  }else{
-    name <- T
-  }
-
-  ghosts <- lapply(AP, function(y){y[y[,2]=="ghost",]})
-  human <- lapply(AP, function(y){y[y[,2]=="human",]})
-
-  out <- do.call(rbind, lapply(1:length(timelapse), function(i){
-    data.frame(total = nrow(timelapse[[i]]), animal = nrow(timelapse[[i]]) - nrow(ghosts[[i]]) - nrow(human[[i]]), human = nrow(human[[i]]), ghost = nrow(ghosts[[i]]), success = NA)
-  }))
-  rownames(out) <- names(AP)
-
-  total <- apply(out, 2, sum)
-  out2 <- rbind(out,total = apply(out, 2, sum))
-  if(isFALSE(name)){
-    rownames(out2) <- c(1:nrow(out), "total")
-  }else{
-    rownames(out2) <- c(names(AP), "total")
-  }
-  out2[,"success"] <- with(out2, animal/total)
+  out1[["total"]] <- apply(do.call(rbind, out1), 2, sum)
+  out2 <- data.frame(do.call(rbind, out1))
 
   return(out2)
-  rm(AP, name, ghosts, human, out, total, out2)
+  rm(AP, out1, out2)
   #rm(timelapse, type)
 }
 
@@ -391,18 +424,20 @@ timelapseQC <- function(timelapse, exclude=NULL, detailed_res=F){
 ### Camera Trap Nights (Added 2022-08-25, Renamed 2022-09-13) ####
 ##' @description This function calculates the number of active camera trap nights and total camera trap nights using an inputted CT table, formatted based on camtrapR specifications.Required columns are setup date and retrieval date and theoretically, the table should have problems. I have never tested it on a dataset without any problems.
 ##'
-##' @title Camera trapping effort (Trap nights)
+##' @title Camera trapping trap night effort
 ##'
-##' @param cttable data.frame. A data frame formatted as a CT table.
-##' @param group String. A column in the CT Table indicating how camera trap nights should be calculated. Generally accepted are c("Camera", "Site", "Station").
-##' @param sessions Logical. Does your data have multiple sessions (e.g., field seasons, etc.)? This defaults to FALSE.
-##' @param sessioncol String. What column distinguishes sessions? This defaults to NULL. This is only needed if sessions is set to T.
+##' @param ct data.frame. A data frame formatted as a CT table for the  \code{\link[camtrapR]{camtrapR-package}}
+##' @param camOP list. Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
+##' stationCol, setupCol, and retrievalCol. hasProblems is often used as well.
+##' If multiple cameras per site, you must specify cameraCol, byCamera, allCamsOn, and camerasIndepedent.
+##' See \code{\link[camtrapR]{cameraOperation}} for details.
 ##'
 ##' @details Make sure that your CT table is formatted properly. See the \code{\link[camtrapR]{camtrapR-package}} documentation for details. That is the only way this function works. Also, at some point camptrapR had removed its support for dates in "Date" or "POSIXct" format so dates had to be in character format. You can use my ctdates_fun function to fix this in a CT table. This may not be the case anymore and they may have fixed this issue.
 ##'
 ##' A CT table formatted for \code{\link[camtrapR]{camtrapR}} is required. This CT table is used in other functions that utilize the camtrapR package and must be formatted properly.
 ##'
-##' @return A data frame containing the items from the group column, session column (if included), active camera trap nights, and total camera trap nights.
+##' @return A data frame containing the name of the Station (and possibly the session number and camera ID, depending on the inputs of camOP),
+##' active camera trap nights (activenights), and total camera trap nights (totalnights).
 ##'
 ##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 ##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
@@ -421,50 +456,26 @@ timelapseQC <- function(timelapse, exclude=NULL, detailed_res=F){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-trapEffort <- function(cttable, group, sessions=F, sessioncol=NULL){
-  #cttable <- CTtable_WCS
-  #group <- "Site"
-  #group <- "Station"
-  #sessions <- T
-  #sessioncol <- "timeperiod"
+trapEffort <- function(ct, camOP){
+  #ct <- cttable
+  #camOP <- list(stationCol = "Camera", setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T, cameraCol = "Camera", byCamera = F, allCamsOn = F, camerasIndependent = F)
 
-  #require(camtrapR)
-
-  if(isTRUE(sessions)){
-    if(is.null(sessioncol)){
-      stop("You indicated that there are sessions in you ct table. You must specify a sessioncol.")
-    }
-    CamOp <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T,
-                                         cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE,
-                                         sessionCol = sessioncol))
-    CamOp2 <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = FALSE,
-                                          cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE,
-                                          sessionCol = sessioncol))
-  }else if(isFALSE(sessions)){
-    CamOp <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T,
-                                         cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE))
-    CamOp2 <- t(camtrapR::cameraOperation(cttable, stationCol = group, setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = FALSE,
-                                          cameraCol = "Camera", byCamera = FALSE, allCamsOn = FALSE, camerasIndependent = FALSE))
-  }else{
-    stop("Sessions must be logical. Choose c(T,F).")
+  if(!is.list(camOP)){
+    stop("camOP must be a list of arguments used in the camtrapR::cameraOperation function.")
   }
 
-  # Active and Total Camera Trap Nights
-  trapnights1 <- data.frame(activenights = apply(CamOp,2,function(x){sum(x,na.rm=T)}),
-                            totalnights = apply(CamOp2,2,function(x){sum(x,na.rm=T)}))
+  camOP[["CTtable"]] <- ct
 
-  if(is.null(sessioncol)){
-    trapnights2 <- data.frame(rownames(trapnights1), trapnights1)
-    colnames(trapnights2) <- c(group, "activenights", "totalnights")
-  }else{
-    trapnights2 <- data.frame(do.call(rbind, strsplit(rownames(trapnights1), "__")), trapnights1)
-    colnames(trapnights2) <- c(group, sessioncol, "activenights", "totalnights")
-  }
-  rownames(trapnights2) <- NULL
+  co1 <- do.call(camtrapR::cameraOperation, camOP)
 
-  return(trapnights2)
-  rm(CamOp, CamOp2, trapnights1, trapnights2)
-  #rm(cttable, group, sessions, sessioncol)
+  co2 <- data.frame(Site = row.names(co1),
+                    activenights = apply(co1, 1, function(x){sum(x, na.rm = T)}),
+                    totalnights = apply(co1, 1, function(x){length(which(!is.na(x)))}))
+  rownames(co2) <- NULL
+
+  return(co2)
+  rm(co1, co2)
+  #rm(ct, camOP)
 }
 
 ### Unsort Images to Raw data structure (Added 2023-01-04) ####

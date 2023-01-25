@@ -1,7 +1,7 @@
 # Pre-processing functions ####
 ## This script contains functions for pre-processing camera data
 ## This script includes the following functions:
-  ## cameraRename2
+  ## cameraRename2 (Deprecated)
   ## cameraRename3
   ## findCorruptImages
 
@@ -81,7 +81,6 @@
 ##'
 ##' @examples \dontrun{
 ##' ## No example right now
-##'
 ##' }
 cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, rename=FALSE, adjust = NULL, fix.names = FALSE){
   #in.dir <- "J:/test/new_20220117/images_ConLate"  # More than likely, this must be a folder containing camera folders

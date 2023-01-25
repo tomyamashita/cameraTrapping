@@ -84,9 +84,16 @@
 ## Version 0.0.0.14 (2023-01-23)
 
 * Fixed documentation of cameraRename2 to properly deprecate the function in favor of cameraRename3
-* Changed function names for APFun_env (calculateEvents), APFun_timelapse (doTimelapse), and dataOrganize (doFolder) to better represent what those functions do
-* Fixed and updated documentation for several functions related to changed function names and clarified documentation and function relatedness
-* Changed argument names on ctDates function for consistency across functions
+* Changed function names for APFun_env (calculateEvents), APFun_timelapse (doTimelapse), and dataOrganize (doFolder) to better represent what those functions do.
+* Fixed and updated documentation for several functions related to changed function names and clarified documentation and function relatedness.
+* Changed argument names on ctDates function for consistency across functions.
 * Added a check for an inability to return a data.frame when outputting cameraRename3 so that the function will always output at least a list object.
 * Added disclaimer section to all functions that assume my standard workflow for image processing. 
 
+## Version 0.0.0.15 (2023-01-24)
+
+* Updated the imageEffort function to have input names more in line with other functions in this package and to increase efficiency. 
+* Updated the trapEffort function to have input names more in line with other functions in this package and to increase speed, versatility, and efficiency. Note that total trap nights is being calculated differently and is likely to output 1 extra trap night compared to previous versions of this function. This is due to the camtrapR::cameraOperation function calculating a 0.5 night on the first and last days of setup. 
+* Updated the documentation of the movePictures function to properly link to new function names.
+* Backend file name change for the quality control script from QualityControl to qualitycontrol to be more in line with other scripts in this package. 
+* Backend file name change for the Interactions script from Interactions to interactions to be more in line with other scripts in this package. 

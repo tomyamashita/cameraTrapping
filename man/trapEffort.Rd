@@ -2,21 +2,21 @@
 % Please edit documentation in R/qualitycontrol.R
 \name{trapEffort}
 \alias{trapEffort}
-\title{Camera trapping effort (Trap nights)}
+\title{Camera trapping trap night effort}
 \usage{
-trapEffort(cttable, group, sessions = F, sessioncol = NULL)
+trapEffort(ct, camOP)
 }
 \arguments{
-\item{cttable}{data.frame. A data frame formatted as a CT table.}
+\item{ct}{data.frame. A data frame formatted as a CT table for the  \code{\link[camtrapR]{camtrapR-package}}}
 
-\item{group}{String. A column in the CT Table indicating how camera trap nights should be calculated. Generally accepted are c("Camera", "Site", "Station").}
-
-\item{sessions}{Logical. Does your data have multiple sessions (e.g., field seasons, etc.)? This defaults to FALSE.}
-
-\item{sessioncol}{String. What column distinguishes sessions? This defaults to NULL. This is only needed if sessions is set to T.}
+\item{camOP}{list. Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
+stationCol, setupCol, and retrievalCol. hasProblems is often used as well.
+If multiple cameras per site, you must specify cameraCol, byCamera, allCamsOn, and camerasIndepedent.
+See \code{\link[camtrapR]{cameraOperation}} for details.}
 }
 \value{
-A data frame containing the items from the group column, session column (if included), active camera trap nights, and total camera trap nights.
+A data frame containing the name of the Station (and possibly the session number and camera ID, depending on the inputs of camOP),
+active camera trap nights (activenights), and total camera trap nights (totalnights).
 }
 \description{
 This function calculates the number of active camera trap nights and total camera trap nights using an inputted CT table, formatted based on camtrapR specifications.Required columns are setup date and retrieval date and theoretically, the table should have problems. I have never tested it on a dataset without any problems.
