@@ -2,7 +2,7 @@
 ## This script contains functions for prepping and running camera specific analyses
 ## This script includes the following functions:
   ## actFun
-  ## calculateEvents
+  ## calculateEvents (formerly APFun_env)
   ## occFun (Deprecated)
   ## summarizeEvents
 
@@ -114,20 +114,22 @@ actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
 ##' @param exclude string. species to exclude from the output data frame. Use c() to specify species. This defaults to excluding ghosts. If you want keep all items use c("").
 ##' @param start_date string. Start date for the AllPictures file. If you want all data, set this to an arbitrarily early date.
 ##' @param end_date string. End date for pictures. This defaults to the current date.
-##' @param interval integer. Time in seconds between pictures for an independent event. See Details for some normal interval times. This is only necessary for the main function. It defaults to no interval.
+##' @param interval varies. The time between images to consider a set of images an independent event. This defaults to NULL. This can specified using character time ("60 sec", "10 minutes", "30 min", "1 hour", etc.) or by specifying the number of seconds + 1. If an incorrect format or NULL is given, the function will use an interval of 1 sec, thereby keeping all images.
 ##' @param all.pics Logical. Whether or not you want to return all the pictures or just independent events. If all.pics = TRUE, all pictures will be returned with an index number associated with independent events. This defaults to FALSE.
 ##'
-##' @details Suggested interval times: 61 = 1 minute, 1801 = 30 minutes. 3601 = 1 hour
+##' @details OLD: Interval times when specified using a number of seconds need to have 1 added to the end.
+##' For 1 minute, this would mean a 61 second interval, 30 minutes = 1801 seconds, etc.
+##' In the current version of this function, a time unit can be specified. The function uses lubridate to specify the inputted period into number of seconds.
 ##'
-##' One second should be added to the total to ensure the full interval is included.
-##'
-##' When interval is set to NULL, the function will use an interval of 1 second and therefore does not summarize any events.
+##' When the interval is NULL or 1, the function does not summarize any events.
 ##'
 ##' @return A data frame of camera data. Output varies depending on whether or not all.pics is true or false.
 ##' @return all.pics = FALSE:
 ##' Returns a data frame of only independent events at the specified interval.
 ##' @return all.pics = TRUE:
 ##' Returns a data frame of all pictures from the input file. A index number is added associated with independent events.
+##'
+##' @note This function used to be called APFun_env
 ##'
 ##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 ##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
@@ -147,6 +149,7 @@ actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
 ##' @importFrom dplyr arrange summarise group_by
 ##' @importFrom pbapply pbsapply
 ##' @importFrom zoo na.locf
+##' @importFrom lubridate as.period
 ##' @export
 ##'
 ##' @examples \dontrun{
@@ -166,16 +169,28 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
   # Outputs:
   ## A data frame containing independent events in date-time format + camera/site specific variables
 
-  # Defining an interval if interval left as default
+  # Defining an interval in number of seconds
   if(is.null(interval)==TRUE){
-    interval <- 1
+    int <- 1
+  }else if(is.character(interval)){
+    if(is.na(as.numeric(lubridate::as.period(interval)))){
+      message("You did not specify a valid character type for interval. Using an interval of 1 second.")
+      int <- 1
+    }else{
+      int <- as.numeric(lubridate::as.period(interval)) + 1
+    }
+  }else if(is.numeric(interval)){
+    int <- interval
+  }else{
+    stop("Interval was not specified correctly. Check your input.")
   }
+  print(paste("The interval you specified was ", interval, ". This will create an interval of ", int, " seconds.", sep = ""))
 
   # Formatting the columns in the AllPictures file
   if(ncol(do)==9){
-    colnames(do) <- c("Camera","Species", "N.Individuals", "Year","Month","Day","Hour","Minute","Second")
+    colnames(do) <- c("Camera","Species", "N.Individuals", "Year", "Month", "Day", "Hour", "Minute", "Second")
   }else if(ncol(do)==10){
-    colnames(do) <- c("Camera","Species", "N.Individuals", "Year","Month","Day","Hour","Minute","Second","Serial")
+    colnames(do) <- c("Camera","Species", "N.Individuals", "Year", "Month", "Day", "Hour", "Minute", "Second", "Serial")
   }else{
     stop("Your DataOrganize file does not have the correct number of columns. Check your input file.")
   }
@@ -220,15 +235,15 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
   x3["Sort"] <- x3[sort.col]
   x4=dplyr::arrange(x3, Sort, Species, Month_Day)
   x4$delta.time.secs <- pbapply::pbsapply(1:(nrow(x4)), FUN = function(i){
-    ifelse(i-1==0, interval,
+    ifelse(i-1==0, int,
            ifelse(x4$Species[i]==x4$Species[i-1],
-                  difftime(x4$DateTimeOriginal[i], x4$DateTimeOriginal[i-1], units = "secs"), interval))
+                  difftime(x4$DateTimeOriginal[i], x4$DateTimeOriginal[i-1], units = "secs"), int))
     #rm(i)
   })
   x4$Ident <- seq(1,nrow(x4))
 
   # Identifying and subsetting out independent events
-  x5 <- x4[!(x4$delta.time.secs < interval),]
+  x5 <- x4[!(x4$delta.time.secs < int),]
   x5$Ident2 <- seq(1, nrow(x5))
   x5a <- merge.data.frame(x5, x4, by="Ident", all.y=TRUE, sort.y=TRUE)
   x5b <- data.frame(x5a[,c(1,(ncol(x5)+1):ncol(x5a))], Ident2 = zoo::na.locf(x5a$Ident2, fromLast=FALSE))
@@ -247,17 +262,18 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
     x7 <- x6[,c(2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
   }
   return(x7)
-  rm(x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
+  rm(int, x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
   #rm(do, envdata, sort.col, exclude, start_date, end_date, interval, all.pics)
 }
+
 
 ### Setting up for occupancy modelling from an APFun_env output (Added 2022-08-25) ####
 ##' @description This function modifies data for use in occupancy modelling using Unmarked or a separate program, I think.
 ##'
 ##' @title (Deprecated) Occupancy Analysis Data Setup
 ##'
-##' @param x A data frame produced by the APFun_env function available in this package.
-##' @param ct A CT Table following the format from the package camtrapR.
+##' @param x A data frame produced by the \code{\link{calculateEvents}} function available in this package.
+##' @param ct A CT Table following the format from the camtrapR package. See \code{\link[camtrapR]{camtrapR}} for details.
 ##' @param unit The temporal unit for dividing up your data. This must be in units "days".
 ##' @param subset A character vector indicating which species to prepare data for.
 ##' @param stationCol String. A character string for the column used to identify sites.

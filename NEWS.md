@@ -98,7 +98,9 @@
 * Backend file name change for the quality control script from QualityControl to qualitycontrol to be more in line with other scripts in this package. 
 * Backend file name change for the Interactions script from Interactions to interactions to be more in line with other scripts in this package. 
 
-## Version 0.0.0.16 (2023-01-25)
+## Version 0.0.0.16 (2023-01-25, 2023-01-27)
 
+* Allowed input of calculateEvents for interval to be a character-based time object (i.e., "30 min", "1 hour", etc.). 
+* Updated documentation for some functions. 
 * Fixed a bug in doFolder where it could not save the output. 
 

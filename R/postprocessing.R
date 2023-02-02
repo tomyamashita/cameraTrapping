@@ -112,6 +112,8 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##'
 ##' @references Original DataOrganize program: \url{https://smallcats.org/resources/}
 ##'
+##' @note This function used to be called dataOrganize
+##'
 ##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 ##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
 ##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
@@ -214,6 +216,8 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 ##' @return An R object formatted in the same style as a dataorganize text file.
 ##'
 ##' @note This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package
+##'
+##' This function used to be called APFun_Timelapse
 ##'
 ##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 ##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
