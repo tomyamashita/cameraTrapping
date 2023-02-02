@@ -193,7 +193,7 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 
   if(isTRUE(save)){
     print("Writing a text file to the in.dir.")
-    write.table(out, file = file.path(in.dir, "dataorganize.txt"), row.names = F)
+    write.table(out2, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = F)
   }
 
   return(out2)

@@ -97,3 +97,8 @@
 * Updated the documentation of the movePictures function to properly link to new function names.
 * Backend file name change for the quality control script from QualityControl to qualitycontrol to be more in line with other scripts in this package. 
 * Backend file name change for the Interactions script from Interactions to interactions to be more in line with other scripts in this package. 
+
+## Version 0.0.0.16 (2023-01-25)
+
+* Fixed a bug in doFolder where it could not save the output. 
+
