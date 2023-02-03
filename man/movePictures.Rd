@@ -53,6 +53,10 @@ Once this has been tested, I will update this.
 
 This function can "sort" pictures using either a timelapse csv or a dataorganize text file.
 The inclusion of a dataorganize file was to better accommodate data sorted manually (i.e., not using Timelapse) and its primary use is when sorted images need to be replaced (e.g., the images got corrupted or lost somehow).
+
+When a dataorganize file is used in this function, the file must have the following column names: c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial").
+The "serial" name is not required and is only used if do_format is specified as "serial".
+These columns names are already produced by the \code{\link{doFolder}} and \code{\link{doTimelapse}} functions.
 }
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.

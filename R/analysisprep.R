@@ -13,7 +13,7 @@
 ##'
 ##' @title Animal Diel Activity
 ##'
-##' @param x data.frame. This should be the output from running the APFun_env function.
+##' @param x data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.
 ##' @param split Logical. Whether you want to split your data by a column in the data frame. This defaults to FALSE.
 ##' @param splitcol (Optional). Defaults to NULL. Which column to use to split the data. Only required if split=T.
 ##' @param include String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
@@ -103,18 +103,18 @@ actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
   #rm(x, split, splitcol, species, bw, rep)
 }
 
-### From a dataorganize file, create a usable output (Added 2022-08-25, Modified 2022-08-31) ####
+### From a dataorganize file, create a usable output (Added 2022-08-25, Modified 2022-08-31, Updated 2023-02-02) ####
 ##' @description Function for calculating the number of events from raw camera trap images and adding camera/site-specific information to the output.
 ##'
 ##' @title Calculate number of events from a file organized like a dataOrganize file.
 ##'
-##' @param do data frame. A DataOrganize file produced by the DataOrganize program or the dataOrganize function in this package.
-##' @param envdata Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.
-##' @param sort.col string. Column that you want to sort pictures by to create independent events. This should be one of c("Camera", "Site", "Station") depending on your wording for sites. This defaults to "Camera".
-##' @param exclude string. species to exclude from the output data frame. Use c() to specify species. This defaults to excluding ghosts. If you want keep all items use c("").
-##' @param start_date string. Start date for the AllPictures file. If you want all data, set this to an arbitrarily early date.
-##' @param end_date string. End date for pictures. This defaults to the current date.
-##' @param interval varies. The time between images to consider a set of images an independent event. This defaults to NULL. This can specified using character time ("60 sec", "10 minutes", "30 min", "1 hour", etc.) or by specifying the number of seconds + 1. If an incorrect format or NULL is given, the function will use an interval of 1 sec, thereby keeping all images.
+##' @param do data.frame. A DataOrganize file produced by the DataOrganize program or the dataOrganize function in this package.
+##' @param envdata data.frame. Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.
+##' @param sort.col String. Column that you want to sort pictures by to create independent events. This should be one of c("Camera", "Site", "Station") depending on your wording for sites. This defaults to "Camera".
+##' @param exclude String. species to exclude from the output data frame. Use c() to specify species. This defaults to excluding ghosts. If you want keep all items use c("").
+##' @param start_date String. Start date for the AllPictures file. If you want all data, set this to an arbitrarily early date.
+##' @param end_date String. End date for pictures. This defaults to the current date.
+##' @param interval Varies. The time between images to consider a set of images an independent event. This defaults to NULL. This can specified using character time ("60 sec", "10 minutes", "30 min", "1 hour", etc.) or by specifying the number of seconds + 1. If an incorrect format or NULL is given, the function will use an interval of 1 sec, thereby keeping all images.
 ##' @param all.pics Logical. Whether or not you want to return all the pictures or just independent events. If all.pics = TRUE, all pictures will be returned with an index number associated with independent events. This defaults to FALSE.
 ##'
 ##' @details OLD: Interval times when specified using a number of seconds need to have 1 added to the end.
@@ -123,11 +123,11 @@ actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
 ##'
 ##' When the interval is NULL or 1, the function does not summarize any events.
 ##'
-##' @return A data frame of camera data. Output varies depending on whether or not all.pics is true or false.
+##' @return A data frame of camera data. The columns outputted are: (The columns from the envdata object), species, individuals, datetime, date, hms (time), time in numeric format, time in radians format, and the event number.
 ##' @return all.pics = FALSE:
 ##' Returns a data frame of only independent events at the specified interval.
 ##' @return all.pics = TRUE:
-##' Returns a data frame of all pictures from the input file. A index number is added associated with independent events.
+##' Returns a data frame of all pictures that were not in the exclude parameter from the input file. The EventNumber column specifies independent events.
 ##'
 ##' @note This function used to be called APFun_env
 ##'
@@ -150,6 +150,7 @@ actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
 ##' @importFrom pbapply pbsapply
 ##' @importFrom zoo na.locf
 ##' @importFrom lubridate as.period
+##'
 ##' @export
 ##'
 ##' @examples \dontrun{
@@ -186,26 +187,31 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
   }
   print(paste("The interval you specified was ", interval, ". This will create an interval of ", int, " seconds.", sep = ""))
 
-  # Formatting the columns in the AllPictures file
-  if(ncol(do)==9){
-    colnames(do) <- c("Camera","Species", "N.Individuals", "Year", "Month", "Day", "Hour", "Minute", "Second")
-  }else if(ncol(do)==10){
-    colnames(do) <- c("Camera","Species", "N.Individuals", "Year", "Month", "Day", "Hour", "Minute", "Second", "Serial")
+  # Formatting the columns in the dataorganize file
+  if(is.null(colnames(do))){
+    message("No column names were provided in the do file. The standard format is assumed. See details")
+    if(ncol(do)==9){
+      colnames(do) <- c("Camera", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+    }else if(ncol(do)==10){
+      colnames(do) <- c("Camera", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
+    }else{
+      stop("Your DataOrganize file does not have the correct number of columns. Check your input file.")
+    }
   }else{
-    stop("Your DataOrganize file does not have the correct number of columns. Check your input file.")
+    colnames(do)[grep("site", colnames(do))] <- "Camera"
   }
 
   if(isTRUE(is.na(exclude))){
     x1 <- do
   }else{
-    x1=subset(do, !(Species %in% exclude))
+    x1=subset(do, !(species %in% exclude))
   }
-  x1$Month_Day <- paste(formatC(x1[,"Year"], width = 4, format = "d", flag = "0"),
-                        formatC(x1[,"Month"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Day"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Hour"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Minute"], width = 2, format = "d", flag = "0"),
-                        formatC(x1[,"Second"], width = 2, format = "d", flag = "0"), sep = "")
+  x1$Month_Day <- paste(formatC(x1[,"year"], width = 4, format = "d", flag = "0"),
+                        formatC(x1[,"month"], width = 2, format = "d", flag = "0"),
+                        formatC(x1[,"day"], width = 2, format = "d", flag = "0"),
+                        formatC(x1[,"hour"], width = 2, format = "d", flag = "0"),
+                        formatC(x1[,"minute"], width = 2, format = "d", flag = "0"),
+                        formatC(x1[,"second"], width = 2, format = "d", flag = "0"), sep = "")
   x1$DateTimeOriginal <- as.POSIXct(strptime(x1$Month_Day,'%Y%m%d%H%M%S'))
   x1$Date <- as.POSIXct(strptime(x1$Month_Day,'%Y%m%d'))
   x1$hms <- format(x1$DateTimeOriginal,format="%H:%M:%S")
@@ -216,53 +222,57 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
     stop("Your EnvData file must contain a column called 'Camera'.")
   }
 
-  x2 <- merge.data.frame(x1, envdata, by = "Camera")
+  x2 <- merge.data.frame(envdata, x1, by = "Camera")
   if(nrow(x2)==0){
     stop("Something went wrong merging the camera data to the envdata. Check your column and camera names in your envdata file.")
   }
-  x2$time_numeric <- (as.numeric(x2$Hour)*3600 + as.numeric(x2$Minute)*60 + as.numeric(x2$Second))/(86400)
+  x2$time_numeric <- (as.numeric(x2$hour)*3600 + as.numeric(x2$minute)*60 + as.numeric(x2$second))/(86400)
   x2$time_radians <-2*pi*x2$time_numeric
 
   # Subsetting the data by date
-  x2a <- subset(x2,Date >= start_date)
-  x2b <- subset(x2a,Date <= as.character(end_date))
-  if(nrow(x2b)==0){
-    stop("The specified date range is outside the range of the data")
+  x3 <- x2[x2$Date >= start_date & x2$Date <= as.character(end_date),]
+
+  if(nrow(x3)==0){
+    stop("The specified date range is outside teh range of the data.")
   }
-  x3 <- x2b
 
   # Calculating the time difference between pictures
   x3["Sort"] <- x3[sort.col]
-  x4=dplyr::arrange(x3, Sort, Species, Month_Day)
+  x4 <- dplyr::arrange(x3, Sort, species, Month_Day)
   x4$delta.time.secs <- pbapply::pbsapply(1:(nrow(x4)), FUN = function(i){
-    ifelse(i-1==0, int,
-           ifelse(x4$Species[i]==x4$Species[i-1],
+    ifelse(i-1 == 0, int,
+           ifelse(x4$species[i]==x4$species[i-1],
                   difftime(x4$DateTimeOriginal[i], x4$DateTimeOriginal[i-1], units = "secs"), int))
     #rm(i)
   })
-  x4$Ident <- seq(1,nrow(x4))
 
   # Identifying and subsetting out independent events
-  x5 <- x4[!(x4$delta.time.secs < int),]
-  x5$Ident2 <- seq(1, nrow(x5))
-  x5a <- merge.data.frame(x5, x4, by="Ident", all.y=TRUE, sort.y=TRUE)
-  x5b <- data.frame(x5a[,c(1,(ncol(x5)+1):ncol(x5a))], Ident2 = zoo::na.locf(x5a$Ident2, fromLast=FALSE))
-  x5c <- dplyr::summarise(dplyr::group_by(x5b, Ident2), Individuals = max(`N.Individuals.y`))
+  ## Create an index number for each picture
+  x4$Ident <- seq(1,nrow(x4))
+  ## First, subset independent events to create an index number for them
+  ind1 <- x4[!(x4$delta.time.secs < int),]
+  ind1$Ident2 <- seq(1, nrow(ind1))
+  ## We only need the original and new index numbers to add the new index number (event number) to the original data
+  ind2 <- ind1[,c("Ident", "Ident2")]
+  ## Then we can add this to the original data
+  x5 <- merge.data.frame(ind2, x4, by = "Ident", all.y = T, sort.y = T)
+  x5$Ident3 <- zoo::na.locf(x5$Ident2, fromLast = F)                       # Fill in NA values for the event number
+  ## Calculate maximum number of individuals in an independent event
+  ind3 <- dplyr::summarise(dplyr::group_by(x5, Ident3), Individuals = max(individuals))
 
-  # Sorting the columns and removing unnecessary columns
-  if(all.pics==TRUE){
-    x5b2 <- x5b[,1:ncol(x5)]
-    x5b3 <- x5b2[,c(3:ncol(x5b2)-1,1,ncol(x5b2))]
-    colnames(x5b3) <- colnames(x5)
-    x6 <- merge.data.frame(x5b3, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
-    x7 <- x6[,c(1,2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
-    rm(x5b2, xb53)
-  }else{
-    x6 <- merge.data.frame(x5, x5c, by="Ident2", all.x=TRUE, sort.x=TRUE)
-    x7 <- x6[,c(2,seq(2,length(envdata))+14,3,length(envdata)+length(x1)+5,11,12,13,14,length(envdata)+length(x1)+1,length(envdata)+length(x1)+2)]
+  # Cleaning up and outputting a file
+  if(isTRUE(all.pics)){
+    x6 <- merge.data.frame(x5, ind3, by = "Ident3", all.x = T, sort.x = T)
+    x7 <- x6[,c(colnames(envdata), "species", "Individuals", "DateTimeOriginal", "Date", "hms", "time_numeric", "time_radians", "Ident3")]
+    colnames(x7)[ncol(x7)] <- "EventNumber"
+  }else if(isFALSE(all.pics)){
+    x6 <- merge.data.frame(ind1, ind3, by.x = "Ident2", by.y = "Ident3", all.x = T, sort.x = T)
+    x7 <- x6[,c(colnames(envdata), "species", "Individuals", "DateTimeOriginal", "Date", "hms", "time_numeric", "time_radians", "Ident2")]
+    colnames(x7)[ncol(x7)] <- "EventNumber"
   }
+
   return(x7)
-  rm(int, x1, x2, x2a, x2b, x3, x4, x5, x5a, x5b, x5c, x6, x7)
+  rm(int, x1, x2,  x3, x4, x5, x6, x7, ind1, ind2, ind3)
   #rm(do, envdata, sort.col, exclude, start_date, end_date, interval, all.pics)
 }
 
@@ -272,10 +282,10 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
 ##'
 ##' @title (Deprecated) Occupancy Analysis Data Setup
 ##'
-##' @param x A data frame produced by the \code{\link{calculateEvents}} function available in this package.
-##' @param ct A CT Table following the format from the camtrapR package. See \code{\link[camtrapR]{camtrapR}} for details.
-##' @param unit The temporal unit for dividing up your data. This must be in units "days".
-##' @param subset A character vector indicating which species to prepare data for.
+##' @param x data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.
+##' @param ct data.frame. A CT Table following the format from the camtrapR package. See \code{\link[camtrapR]{camtrapR}} for details.
+##' @param unit String. The temporal unit for dividing up your data. This must be in units "days".
+##' @param subset String. A character vector indicating which species to prepare data for.
 ##' @param stationCol String. A character string for the column used to identify sites.
 ##' @param sessionCol Character. A character string for the column used to identify sessions. This is currently untested. Use with caution.
 ##' @param ct_probs Logical. Does the CT table have problems?
@@ -305,6 +315,7 @@ calculateEvents <- function(do, envdata, sort.col="Camera", exclude=c("ghost"), 
 ##'
 ##' @importFrom camtrapR cameraOperation
 ##' @importFrom stats aggregate reshape
+##'
 ##' @export
 ##'
 ##' @examples \dontrun{
@@ -453,18 +464,18 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
 ##'
 ##' @title Summarize camera trap events, including setting up for regression analyses, occupancy models, n-mixture models
 ##'
-##' @param x A data frame produced by the APFun_env function available in this package.
-##' @param ct A CT Table following the format from the package camtrapR.
-##' @param unit The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
+##' @param x data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.
+##' @param ct data.frame. A CT Table following the format from the package camtrapR.
+##' @param unit String. The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
 ##' See details for how this function handles summarizing units greater than days.
-##' @param include String of characters. This should be the names of the species that you want to include in this analysis.
-##' @param camOP Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
+##' @param include String. This should be the names of the species that you want to include in this analysis. Use c() to include multiple inputs.
+##' @param camOP list. Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
 ##' stationCol, setupCol, and retrievalCol. hasProblems is often used as well.
 ##' If multiple cameras per site, you must specify cameraCol, byCamera, allCamsOn, and camerasIndepedent.
 ##' See \code{\link[camtrapR]{cameraOperation}} for details.
-##' @param out_form Should the data output in long format, wide format or both. Acceptable inputs are c("all", "l", "long", "w", "wide"). The maximum length of this input is 2. Do not include "all" if providing multiple arguments.
-##' @param out_data Should the data output number of detections (DE), abundance (AB; number of individuals), or presence/absence (PA). Acceptable inputs are c("all", "DE", "detections", "AB", "abundance", "PA", "presence"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
-##' @param out_correction Should the data apply no correction for active camera trap nights (raw), remove all data when camera traps were inactive for more than have the time interval (rm; Unit), or calculate an adjusted number of detections/abundance for each time interval (pu; events/activenights * totalnights). Acceptable inputs are c("all", "none", "raw", "rm", "rmInactive", "pu", "perUnit"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
+##' @param out_form String. Should the data output in long format, wide format or both. Acceptable inputs are c("all", "l", "long", "w", "wide"). The maximum length of this input is 2. Do not include "all" if providing multiple arguments.
+##' @param out_data String. Should the data output number of detections (DE), abundance (AB; number of individuals), or presence/absence (PA). Acceptable inputs are c("all", "DE", "detections", "AB", "abundance", "PA", "presence"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
+##' @param out_correction String. Should the data apply no correction for active camera trap nights (raw), remove all data when camera traps were inactive for more than have the time interval (rm; Unit), or calculate an adjusted number of detections/abundance for each time interval (pu; events/activenights * totalnights). Acceptable inputs are c("all", "none", "raw", "rm", "rmInactive", "pu", "perUnit"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
 ##'
 ##' @details Using units other than days: If you use units other than days, the function will start the time interval on the first day of the period.
 ##' For example, if "1 month" is specified as the unit, the function will start each period on the 1st of the month.

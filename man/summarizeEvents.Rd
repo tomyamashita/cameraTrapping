@@ -16,25 +16,25 @@ summarizeEvents(
 )
 }
 \arguments{
-\item{x}{A data frame produced by the APFun_env function available in this package.}
+\item{x}{data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.}
 
-\item{ct}{A CT Table following the format from the package camtrapR.}
+\item{ct}{data.frame. A CT Table following the format from the package camtrapR.}
 
-\item{unit}{The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
+\item{unit}{String. The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
 See details for how this function handles summarizing units greater than days.}
 
-\item{include}{String of characters. This should be the names of the species that you want to include in this analysis.}
+\item{include}{String. This should be the names of the species that you want to include in this analysis. Use c() to include multiple inputs.}
 
-\item{camOP}{Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
+\item{camOP}{list. Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
 stationCol, setupCol, and retrievalCol. hasProblems is often used as well.
 If multiple cameras per site, you must specify cameraCol, byCamera, allCamsOn, and camerasIndepedent.
 See \code{\link[camtrapR]{cameraOperation}} for details.}
 
-\item{out_form}{Should the data output in long format, wide format or both. Acceptable inputs are c("all", "l", "long", "w", "wide"). The maximum length of this input is 2. Do not include "all" if providing multiple arguments.}
+\item{out_form}{String. Should the data output in long format, wide format or both. Acceptable inputs are c("all", "l", "long", "w", "wide"). The maximum length of this input is 2. Do not include "all" if providing multiple arguments.}
 
-\item{out_data}{Should the data output number of detections (DE), abundance (AB; number of individuals), or presence/absence (PA). Acceptable inputs are c("all", "DE", "detections", "AB", "abundance", "PA", "presence"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.}
+\item{out_data}{String. Should the data output number of detections (DE), abundance (AB; number of individuals), or presence/absence (PA). Acceptable inputs are c("all", "DE", "detections", "AB", "abundance", "PA", "presence"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.}
 
-\item{out_correction}{Should the data apply no correction for active camera trap nights (raw), remove all data when camera traps were inactive for more than have the time interval (rm; Unit), or calculate an adjusted number of detections/abundance for each time interval (pu; events/activenights * totalnights). Acceptable inputs are c("all", "none", "raw", "rm", "rmInactive", "pu", "perUnit"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.}
+\item{out_correction}{String. Should the data apply no correction for active camera trap nights (raw), remove all data when camera traps were inactive for more than have the time interval (rm; Unit), or calculate an adjusted number of detections/abundance for each time interval (pu; events/activenights * totalnights). Acceptable inputs are c("all", "none", "raw", "rm", "rmInactive", "pu", "perUnit"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.}
 }
 \value{
 Usually a 2-leveled list with species (chosen using the include argument) as the top level and requested outputs (chosen using out_form, out_data, and out_correction) below it.

@@ -16,13 +16,13 @@ occFun(
 )
 }
 \arguments{
-\item{x}{A data frame produced by the APFun_env function available in this package.}
+\item{x}{data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.}
 
-\item{ct}{A CT Table following the format from the package camtrapR.}
+\item{ct}{data.frame. A CT Table following the format from the camtrapR package. See \code{\link[camtrapR]{camtrapR}} for details.}
 
-\item{unit}{The temporal unit for dividing up your data. This must be in units "days".}
+\item{unit}{String. The temporal unit for dividing up your data. This must be in units "days".}
 
-\item{subset}{A character vector indicating which species to prepare data for.}
+\item{subset}{String. A character vector indicating which species to prepare data for.}
 
 \item{stationCol}{String. A character string for the column used to identify sites.}
 

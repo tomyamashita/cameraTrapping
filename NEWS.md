@@ -103,4 +103,6 @@
 * Allowed input of calculateEvents for interval to be a character-based time object (i.e., "30 min", "1 hour", etc.). 
 * Updated documentation for some functions. 
 * Fixed a bug in doFolder where it could not save the output. 
-
+* Updated doTimelapse to have the same options for outputs as doFolder. 
+* Updated movePictures documentation to better describe how a dataorganize file must be formatted for the function to work properly. 
+* Cleaned up the code of calculateEvents and made it check for column names in the dataorganize file to make it function better. 

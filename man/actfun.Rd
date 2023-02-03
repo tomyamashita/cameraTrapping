@@ -7,7 +7,7 @@
 actFun(x, split = F, splitcol = NULL, include, bw = NULL, rep = 999)
 }
 \arguments{
-\item{x}{data.frame. This should be the output from running the APFun_env function.}
+\item{x}{data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.}
 
 \item{split}{Logical. Whether you want to split your data by a column in the data frame. This defaults to FALSE.}
 

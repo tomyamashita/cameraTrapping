@@ -44,6 +44,9 @@ This is something that I am checking and will confirm a smooth transition to thi
 In addition, this function can now accommodate image names that are in "yyyy mm dd hh mm ss" (the standard in Renamer and SpecialRenamer) or "yyyy mm dd hh mm ss serial" (the standard in this package).
 This should help improve compatibility with images that were formatted using Renamer or SpecialRenamer.
 }
+\note{
+This function used to be called dataOrganize
+}
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.

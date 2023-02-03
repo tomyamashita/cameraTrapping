@@ -195,7 +195,7 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 
   if(isTRUE(save)){
     print("Writing a text file to the in.dir.")
-    write.table(out2, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = F)
+    write.table(out2, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = T)
   }
 
   return(out2)
@@ -204,18 +204,34 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
   #rm(in.dir, ext, save, diagnostics)
 }
 
-### Convert a Timelapse file to a dataorganize output (Added 2022-08-25) ####
+### Convert a Timelapse file to a dataorganize output (Added 2022-08-25, Updated 2023-02-02) ####
 ##' @description This function converts a Timelapse csv file to the dataorganize file output format. This was done this way because many of my core functions for processing camera trap data depend on the existence of a data frame created by APFun_env. Converting a timelapse file to this format is just the easiest way to maintain consistency.
 ##'
 ##' @title Convert a Timelapse csv to a format for use with APFun_env
 ##'
 ##' @param timelapse data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.
+##' @param ext String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for to run DataOrganize on?
+##' @param do_format String. Defaults to "serial". Should dataOrganize include the camera's serial number if it has one? Choose one of c("serial", "original"). See details below.
 ##'
 ##' @details The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
 ##'
-##' @return An R object formatted in the same style as a dataorganize text file.
+##' This function's original intention was to replicate the results of the DataOrganize program and its file format.
+##' Due to a modification with the \code{\link{movePictures}} to accommodate a DataOrganize file as an input, this function was modified to allow the inclusion of the camera serial number in the output.
+##' While, this should not have any downstream effects, the addition of the serial number column could impact future processes.
+##' This is something that I am checking and will confirm a smooth transition to this method.
 ##'
-##' @note This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package
+##' In addition, this function can now accommodate image names that are in "yyyy mm dd hh mm ss" (the standard in Renamer and SpecialRenamer) or "yyyy mm dd hh mm ss serial" (the standard in this package).
+##' This should help improve compatibility with images that were formatted using Renamer or SpecialRenamer.
+##'
+##' @return original:
+##' A data frame formatted in the same way as the DataOrganize program:
+##' site species individuals year month day hour minute second.
+##'
+##' @return serial:
+##' A data frame including the same information as DataOrganize but with the addition of the image serial number:
+##' site species individuals year month day hour minute second serial.
+##'
+##' @note This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package.
 ##'
 ##' This function used to be called APFun_Timelapse
 ##'
@@ -240,8 +256,8 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-doTimelapse <- function(timelapse){
-  #timelapse <- AP1_t
+doTimelapse <- function(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial"){
+  #timelapse <- read.csv("timelapse_out_20221028.csv")
 
   images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
   colnames(images1) <- c("File", "Path", "Species", "Individuals")
@@ -265,13 +281,56 @@ doTimelapse <- function(timelapse){
     images4 <- NULL
   }
   x1 <- rbind(images1,images2,images3,images4)
-  x2 <- data.frame(do.call(rbind, strsplit(x1$Path, split = "\\\\")), do.call(rbind, strsplit(sub(".JPG", "", x1$File, ignore.case = T), split = " ")), x1[,3:4])
-  x3 <- x2[,c(2,11,4:9,12)]
-  colnames(x3) <- paste("V", seq(1:ncol(x3)), sep = "")
-  x4 <- data.frame(x3[,1:2], apply(x3[,3:ncol(x3)], 2, as.integer))
 
-  return(x4)
-  rm(images1, images2, images3, images4, x1, x2, x3, x4)
+  if(any(!grepl("[.]", ext))){
+    message("Some of your file extensions did not include the '.'. This is being added. Add a '.' to each ext to avoid this message")
+    ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
+  }
+
+  out1 <- lapply(ext, function(x){
+    x2 <- x1[grep(x, x1$File),]
+    x3 <- data.frame(do.call(rbind, strsplit(x2$Path, split = "\\\\")), do.call(rbind, strsplit(sub(x, "", x2$File, ignore.case = T), split = " ")), x2[,3:4])
+    if(ncol(x3)==12){
+      if(!exists("do_format")){
+        message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }else if(do_format == "serial"){
+        x4 <- x3[,c(2,11,12,4:10)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
+      }else if(do_format == "original"){
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }else{
+        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }
+    }else if(ncol(x3)==11){
+      if(!exists("do_format")){
+        message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }else if(do_format == "serial"){
+        message("Your image names do not have a serial number. Outputting in original format.")
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }else if(do_format == "original"){
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }else{
+        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+        x4 <- x3[,c(2,11,12,4:9)]
+        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      }
+    }
+    return(x4)
+    #rm(x2, x3, x4)
+  })
+  out2 <- do.call(rbind, out1)
+
+  return(out2)
+  rm(images1, images2, images3, images4, x1, out1, out2)
   #rm(timelapse)
 }
 
@@ -297,6 +356,10 @@ doTimelapse <- function(timelapse){
 ##'
 ##' This function can "sort" pictures using either a timelapse csv or a dataorganize text file.
 ##' The inclusion of a dataorganize file was to better accommodate data sorted manually (i.e., not using Timelapse) and its primary use is when sorted images need to be replaced (e.g., the images got corrupted or lost somehow).
+##'
+##' When a dataorganize file is used in this function, the file must have the following column names: c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial").
+##' The "serial" name is not required and is only used if do_format is specified as "serial".
+##' These columns names are already produced by the \code{\link{doFolder}} and \code{\link{doTimelapse}} functions.
 ##'
 ##' @return list of the full file path to the in files and out files
 ##' @return in.files:

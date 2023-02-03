@@ -4,22 +4,42 @@
 \alias{doTimelapse}
 \title{Convert a Timelapse csv to a format for use with APFun_env}
 \usage{
-doTimelapse(timelapse)
+doTimelapse(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial")
 }
 \arguments{
 \item{timelapse}{data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.}
+
+\item{ext}{String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for to run DataOrganize on?}
+
+\item{do_format}{String. Defaults to "serial". Should dataOrganize include the camera's serial number if it has one? Choose one of c("serial", "original"). See details below.}
 }
 \value{
-An R object formatted in the same style as a dataorganize text file.
+original:
+A data frame formatted in the same way as the DataOrganize program:
+site species individuals year month day hour minute second.
+
+serial:
+A data frame including the same information as DataOrganize but with the addition of the image serial number:
+site species individuals year month day hour minute second serial.
 }
 \description{
 This function converts a Timelapse csv file to the dataorganize file output format. This was done this way because many of my core functions for processing camera trap data depend on the existence of a data frame created by APFun_env. Converting a timelapse file to this format is just the easiest way to maintain consistency.
 }
 \details{
 The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
+
+This function's original intention was to replicate the results of the DataOrganize program and its file format.
+Due to a modification with the \code{\link{movePictures}} to accommodate a DataOrganize file as an input, this function was modified to allow the inclusion of the camera serial number in the output.
+While, this should not have any downstream effects, the addition of the serial number column could impact future processes.
+This is something that I am checking and will confirm a smooth transition to this method.
+
+In addition, this function can now accommodate image names that are in "yyyy mm dd hh mm ss" (the standard in Renamer and SpecialRenamer) or "yyyy mm dd hh mm ss serial" (the standard in this package).
+This should help improve compatibility with images that were formatted using Renamer or SpecialRenamer.
 }
 \note{
-This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package
+This function is designed to make timelapse files compatible with DataOrganize files which are used for most of the analyses in this package.
+
+This function used to be called APFun_Timelapse
 }
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.

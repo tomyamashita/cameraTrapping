@@ -16,40 +16,43 @@ calculateEvents(
 )
 }
 \arguments{
-\item{do}{data frame. A DataOrganize file produced by the DataOrganize program or the dataOrganize function in this package.}
+\item{do}{data.frame. A DataOrganize file produced by the DataOrganize program or the dataOrganize function in this package.}
 
-\item{envdata}{Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.}
+\item{envdata}{data.frame. Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.}
 
-\item{sort.col}{string. Column that you want to sort pictures by to create independent events. This should be one of c("Camera", "Site", "Station") depending on your wording for sites. This defaults to "Camera".}
+\item{sort.col}{String. Column that you want to sort pictures by to create independent events. This should be one of c("Camera", "Site", "Station") depending on your wording for sites. This defaults to "Camera".}
 
-\item{exclude}{string. species to exclude from the output data frame. Use c() to specify species. This defaults to excluding ghosts. If you want keep all items use c("").}
+\item{exclude}{String. species to exclude from the output data frame. Use c() to specify species. This defaults to excluding ghosts. If you want keep all items use c("").}
 
-\item{start_date}{string. Start date for the AllPictures file. If you want all data, set this to an arbitrarily early date.}
+\item{start_date}{String. Start date for the AllPictures file. If you want all data, set this to an arbitrarily early date.}
 
-\item{end_date}{string. End date for pictures. This defaults to the current date.}
+\item{end_date}{String. End date for pictures. This defaults to the current date.}
 
-\item{interval}{integer. Time in seconds between pictures for an independent event. See Details for some normal interval times. This is only necessary for the main function. It defaults to no interval.}
+\item{interval}{Varies. The time between images to consider a set of images an independent event. This defaults to NULL. This can specified using character time ("60 sec", "10 minutes", "30 min", "1 hour", etc.) or by specifying the number of seconds + 1. If an incorrect format or NULL is given, the function will use an interval of 1 sec, thereby keeping all images.}
 
 \item{all.pics}{Logical. Whether or not you want to return all the pictures or just independent events. If all.pics = TRUE, all pictures will be returned with an index number associated with independent events. This defaults to FALSE.}
 }
 \value{
-A data frame of camera data. Output varies depending on whether or not all.pics is true or false.
+A data frame of camera data. The columns outputted are: (The columns from the envdata object), species, individuals, datetime, date, hms (time), time in numeric format, time in radians format, and the event number.
 
 all.pics = FALSE:
 Returns a data frame of only independent events at the specified interval.
 
 all.pics = TRUE:
-Returns a data frame of all pictures from the input file. A index number is added associated with independent events.
+Returns a data frame of all pictures that were not in the exclude parameter from the input file. The EventNumber column specifies independent events.
 }
 \description{
 Function for calculating the number of events from raw camera trap images and adding camera/site-specific information to the output.
 }
 \details{
-Suggested interval times: 61 = 1 minute, 1801 = 30 minutes. 3601 = 1 hour
+OLD: Interval times when specified using a number of seconds need to have 1 added to the end.
+For 1 minute, this would mean a 61 second interval, 30 minutes = 1801 seconds, etc.
+In the current version of this function, a time unit can be specified. The function uses lubridate to specify the inputted period into number of seconds.
 
-One second should be added to the total to ensure the full interval is included.
-
-When interval is set to NULL, the function will use an interval of 1 second and therefore does not summarize any events.
+When the interval is NULL or 1, the function does not summarize any events.
+}
+\note{
+This function used to be called APFun_env
 }
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
