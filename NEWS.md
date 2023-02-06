@@ -106,3 +106,8 @@
 * Updated doTimelapse to have the same options for outputs as doFolder. 
 * Updated movePictures documentation to better describe how a dataorganize file must be formatted for the function to work properly. 
 * Cleaned up the code of calculateEvents and made it check for column names in the dataorganize file to make it function better. 
+
+## Version 0.0.0.17 (2023-02-06)
+
+* Fixed bug in doTimelapse function to handle situations where a file extension specified does not exist in the data. 
+

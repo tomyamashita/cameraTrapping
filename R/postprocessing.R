@@ -287,45 +287,48 @@ doTimelapse <- function(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial"
     ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
   }
 
-  out1 <- lapply(ext, function(x){
-    x2 <- x1[grep(x, x1$File),]
-    x3 <- data.frame(do.call(rbind, strsplit(x2$Path, split = "\\\\")), do.call(rbind, strsplit(sub(x, "", x2$File, ignore.case = T), split = " ")), x2[,3:4])
-    if(ncol(x3)==12){
+  out1 <- lapply(ext, function(y){
+    y2 <- x1[grep(y, x1$File),]
+    if(nrow(y2)==0){
+      return(NULL)
+    }
+    y3 <- data.frame(do.call(rbind, strsplit(y2$Path, split = "\\\\")), do.call(rbind, strsplit(sub(y, "", y2$File, ignore.case = T), split = " ")), y2[,3:4])
+    if(ncol(y3)==12){
       if(!exists("do_format")){
         message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }else if(do_format == "serial"){
-        x4 <- x3[,c(2,11,12,4:10)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
+        y4 <- y3[,c(2,11,12,4:10)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
       }else if(do_format == "original"){
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }else{
         message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }
-    }else if(ncol(x3)==11){
+    }else if(ncol(y3)==11){
       if(!exists("do_format")){
         message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }else if(do_format == "serial"){
         message("Your image names do not have a serial number. Outputting in original format.")
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }else if(do_format == "original"){
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }else{
         message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        x4 <- x3[,c(2,11,12,4:9)]
-        colnames(x4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+        y4 <- y3[,c(2,11,12,4:9)]
+        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
       }
     }
-    return(x4)
-    #rm(x2, x3, x4)
+    return(y4)
+    #rm(y2, y3, y4)
   })
   out2 <- do.call(rbind, out1)
 
