@@ -566,7 +566,7 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
 
 
   # For the camera data now
-  x1 <- x[,c(camOP$stationCol, "Date", "Species", "Individuals")]
+  x1 <- x[,c(camOP$stationCol, "Date", "species", "Individuals")]
   colnames(x1) <- c("Site", "Date", "Species", "Individuals")
   x1$Individuals <- as.numeric(x1$Individuals)
   x1$camdate <- with(x1, paste(Site, Date, sep = "_"))

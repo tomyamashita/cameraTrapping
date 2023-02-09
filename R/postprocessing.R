@@ -387,6 +387,7 @@ doTimelapse <- function(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial"
 ##' @concept timelapse
 ##'
 ##' @importFrom fs file_move file_copy
+##'
 ##' @export
 ##'
 ##' @examples \dontrun{
