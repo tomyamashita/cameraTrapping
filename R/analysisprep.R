@@ -572,7 +572,7 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   x1$camdate <- with(x1, paste(Site, Date, sep = "_"))
   x2 <- suppressMessages(data.frame(dplyr::summarise(dplyr::group_by(x1, Site, Date, Species, camdate), Detections = dplyr::n(), Abundance = sum(Individuals))))
   x3 <- split(x2, f = x2$Species)
-  x4 <- x3[include]
+  x4 <- x3[which(names(x3) %in% include)]
 
   ## Check if requested outputs are valid outputs
   subFun <- function(x, v, s){

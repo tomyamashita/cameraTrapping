@@ -107,8 +107,9 @@
 * Updated movePictures documentation to better describe how a dataorganize file must be formatted for the function to work properly. 
 * Cleaned up the code of calculateEvents and made it check for column names in the dataorganize file to make it function better. 
 
-## Version 0.0.0.17 (2023-02-06, 2023-02-09)
+## Version 0.0.0.17 (2023-02-06, 2023-02-09, 2023-02-13)
 
 * Fixed bug in doTimelapse function to handle situations where a file extension specified does not exist in the data. 
 * Fixed bug in summarizeEvents function where it could not find the species folder
 * Added the subsetImages function to subset sets of images from a raw or sorted camera folder. 
+* Fixed bug in summarizeEvents where function would not be able to run if an item in the list of included species does not exist
