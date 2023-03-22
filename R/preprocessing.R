@@ -756,7 +756,7 @@ findCorruptImages <- function(in.dir, file.type, pp, cores.left = NULL){
                              warning = function(w){message("Could not coerce cores.left to a number. The default of 2 cores are not utilized"); return(2)})
     }
     cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
-    parallel::clusterExport(cl1, varlist = c("images_split2", "Tag"), envir = environment())
+    parallel::clusterExport(cl1, varlist = c("files"), envir = environment())
   }else{
     cl1 <- NULL
   }

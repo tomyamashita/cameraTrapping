@@ -27,7 +27,7 @@ interactionsTimelapse(
 
 \item{type}{String. Defaults to "none". Should image files be copied or not to the appropriate directories?}
 
-\item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.}
+\item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike \code{\link{calculateEvents}}, this has no default. Use it to exclude any "species" from the output file.}
 }
 \value{
 A list containing the data file and a file of the old and new paths and names.
@@ -63,6 +63,8 @@ Tewes, M., J. Lombardi, Z. Wardle, and T. Yamashita. 2020. Ocelot and Jaguarundi
 Kline, R., K. Ryer, A. Rivera, T. Yamashita, and T. Hopkins. 2020. Post-construction Monitoring Bi-annual Report for SH 100: May 2019 thru October 2019 (Contract No 57-9XXIA001). The University of Texas Rio Grande Valley.
 }
 \seealso{
+\code{\link{calculateEvents}}
+
 \code{\link{interactionsDataOrganize}}
 }
 \concept{interactions}

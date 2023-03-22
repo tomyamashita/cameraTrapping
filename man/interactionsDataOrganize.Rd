@@ -17,7 +17,7 @@ interactionsDataOrganize(
 
 \item{envdata}{Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.}
 
-\item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.}
+\item{exclude}{species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike \code{\link{calculateEvents}}, this has no default. Use it to exclude any "species" from the output file.}
 
 \item{start_date}{Start date for the AllPictures file.}
 

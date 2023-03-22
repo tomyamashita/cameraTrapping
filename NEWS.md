@@ -113,3 +113,9 @@
 * Fixed bug in summarizeEvents function where it could not find the species folder
 * Added the subsetImages function to subset sets of images from a raw or sorted camera folder. 
 * Fixed bug in summarizeEvents where function would not be able to run if an item in the list of included species does not exist
+
+## Version 0.0.0.18 (2023-03-08, 2023-03-22)
+
+* Updated documentation of interactions to properly cite and link to associated functions
+* Fixed bug in findCorruptImages function to properly call the correct object when running parallel processing
+

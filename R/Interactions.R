@@ -13,7 +13,7 @@
 ##'
 ##' @param do An AllPictures file produced by DataOrganize.
 ##' @param envdata Environmental variables data frame. This file must have header called "Camera" containing the list of cameras.
-##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.
+##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike \code{\link{calculateEvents}}, this has no default. Use it to exclude any "species" from the output file.
 ##' @param start_date Start date for the AllPictures file.
 ##' @param end_date End date for pictures. This defaults to the current date.
 ##'
@@ -86,7 +86,7 @@ interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=
 ##' @param out.dir String. Defaults to NULL. The directory where you want to store the Interactions images. The default specifies the in.dir. Options include c("in.dir") to more explicitly refer to the in.dir.
 ##' @param create.dirs Logical. Defaults to TRUE. Should new directories be checked for and created by R if necessary?
 ##' @param type String. Defaults to "none". Should image files be copied or not to the appropriate directories?
-##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike APFun_env, this has no default. Use it to exclude any "species" from the output file.
+##' @param exclude species to exclude from the output data frame. Use c() to specify species. If you want keep all items use c(""). Unlike \code{\link{calculateEvents}}, this has no default. Use it to exclude any "species" from the output file.
 ##'
 ##' @details NOTE: This function will add a (#) to duplicate file names, similar to the way Windows handles copying files with the same name into the same folder.  of handling duplicate file names so it will skip duplicates when copying.
 ##'
@@ -106,7 +106,9 @@ interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=
 ##' I build them for my own use and make no promises that they will work for different data formatting situations.
 ##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
-##' @seealso \code{\link{interactionsDataOrganize}}
+##' @seealso \code{\link{calculateEvents}}
+##'
+##' \code{\link{interactionsDataOrganize}}
 ##'
 ##' @keywords manip
 ##'
