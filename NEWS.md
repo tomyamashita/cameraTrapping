@@ -119,3 +119,9 @@
 * Updated documentation of interactions to properly cite and link to associated functions
 * Fixed bug in findCorruptImages function to properly call the correct object when running parallel processing
 
+## Version 0.0.0.19 (2023-04-17)
+
+* Fixed a bug in summarizeEvents where total camera trap nights calculates as number of seconds, not number of days
+* Fixed consistency bug in actFun to properly use "species" instead of "Species"
+
+

@@ -70,8 +70,8 @@ actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
 
   #require(activity)
 
-  specs_all <- lapply(AP, function(x){subset(x, x$Species %in% include)})
-  specs <- lapply(specs_all, function(x){split(x, as.factor(x[,"Species"]))})
+  specs_all <- lapply(AP, function(x){subset(x, x$species %in% include)})
+  specs <- lapply(specs_all, function(x){split(x, as.factor(x[,"species"]))})
 
   act <- lapply(specs, function(X){lapply(1:length(X), function(s){
     y <- X[[s]]
@@ -558,7 +558,7 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   c1$intdate <- with(c1, paste(Site, Interval, sep = "_"))
 
   c2 <- suppressMessages(data.frame(dplyr::summarise(dplyr::group_by(c1, intdate), mind = min(Date), maxd = max(Date), actived = sum(op, na.rm = T))))
-  c2$totald <- as.numeric(difftime(c2$maxd, c2$mind)+1)
+  c2$totald <- as.numeric(difftime(c2$maxd, c2$mind, units = "days") + 1)
   c2$activet <- ifelse(c2$actived < c2$totald/2, NA, 0)
 
   c3 <- merge.data.frame(c1, c2, by = "intdate", all.x = T)
