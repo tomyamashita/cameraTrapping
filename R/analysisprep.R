@@ -84,6 +84,12 @@ actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep 
     AP <- list(all = x)
   }
 
+  # Now, split the data by species
+  specs <- lapply(AP, function(x){
+    x1 <- split(x, x$species)
+    x1[include]
+  })
+
   if(is.null(bw)){
     message("The bandwidth is set to NULL. The function will estimate it from the data")
   }else{
@@ -168,6 +174,7 @@ actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep 
   rm(AP, specs, act, out, flipFun)
   #rm(x, split, include, return, bw, rep)
 }
+
 
 ### Manipulating the actFun output to be plottable using ggplot2 or another plotting function (Added 2023-05-09) ####
 ##' @description A function for taking an actmod object and prepping it for plotting in ggplot
