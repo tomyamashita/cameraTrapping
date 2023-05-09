@@ -109,13 +109,20 @@
 
 ## Version 0.0.0.17 (2023-02-06, 2023-02-09, 2023-02-13)
 
-* Fixed bug in doTimelapse function to handle situations where a file extension specified does not exist in the data. 
-* Fixed bug in summarizeEvents function where it could not find the species folder
+* Fixed bug in doTimelapse function to handle situations where a file extension specified does not exist in the data.
+* Fixed bug in summarizeEvents function where it could not find the species folder.
 * Added the subsetImages function to subset sets of images from a raw or sorted camera folder. 
-* Fixed bug in summarizeEvents where function would not be able to run if an item in the list of included species does not exist
+* Fixed bug in summarizeEvents where function would not be able to run if an item in the list of included species does not exist.
 
 ## Version 0.0.0.18 (2023-03-08, 2023-03-22)
 
-* Updated documentation of interactions to properly cite and link to associated functions
-* Fixed bug in findCorruptImages function to properly call the correct object when running parallel processing
+* Updated documentation of interactions to properly cite and link to associated functions.
+* Fixed bug in findCorruptImages function to properly call the correct object when running parallel processing.
+
+## Version 0.0.0.19 (2023-03-22, 2023-05-09)
+
+* Added output message related to parallel processing for findCorruptImages function.
+* Fixed the actFun function to call the correct spelling of "species" from calculateEvents.
+* Added functionality in actFun to accommodate multiple grouping factors and output with species as the top level of the output list.
+* Added the actPlot function to modify the output of the actFun function to make it easier to plot using ggplot2 or another plotting package.
 

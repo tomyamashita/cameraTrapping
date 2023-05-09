@@ -4,20 +4,20 @@
 \alias{actFun}
 \title{Animal Diel Activity}
 \usage{
-actFun(x, split = F, splitcol = NULL, include, bw = NULL, rep = 999)
+actFun(x, split = NULL, include, return = "species", bw = NULL, rep = 999)
 }
 \arguments{
 \item{x}{data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.}
 
-\item{split}{Logical. Whether you want to split your data by a column in the data frame. This defaults to FALSE.}
+\item{split}{character or NULL. How should the data be grouped before running \code{\link[activity]{fitact}} on the data. This can take NULL for no grouping or a vector of column names or index numbers. The default is NULL.}
 
-\item{splitcol}{(Optional). Defaults to NULL. Which column to use to split the data. Only required if split=T.}
+\item{include}{string. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").}
 
-\item{include}{String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").}
+\item{return}{string. Should the species or the grouping factor be placed on top of the output list. Valid options include c("species", "group", "both"). This defaults to "species". If an inproper option is provided, the function outputs as "both".}
 
-\item{bw}{Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.}
+\item{bw}{numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.}
 
-\item{rep}{Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.}
+\item{rep}{numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.}
 }
 \value{
 data:
@@ -28,6 +28,11 @@ These are the estimations of diel activity for each species.
 }
 \description{
 A function for calculating diel activity for selected species. The function can optionally also split your data based on a user-defined column.
+}
+\details{
+This function now properly checks for and adjusts the confidence interval estimation for the number of observations used in the calculation.
+This function will not calculate diel activity when there are less than 70 observations for a species-group and does provide an appropriate warning when this occurs.
+See \code{\link[activity]{fitact}} for details on how confidence interval estimation should occur.
 }
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.

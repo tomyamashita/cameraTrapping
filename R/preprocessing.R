@@ -704,7 +704,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   #rm(in.dir, out.dir, file.type, trigger.info, rename, return.type, adjust, fix.names, pp, cores.left)
 }
 
-## A function to find corrupt files (Added 2022-08-25) ####
+## A function to find corrupt files (Added 2022-08-25, Modified 2023-03-22) ####
 ##' @description A useful, but slow function for locating the name and position of corrupt images within a camera folder.
 ##'
 ##' @title Locate the name of corrupt images
@@ -761,7 +761,10 @@ findCorruptImages <- function(in.dir, file.type, pp, cores.left = NULL){
     cl1 <- NULL
   }
 
-  all <- pbapply::pblapply(files, cl = cl1, function(x){tryCatch(exiftoolr::exif_read(x, tags = c("Directory")), error = function(e){return(NA)})})
+  all <- pbapply::pblapply(files, cl = cl1, function(x){
+    tryCatch(exiftoolr::exif_read(x, tags = c("Directory")), error = function(e){return(NA)})
+    print(paste("Exiftool completed on ", x, ".", sep = ""))
+  })
 
   if(isTRUE(pp)){
     parallel::stopCluster(cl1)

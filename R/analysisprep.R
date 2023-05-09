@@ -2,23 +2,28 @@
 ## This script contains functions for prepping and running camera specific analyses
 ## This script includes the following functions:
   ## actFun
+  ## actPlot
   ## calculateEvents (formerly APFun_env)
   ## occFun (Deprecated)
   ## summarizeEvents
 
 ################################################################################
 
-### Animal Diel Activity (Added 2022-08-25) ####
+### Animal Diel Activity (Added 2022-08-25, modified 2023-05-09) ####
 ##' @description A function for calculating diel activity for selected species. The function can optionally also split your data based on a user-defined column.
 ##'
 ##' @title Animal Diel Activity
 ##'
 ##' @param x data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.
-##' @param split Logical. Whether you want to split your data by a column in the data frame. This defaults to FALSE.
-##' @param splitcol (Optional). Defaults to NULL. Which column to use to split the data. Only required if split=T.
-##' @param include String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
-##' @param bw Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.
-##' @param rep Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.
+##' @param split character or NULL. How should the data be grouped before running \code{\link[activity]{fitact}} on the data. This can take NULL for no grouping or a vector of column names or index numbers. The default is NULL.
+##' @param include string. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
+##' @param return string. Should the species or the grouping factor be placed on top of the output list. Valid options include c("species", "group", "both"). This defaults to "species". If an inproper option is provided, the function outputs as "both".
+##' @param bw numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.
+##' @param rep numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.
+##'
+##' @details This function now properly checks for and adjusts the confidence interval estimation for the number of observations used in the calculation.
+##' This function will not calculate diel activity when there are less than 70 observations for a species-group and does provide an appropriate warning when this occurs.
+##' See \code{\link[activity]{fitact}} for details on how confidence interval estimation should occur.
 ##'
 ##' @return data:
 ##' These are the data tables for each species (and split) used to produce the activity distribution.
@@ -54,54 +59,216 @@
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-actFun <- function(x, split=F, splitcol=NULL, include, bw = NULL, rep = 999){
-  #x <- AP2_1min$FM1847
-  #split <- F
-  #splitcol <- "timeperiod"
+actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep = 999){
+  #x <- AP2_1min
+  #split <- c("Location", "DistInt")
   #include <- c("bobcat", "coyote")
+  #return <- "species"
   #bw = NULL
   #rep = 99
 
-  if(split==T){
-    AP <- split(x, as.factor(x[,splitcol]))
+  # First, check if the data is going to be split into groups before conducting the analysis
+  if(!is.null(split)){
+    test <- tryCatch(x[1,split], error = function(e) e)
+    if(is.null(test)){
+      stop("You must specify split as NULL or as one or more valid column names or index numbers.")
+    }
+    rm(test)
+    if(length(split)>1){
+      x$Split <- apply(x[,split], 1, paste, collapse = "_")
+    }else{
+      x$Split <- x[,split]
+    }
+    AP <- split(x, f = x$Split)
   }else{
     AP <- list(all = x)
   }
 
+
   #require(activity)
 
-  specs_all <- lapply(AP, function(x){subset(x, x$Species %in% include)})
-  specs <- lapply(specs_all, function(x){split(x, as.factor(x[,"Species"]))})
+  # Now, split the data by species
+  specs <- lapply(AP, function(x){
+    x1 <- split(x, x$species)
+    x1[include]
+  })
 
-  act <- lapply(specs, function(X){lapply(1:length(X), function(s){
-    y <- X[[s]]
-    if(is.null(splitcol)==T){
-      print(paste("Started ", names(X)[s], " at ", Sys.time(), sep = ""))
-    }else{
-      print(paste("Started ", names(X)[s], " for group ", unique(y[,splitcol]), " at ", Sys.time(), sep = ""))
-    }
-    if(is.null(bw)==T){
-      if(nrow(y)>=100){
-        activity::fitact(y$time_radians, sample = "model", reps = rep, bw = NULL, adj = 1.5)
+  if(is.null(bw)){
+    message("The bandwidth is set to NULL. The function will estimate it from the data")
+  }else{
+    message("The function will use the specified bandwidth in the kernel calculation")
+  }
+
+  act <- lapply(1:length(specs), function(i){
+    y <- specs[[i]]
+    z <- lapply(1:length(y), function(j){
+      y1 <- y[[j]]
+
+      if(is.null(split)){
+        print(paste("Started ", names(y)[j], " at ", Sys.time(), sep = ""))
       }else{
-        activity::fitact(y$time_radians, sample = "data", reps = rep, bw = NULL, adj = 1.5)
+        print(paste("Started ", names(y)[j], " for group ", names(specs)[i], " at ", Sys.time(), sep = ""))
       }
-    }else{
-      if(nrow(y)>=100){
-        activity::fitact(y$time_radians, sample = "model", reps = rep, bw = bw, adj = 1.5)
+
+      if(is.null(bw)){
+        if(nrow(y1) >= 100){
+          y2 <- activity::fitact(y1$time_radians, sample = "data", reps = rep, bw = NULL, adj = 1.5)
+        }else if(nrow(y1) >= 70){
+          message("This group has between 70 and 100 events. Confidence bands will be estimated from the fitted model")
+          y2 <- activity::fitact(y1$time_radians, sample = "model", reps = rep, bw = NULL, adj = 1.5)
+        }else{
+          message("This group has less than 70 events. An activity curve cannot be estimated. Skipping...")
+          y2 <- "Cannot estimate activity"
+        }
       }else{
-        activity::fitact(y$time_radians, sample = "data", reps = rep, bw = bw, adj = 1.5)
+        if(nrow(y1) >= 100){
+          y2 <- activity::fitact(y1$time_radians, sample = "data", reps = rep, bw = bw, adj = 1.5)
+        }else if(nrow(y1) >= 70){
+          message("This group has between 70 and 100 events. Confidence bands will be estimated from the fitted model")
+          y2 <- activity::fitact(y1$time_radians, sample = "model", reps = rep, bw = bw, adj = 1.5)
+        }else{
+          message("This group has less than 70 events. An activity curve cannot be reliably estimated. Skipping...")
+          y2 <- "Cannot estimate activity"
+        }
       }
-    }
-  })})
-  act2 <- lapply(1:length(act), function(y){names(act[[y]]) <- names(specs[[y]]); return(act[[y]])})
-  names(act2) <- names(specs)
+      return(y2)
+      #rm(y1, y2)
+    })
+    names(z) <- names(y)
+    return(z)
+    #rm(y, z)
+  })
+  names(act) <- names(specs)
 
-  return(list(data = specs, activity = act2))
+  # Flip the list from split first to species first. Important depending on what is compared
+  flipFun <- function(input){
+    group.name <- names(input)
+    spec.name <- names(input[[1]])
 
-  rm(AP, specs_all, specs, act, act2)
-  #rm(x, split, splitcol, species, bw, rep)
+    a1 <- unlist(input, recursive = F)
+
+    a2 <- lapply(spec.name, function(b){
+      b1 <- a1[grep(b, names(a1))]
+      names(b1) <- group.name
+      return(b1)
+      #rm(b1)
+    })
+    names(a2) <- spec.name
+
+    return(a2)
+    #rm(group.name, spec.name, a1, a2)
+  }
+
+  # Should the function return species as the top level of the list, the grouping factor, or both?
+  if(return == "species"){
+    out <- list(data = flipFun(specs), activity = flipFun(act))
+  }else if(return == "group"){
+    out <- list(data = specs, activity = act)
+  }else if(return == "both"){
+    out <- list(species = list(data = flipFun(specs), activity = flipFun(act)),
+                split = list(data = specs, activity = act))
+  }else{
+    message("You did not specify a valid return type. Data will be returned with both species and group as the top.")
+    out <- list(species = list(data = flipFun(specs), activity = flipFun(act)),
+                split = list(data = specs, activity = act))
+  }
+  return(out)
+
+  rm(AP, specs, act, out, flipFun)
+  #rm(x, split, include, return, bw, rep)
 }
+
+### Manipulating the actFun output to be plottable using ggplot2 or another plotting function (Added 2023-05-09) ####
+##' @description A function for taking an actmod object and prepping it for plotting in ggplot
+##'
+##' @title Prepare diel activity plots
+##'
+##' @param act list. The list object outputted by the \code{\link{actFun}} function. This must contain either species or the grouping factor as the top level of the list
+##' @param top character. What was outputted as the top level list? This can be one of c("species", "group"). This should be the same as what is asked for in the "return" parameter of the \code{\link{actFun}} function.
+##' It does not matter which is which, and fundamentally, it will not change anything about the output. It only affects the naming of two columns in the output.
+##'
+##' @return data.frame containing the probability density function information for x if it is centered on 12 noon (day) or 12 midnight (night) and y in radians, density, or frequency
+##'
+##' @references Rowcliffe, J. M., R. Kays, B. Kranstauber, C. Carbone, and P. A. Jansen. 2014. Quantifying levels of animal activity using camera trap data. Methods in Ecology and Evolution 5:1170-1179. 10.1111/2041-210x.12278
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso activity package: \url{https://cran.r-project.org/web/packages/activity/index.html}, \code{\link[activity]{activity}}
+##'
+##' activity package plotting code is viewable on github: \url{https://github.com/MarcusRowcliffe/activity}
+##'
+##' \code{\link{actFun}}
+##'
+##' @keywords dplot
+##' @keywords manip
+##'
+##' @concept diel activity
+##' @concept plotting
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+actPlot <- function(act, top = "species"){
+  #act <- act_test
+  #top <- "species"   # If you output species as the return, then the species are on the top level.
+
+  if(!all(names(act) == c("data", "activity"))){
+    stop("The input must contain the data and activity names at the top level")
+  }
+  x1 <- act$activity
+
+  x2 <- lapply(1:length(x1), function(i){
+    name1 <- names(x1)[i]
+    y1 <- lapply(1:length(x1[[i]]), function(j){
+      name2 <- names(x1[[i]])[j]
+
+      if(class(x1[[i]][[j]]) == "actmod"){
+        pdf <- data.frame(x1[[i]][[j]]@pdf)
+        colnames(pdf) <- c("x_day", "y_rads", "se", "lcl_rads", "ucl_rads")
+        fdata <- x1[[i]][[j]]@data
+
+        # All of these formulas are taken from the activity::plot.actmod method
+        pdf$x_night <- pdf$x_day - ifelse(pdf$x_day>pi, 2*pi, 0)             # Convert day x units to night x units by subtracting 2*pi from values greater than pi (12 noon)
+        pdf$y_dens <- pdf$y_rads*pi/12                                       # Convert to density from radians
+        pdf$lcl_dens <- pdf$lcl_rads*pi/12                                   # Convert to density from radians
+        pdf$ucl_dens <- pdf$ucl_rads*pi/12                                   # Convert to density from radians
+        pdf$y_freq <- pdf$y_rads*length(fdata)*pi/12                         # Convert density y axis to frequency y axis
+        pdf$lcl_freq <- pdf$lcl_rads*length(fdata)*pi/12                     # Convert density lower confidence interval to frequency lower confidence interval
+        pdf$ucl_freq <- pdf$ucl_rads*length(fdata)*pi/12                     # Convert density upper confidence interval to frequency upper confidence interval
+
+        if(top == "species"){
+          pdf$species <- name1
+          pdf$group <- name2
+        }else if(top == "group"){
+          pdf$species <- name2
+          pdf$group <- name1
+        }else{
+          message("You did not properly specify which level is the species level. Assuming group is on top...")
+          pdf$species <- name2
+          pdf$group <- name1
+        }
+
+        pdf2 <- pdf[,c("species", "group", "x_day", "x_night", "y_rads", "lcl_rads", "ucl_rads", "y_dens", "lcl_dens", "ucl_dens", "y_freq", "lcl_freq", "ucl_freq", "se")]
+        return(pdf2)
+      }else{
+        return(NULL)
+      }
+    })
+    do.call(rbind, y1)
+  })
+  x3 <- do.call(rbind, x2)
+
+  return(x3)
+  rm(x1, x2, x3)
+  #rm(act)
+}
+
 
 ### From a dataorganize file, create a usable output (Added 2022-08-25, Modified 2022-08-31, Updated 2023-02-02) ####
 ##' @description Function for calculating the number of events from raw camera trap images and adding camera/site-specific information to the output.
@@ -458,6 +625,7 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
   rm(unit1, camop, camopt, dates, camdate, active, activet, x1, x2, x3)
   #rm(x, ct, unit, subset, stationCol, sessionCol, ct_probs, count)
 }
+
 
 ### Summarize number of events by a time period (Added 2023-01-20) ####
 ##' @description Summarize raw camera trap events by a user-specified time period for various analyses
