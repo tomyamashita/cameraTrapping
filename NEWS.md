@@ -119,10 +119,16 @@
 * Updated documentation of interactions to properly cite and link to associated functions.
 * Fixed bug in findCorruptImages function to properly call the correct object when running parallel processing.
 
-## Version 0.0.0.19 (2023-03-22, 2023-05-09)
+## Version 0.0.0.19 (2023-04-17)
+
+* Fixed a bug in summarizeEvents where total camera trap nights calculates as number of seconds, not number of days
+* Fixed consistency bug in actFun to properly use "species" instead of "Species"
+
+## Version 0.0.0.20 (2023-03-22, 2023-05-09)
 
 * Added output message related to parallel processing for findCorruptImages function.
 * Fixed the actFun function to call the correct spelling of "species" from calculateEvents.
 * Added functionality in actFun to accommodate multiple grouping factors and output with species as the top level of the output list.
 * Added the actPlot function to modify the output of the actFun function to make it easier to plot using ggplot2 or another plotting package.
+
 
