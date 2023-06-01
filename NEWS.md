@@ -131,4 +131,9 @@
 * Added functionality in actFun to accommodate multiple grouping factors and output with species as the top level of the output list.
 * Added the actPlot function to modify the output of the actFun function to make it easier to plot using ggplot2 or another plotting package.
 
+## Version 0.0.0.22 (2023-06-01)
+
+* Added progress line to rename section of cameraRename3 function
+
+
 

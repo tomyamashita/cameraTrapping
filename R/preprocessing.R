@@ -418,8 +418,8 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' }
 ##'
 cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, rename="none", return.type = "list", adjust = NULL, fix.names = FALSE, pp = FALSE, cores.left = NULL){
-  #in.dir <- "J:/test/new_20220117/images_ConLate"  # More than likely, this must be a folder containing camera folders
-  #out.dir <- "J:/test/new_20220501"
+  #in.dir <- "H:/new_HY_20230531/images/RH7-6/20230531"  # More than likely, this must be a folder containing camera folders
+  #out.dir <- NULL
   #file.type <- ".jpg"  # What type of file do you want to rename
   #trigger.info <- "Hyperfire2"  # Should the output include info about trigger method, and photo numbers? Currently only available for Hyperfire 2 cameras
   #rename <- "none"  # Should the original image files be renamed? Note: this affects the raw file names and cannot be easily undone.
@@ -427,6 +427,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   #adjust <- NULL
   #adjust <- c("2021-01-01 00:00:00", "2021-01-01 01:00:00")  # Do the image date-times need adjustment? Specify the original date-time and the new date-time. This is used to calculate a difftime object for adjustment purposes.
   #fix.names <- F
+  #pp <- F
   #pp <- T
   #cores.left <- 2
 
@@ -548,7 +549,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
   exif1 <- pbapply::pblapply(1:length(images_split2), cl = cl1, function(i){
     x <- tryCatch(exiftoolr::exif_read(images_split2[[i]], tags = Tag),
-             error = function(e){message(paste("There is likely a corrupt file in: \n", names(images_split2)[i], "\nThe original error is: ", sep = "")); message(e); return(names(images_split2)[i])})
+                  error = function(e){message(paste("There is likely a corrupt file in: \n", names(images_split2)[i], "\nThe original error is: ", sep = "")); message(e); return(names(images_split2)[i])})
     print(paste("Exiftool completed on ", names(images_split2)[i], ".", sep = ""))
     return(x)
   })
@@ -654,6 +655,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
     }
     return(x3[,2:ncol(x3)])
   })
+  names(exif2) <- names(images_split2)
 
   # Rename the images if desired (this cannot be undone)
   if(isTRUE(pp)){
@@ -663,22 +665,30 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 
   if(rename=="replace"){
     print(paste("Files will be renamed and replaced. Renaming started at ", Sys.time(), sep = ""))
-    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){
-      fs::file_move(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))
-      print("Completed renaming for an item")
+    pbapply::pblapply(1:length(exif2), cl = cl1, function(i){
+      if(is.na(exif2[[i]])){
+        print(paste("Skipping ", names(exif2)[i], " due to missing exif data.", sep = ""))
+      }else{
+        with(exif2[[i]], fs::file_move(path = file.path(inpath, old.name), new_path = file.path(outpath, new.name)))
+        print(paste("Completed renaming for ", names(exif2)[i], ".", sep = ""))
+      }
     })
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="copy"){
     print(paste("Files will be renamed and copied. Renaming started at ", Sys.time(), sep = ""))
-    pbapply::pblapply(exif2[which(!is.na(exif2))], cl = cl1, function(x){
-      fs::file_copy(path = with(x, file.path(inpath, old.name)), new_path = with(x, file.path(outpath, new.name)))
-      print("Completed renaming for an item")
+    pbapply::pblapply(1:length(exif2), cl = cl1, function(i){
+      if(is.na(exif2[[i]])){
+        print(paste("Skipping ", names(exif2)[i], " due to missing exif data.", sep = ""))
+      }else{
+        with(exif2[[i]], fs::file_copy(path = file.path(inpath, old.name), new_path = file.path(outpath, new.name)))
+        print(paste("Completed renaming for ", names(exif2)[i], ".", sep = ""))
+      }
     })
     print(paste("File renaming completed at ", Sys.time(), sep = ""))
   }else if(rename=="none"){
     message("No files were renamed")
   }else{
-    message("No files were renamed because you did not specify a correct value for rename. Choose one of c('replace', 'copy', 'none').")
+    message("No files were renamed because you did not specify a correct value for rename. Renaming can be done using the output file. To avoid this warning, choose one of c('replace', 'copy', 'none').")
   }
 
   if(isTRUE(pp)){
