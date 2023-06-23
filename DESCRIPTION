@@ -1,7 +1,7 @@
 Package: cameraTrapping
 Type: Package
 Title: Managing camera trap data
-Version: 0.0.0.22
+Version: 0.0.0.23
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
                     email = "tjyamashta@gmail.com", 
@@ -28,12 +28,12 @@ Imports:
   jsonlite (>= 1.8.0),
   lubridate (>= 1.8.0),
   methods (>= 4.2.0),
+  openxlsx (>= 4.2.5),
   parallel (>= 4.2.0),
   pbapply (>= 1.5-0),
   stats (>= 4.2.0),
   zoo (>= 1.8-10)
 Suggests: 
   ggplot2 (>= 3.3.6), 
-  openxlsx (>= 4.2.5), 
   tidyr (>= 1.2.0)
 RoxygenNote: 7.2.3
