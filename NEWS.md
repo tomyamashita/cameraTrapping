@@ -135,5 +135,9 @@
 
 * Added progress line to rename section of cameraRename3 function
 
+## Version 0.0.0.23 (2023-06-23)
+
+* Fixed problem with package install where the openxlsx package is set to required instead of suggested
+
 
 
