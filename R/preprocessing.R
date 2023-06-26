@@ -400,7 +400,6 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' @importFrom exiftoolr exif_version install_exiftool exif_read
 ##' @importFrom fs file_move file_copy
 ##' @importFrom lubridate ymd_hms year month day hour minute second
-##' @importFrom methods is
 ##' @importFrom parallel makeCluster clusterExport detectCores stopCluster
 ##' @importFrom pbapply pblapply
 ##' @importFrom stats complete.cases
@@ -472,11 +471,8 @@ cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   }
 
   # Check if exiftool is installed within R
-  out <- tryCatch(exiftoolr::exif_version())
-  if(methods::is(out, "try-error")){
-    warning("Exiftool was not installed on your version of R. The most up-to-date version of exiftool was installed using defaults...")
-    exiftoolr::install_exiftool()
-  }
+  tryCatch(paste("Using exiftool version ", exiftoolr::exif_version(), sep = ""),
+           error = function(e){message("Exiftool is not installed on your version of R. Installing the most up-to-date version of exiftool using exiftoolr::install_exiftool() and default inputs."); exiftoolr::install_exiftool()})
 
   # Check if the "in" and "out" directories exist
   if(!dir.exists(in.dir)){

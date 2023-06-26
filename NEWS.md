@@ -139,5 +139,9 @@
 
 * Fixed problem with package install where the openxlsx package is set to required instead of suggested
 
+## Version 0.0.0.24 (2023-06-26)
+
+* Fixed a bug in cameraRename3 where the function would fail if exiftool was not installed. 
+
 
 

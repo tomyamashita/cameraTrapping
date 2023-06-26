@@ -1,7 +1,7 @@
 Package: cameraTrapping
 Type: Package
 Title: Managing camera trap data
-Version: 0.0.0.23
+Version: 0.0.0.24
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
                     email = "tjyamashta@gmail.com", 
@@ -27,7 +27,6 @@ Imports:
   fs (>= 1.5.2),
   jsonlite (>= 1.8.0),
   lubridate (>= 1.8.0),
-  methods (>= 4.2.0),
   openxlsx (>= 4.2.5),
   parallel (>= 4.2.0),
   pbapply (>= 1.5-0),
