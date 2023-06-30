@@ -857,10 +857,10 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
 
   if(type=="move"){
     print("File transfer in progress. Images are moved from in.dir to out.dir")
-    out <- fs::file_move(path = ds3[["in.files"]], new_path = ds3[["out.files"]])
+    out <- fs::file_move(path = ds2$oldname, new_path = ds2$newname)
   }else if(type=="copy"){
     print("File transfer in progress. Images are copied from in.dir to out.dir")
-    out <- fs::file_copy(path = ds3[["in.files"]], new_path = ds3[["out.files"]])
+    out <- fs::file_copy(path = ds2$oldname, new_path = ds2$newname)
   }else if(type == "none"){
     print("No file transfer specified")
   }else{
