@@ -147,4 +147,6 @@
 
 * Fixed a bug in imageEffort where the total capture rate was not being calculated correctly
 * Fixed a bug in timelapseQC where the function would not check if there is a missing species in SpeciesOther when there is a missing species in Species1
+* Fixed a bug in unsortImages where date.col was improperly specified
+
 

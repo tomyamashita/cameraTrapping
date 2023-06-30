@@ -713,7 +713,7 @@ trapEffort <- function(ct, camOP){
 ##'
 ##' @param in.dir string. The directory containing the sorted camera folders. This can have lengths greater than 1
 ##' @param out.dir string. The directory where you want to unsort files to. This can have length 1 or equal to the in.dir
-##' @param datecol string. The date collected of the batch/es of pictures that need to be unsorted. This must be the same length as the in.dir
+##' @param date.col string. The date collected of the batch/es of pictures that need to be unsorted. This must be the same length as the in.dir
 ##' @param create.dirs Logical. Should the function create the directories it needs?
 ##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')
 ##'
@@ -756,15 +756,15 @@ trapEffort <- function(ct, camOP){
 unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
   #in.dir <- list.dirs(path = getwd(), recursive = F)[3:6]  # The location containing the camera folders
   #out.dir <- "I:/Hixon/images2"
-  #datecol <- c("2021_08_13", "2021_07_05", "2021_05_06", "2021_06_12")
+  #date.col <- c("2021_08_13", "2021_07_05", "2021_05_06", "2021_06_12")
   #type <- "none"
   #create.dirs <- T
 
   print(paste("This function started at ", Sys.time(), sep = ""))
 
   # Initial error checking
-  if(length(in.dir) != length(datecol)){
-    stop("You must specify the same number of elements in in.dir as datecol")
+  if(length(in.dir) != length(date.col)){
+    stop("You must specify the same number of elements in in.dir as date.col")
   }
 
   if(length(out.dir) > 1){
@@ -789,7 +789,7 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
   # Loading files and preparing for renaming
   ds1 <- pbapply::pblapply(1:length(in.dir), function(i){
     indir <- in.dir[i]
-    dc <- datecol[i]
+    dc <- date.col[i]
 
     files <- list.files(path = indir, pattern = ".jpg", ignore.case = T, full.names = T, recursive = T)
 
@@ -869,5 +869,5 @@ unsortImages <- function(in.dir, out.dir, date.col, type, create.dirs = T){
 
   return(rename)
   #rm(ds1, ds2, ds3, e, rename, out)
-  #rm(in.dir, out.dir, datecol, type, create.dirs)
+  #rm(in.dir, out.dir, date.col, type, create.dirs)
 }
