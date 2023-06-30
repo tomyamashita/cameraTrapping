@@ -143,5 +143,8 @@
 
 * Fixed a bug in cameraRename3 where the function would fail if exiftool was not installed. 
 
+## Version 0.0.0.25 (2023-06-30)
 
+* Fixed a bug in imageEffort where the total capture rate was not being calculated correctly
+* Fixed a bug in timelapseQC where the function would not check if there is a missing species in SpeciesOther when there is a missing species in Species1
 

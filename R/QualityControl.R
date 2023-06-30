@@ -202,7 +202,7 @@ imageEffort <- function(timelapse = NULL, do = NULL){
     ghost <- nrow(x[x[,2]=="ghost",])
     human <- nrow(x[x[,2]=="human",])
     animal <- nrow(x) - ghost - human
-    c(total = nrow(x), animal = animal, human = human, ghost = ghost, success = animal/nrow(x))
+    c(total = nrow(x), animal = animal, human = human, ghost = ghost)
   })
   if(is.null(names(out1))){
     message("Your items do not have names. They will be outputted in the order they were inputted.")
@@ -210,6 +210,7 @@ imageEffort <- function(timelapse = NULL, do = NULL){
   }
   out1[["total"]] <- apply(do.call(rbind, out1), 2, sum)
   out2 <- data.frame(do.call(rbind, out1))
+  out2$success <- with(out2, animal/total)
 
   return(out2)
   rm(AP, out1, out2)
@@ -580,7 +581,8 @@ timelapseQC <- function(timelapse, exclude=NULL, detailed_res=F){
   unique_species <- sort(unique(do.call(c, unique_spec)))
 
   # Check missing species data in the species 1 column
-  missing_spec <- timelapse[timelapse$Species1=="",]
+  no_spec <- timelapse[timelapse$Species1=="",]
+  missing_spec <- no_spec[no_spec$SpeciesOther == "",]
 
   # Check missing individuals data in species data
   if(is.null(exclude)){
@@ -643,7 +645,7 @@ timelapseQC <- function(timelapse, exclude=NULL, detailed_res=F){
 
   out <- list("Unique Species" = unique_species, "Missing Species" = missing_spec, "Missing Ind" = missing_ind, "Wrong Ind" = wrong_ind)
   return(out)
-  rm(images, unique_spec, unique_species, missing_spec, exclude, no_ind, missing_ind, yes_ind, wrong_ind, out)
+  rm(images, unique_spec, unique_species, no_spec, missing_spec, exclude, no_ind, missing_ind, yes_ind, wrong_ind, out)
   #rm(timelapse, exclude, detailed_res)
 }
 
