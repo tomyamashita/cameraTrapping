@@ -11,11 +11,11 @@ unsortImages(in.dir, out.dir, date.col, type, create.dirs = T)
 
 \item{out.dir}{string. The directory where you want to unsort files to. This can have length 1 or equal to the in.dir}
 
+\item{date.col}{string. The date collected of the batch/es of pictures that need to be unsorted. This must be the same length as the in.dir}
+
 \item{type}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')}
 
 \item{create.dirs}{Logical. Should the function create the directories it needs?}
-
-\item{datecol}{string. The date collected of the batch/es of pictures that need to be unsorted. This must be the same length as the in.dir}
 }
 \value{
 list of data frames of each each in.dir directory. Each data frame contains the following information:

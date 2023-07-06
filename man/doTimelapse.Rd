@@ -4,12 +4,10 @@
 \alias{doTimelapse}
 \title{Convert a Timelapse csv to a format for use with APFun_env}
 \usage{
-doTimelapse(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial")
+doTimelapse(timelapse, do_format = "serial")
 }
 \arguments{
 \item{timelapse}{data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.}
-
-\item{ext}{String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for to run DataOrganize on?}
 
 \item{do_format}{String. Defaults to "serial". Should dataOrganize include the camera's serial number if it has one? Choose one of c("serial", "original"). See details below.}
 }
@@ -27,6 +25,8 @@ This function converts a Timelapse csv file to the dataorganize file output form
 }
 \details{
 The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
+
+File extensions are automatically removed so it is no longer necessary to specify file extensions in this function.
 
 This function's original intention was to replicate the results of the DataOrganize program and its file format.
 Due to a modification with the \code{\link{movePictures}} to accommodate a DataOrganize file as an input, this function was modified to allow the inclusion of the camera serial number in the output.

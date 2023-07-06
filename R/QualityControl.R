@@ -12,12 +12,14 @@
 
 ################################################################################
 
-### First and Last Pictures (Added 2022-08-30) ####
+### First and Last Pictures (Added 2022-08-30, Modified 2023-07-06) ####
 ##' @description This function computes the first and last pictures from the output of the \code{\link{cameraRename3}} function for basic diagnostic purposes.
 ##'
 ##' @title Camera basic diagnostics
 ##'
-##' @param x data.frame. A data frame outputted from the \code{\link{cameraRename3}} function
+##' @param x data.frame. A data frame outputted from the \code{\link{cameraRename3}} function.
+##' @param cam_dir_level Integer. The level of the directory where the camera name is. This can be a number of levels from the top or bottom directory, specified using the 'from_bottom' argument.
+##' @param from_bottom Logical. Should cam_dir_level be calculated from the lowest directory (TRUE) or highest directory (FALSE)
 ##'
 ##' @details This function has only been tested to work with the output of \code{\link{cameraRename3}}.
 ##' Theoretically it could work with any input that has an outpath, UserLabel, and DateTimeOriginal column but I don't know what it will do.
@@ -40,32 +42,45 @@
 ##' @concept camera trapping
 ##' @concept diagnostics
 ##'
-##' @importFrom dplyr summarize group_by n
+##' @importFrom dplyr reframe group_by n
 ##' @importFrom lubridate ymd year month day
-##'
+##' @importFrom fs path_split path_ext
 ##' @export
 ##'
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-cameraDiagnostics <- function(x){
+cameraDiagnostics <- function(x, cam_dir_level, from_bottom){
   #x <- openxlsx::read.xlsx("new_20220801.xlsx", sheet = 1, detectDates = T)
+  #cam_dir_level <- 2
+  #from_bottom <- TRUE
 
   x$datetime <- lubridate::ymd_hms(x$DateTimeOriginal)
   x$Date <- lubridate::ymd(paste(lubridate::year(x$datetime), lubridate::month(x$datetime), lubridate::day(x$datetime)))
-  if(any(colnames(x)=="UserLabel")){
-    out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
-  }else{
-    out <- data.frame(dplyr::summarize(dplyr::group_by(x, outpath), Label = NA, num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date)))
+
+  dirs <- do.call(rbind, fs::path_split(x$outpath))
+
+  if(isTRUE(from_bottom)){
+    cam_dir_level <- ncol(dirs)+1-cam_dir_level
   }
 
-  print(paste("The total number of pictures is: ", sum(out$num_pics), sep = ""))
+  x$camname <- dirs[,cam_dir_level]
+  x$ext <- fs::path_ext(x$new.name)
+
+  if(any(colnames(x) == "UserLabel")){
+    out <- dplyr::reframe(dplyr::group_by(x, outpath, ext), Camera = unique(camname), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date))
+  }else{
+    out <- dplyr::reframe(dplyr::group_by(x, outpath, ext), Camera = unique(camname), Label = NA, num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date))
+  }
+
+  print(paste("The total number of photos is: ", sum(out$num_pics), sep = ""))
   print(paste("The following cameras did not make to the end: ", paste(out$Label[out$last_pic %in% sort(unique(out$last_pic))[-length(unique(out$last_pic))]], collapse = ", "), sep = ""))
 
   return(out)
   rm(out)
   #rm(x)
 }
+
 
 ### Converting date-time information in a CT Table to character format (Added 2022-08-25) ####
 ##' @description This function will convert properly formatted date objects to characters. This is so camtrapR can read the character date. For some reason, the package does not like date-formatted dates.

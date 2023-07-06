@@ -9,17 +9,26 @@
 
 ################################################################################
 
-### Animal Diel Activity (Added 2022-08-25, modified 2023-05-09) ####
+# Animal diel activity (Modified 2023-07-06) ####
 ##' @description A function for calculating diel activity for selected species. The function can optionally also split your data based on a user-defined column.
 ##'
 ##' @title Animal Diel Activity
 ##'
 ##' @param x data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.
-##' @param split character or NULL. How should the data be grouped before running \code{\link[activity]{fitact}} on the data. This can take NULL for no grouping or a vector of column names or index numbers. The default is NULL.
-##' @param include string. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
-##' @param return string. Should the species or the grouping factor be placed on top of the output list. Valid options include c("species", "group", "both"). This defaults to "species". If an inproper option is provided, the function outputs as "both".
-##' @param bw numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.
-##' @param rep numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.
+##' @param split String or NULL. How should the data be grouped before running \code{\link[activity]{fitact}} on the data. This can take NULL for no grouping or a vector of column names or index numbers. The default is NULL.
+##' @param include String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").
+##' @param return String. Should the species or the grouping factor be placed on top of the output list. Valid options include c("species", "group", "both"). This defaults to "species". If an inproper option is provided, the function outputs as "both".
+##' @param bw Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.
+##' @param rep Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.
+##' @param pp Logical. Should this function take advantage of parallel processing.
+##' The default is FALSE. Because the function separates tasks by camera directory, it can use parallel processing to run multiple cameras at the same time.
+##' This is currently set up to run in Windows OS so I do not know if this will work on a Mac or Linux system.
+##' If you want this functionality on a Unix device and know how to set it up, let me know and I can incorporate it.
+##' @param cores.left Numeric. How many cores should be left available when using parallel processing?
+##' The default is NULL. This is only necessary when pp=TRUE.
+##' If left at the default, the function will default to 2 cores remaining which is generally enough to continue using a PC while the function runs.
+##' I would set this to be greater than 0, otherwise the function will use the entire processing power of your computer.
+##' To see how many cores you have available for parallel processing, use: parallel::detectCores().
 ##'
 ##' @details This function now properly checks for and adjusts the confidence interval estimation for the number of observations used in the calculation.
 ##' This function will not calculate diel activity when there are less than 70 observations for a species-group and does provide an appropriate warning when this occurs.
@@ -53,126 +62,140 @@
 ##' @concept diel activity
 ##'
 ##' @importFrom activity fitact
-##'
+##' @importFrom parallel makeCluster clusterExport stopCluster
+##' @importFrom pbapply pblapply
 ##' @export
 ##'
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep = 999){
+actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep = 999, pp = F, cores.left = NULL){
   #x <- AP2_1min
   #split <- c("Location", "DistInt")
   #include <- c("bobcat", "coyote")
   #return <- "species"
-  #bw = NULL
-  #rep = 99
+  #bw <- NULL
+  #rep <- 99
+  #pp <- F
+  #cores.left <- 4
 
   # First, check if the data is going to be split into groups before conducting the analysis
   if(!is.null(split)){
-    test <- tryCatch(x[1,split], error = function(e) e)
-    if(is.null(test)){
+    if(!all(split %in% colnames(x))){
       stop("You must specify split as NULL or as one or more valid column names or index numbers.")
     }
-    rm(test)
-    if(length(split)>1){
+    if(length(split) > 1){
       x$Split <- apply(x[,split], 1, paste, collapse = "_")
     }else{
       x$Split <- x[,split]
     }
-    AP <- split(x, f = x$Split)
+    split_unique <- unique(x$Split)
+    x$SplitSpecies <- with(x, paste(Split, species, sep = "__"))
   }else{
-    AP <- list(all = x)
+    x$SplitSpecies <- x$species
   }
 
-  # Now, split the data by species
-  specs <- lapply(AP, function(x){
-    x1 <- split(x, x$species)
-    x1[include]
+  # Now, we select only those species that are important and split the data by species and the split group (if applicable)
+  x1 <- x[x$species %in% include,]
+  x2 <- split(x1, f = x1$SplitSpecies)
+
+  # Enable parallel processing if requested
+  if(isTRUE(pp)){
+    message("Parallel processing enabled")
+    show <- FALSE
+    if(is.null(cores.left)){
+      cores.left <- 2
+    }else{
+      cores.left <- tryCatch(as.numeric(cores.left),
+                             error = function(e){message("There was an error coercing cores.left to a number. The default of 2 cores are not utilized"); return(2)},
+                             warning = function(w){message("Could not coerce cores.left to a number. The default of 2 cores are not utilized"); return(2)})
+    }
+    cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
+    parallel::clusterExport(cl1, varlist = c("x2", "show", "bw", "rep"), envir = environment())
+  }else{
+    cl1 <- NULL
+    show <- TRUE
+  }
+
+  # Run activity function
+  act <- pbapply::pblapply(1:length(x2), cl = cl1, function(i){
+    y1 <- x2[[i]]
+
+    print(paste("Started ", names(x2)[i], " at ", Sys.time(), sep = ""))
+
+    if(is.null(bw)){
+      if(nrow(y1) >= 100){
+        y2 <- activity::fitact(y1$time_radians, sample = "data", reps = rep, bw = NULL, adj = 1.5, show = show)
+      }else if(nrow(y1) >= 70){
+        message(paste("The ", names(x2)[i], " group has between 70 and 100 events. Confidence bands will be estimated from the fitted model", sep = ""))
+        y2 <- activity::fitact(y1$time_radians, sample = "model", reps = rep, bw = NULL, adj = 1.5, show = show)
+      }else{
+        message(paste("The ", names(x2)[i], " group has less than 70 events. An activity curve cannot be estimated. Skipping...", sep = ""))
+        y2 <- "Cannot estimate activity"
+      }
+    }else{
+      if(nrow(y1) >= 100){
+        y2 <- activity::fitact(y1$time_radians, sample = "data", reps = rep, bw = bw, adj = 1.5, show = show)
+      }else if(nrow(y1) >= 70){
+        message(paste("The ", names(x2)[i], " group has between 70 and 100 events. Confidence bands will be estimated from the fitted model", sep = ""))
+        y2 <- activity::fitact(y1$time_radians, sample = "model", reps = rep, bw = bw, adj = 1.5, show = show)
+      }else{
+        message(paste("The ", names(x2)[i], " group has less than 70 events. An activity curve cannot be estimated. Skipping...", sep = ""))
+        y2 <- "Cannot estimate activity"
+      }
+    }
+
+    if(isFALSE(show)){
+      print(paste("Finished ", names(x2)[i], " at ", Sys.time(), sep = ""))
+    }
+
+    return(y2)
+    #rm(y1, y2)
   })
 
-  if(is.null(bw)){
-    message("The bandwidth is set to NULL. The function will estimate it from the data")
-  }else{
-    message("The function will use the specified bandwidth in the kernel calculation")
+  if(isTRUE(pp)){
+    parallel::stopCluster(cl1)
   }
 
-  act <- lapply(1:length(specs), function(i){
-    y <- specs[[i]]
-    z <- lapply(1:length(y), function(j){
-      y1 <- y[[j]]
+  names(act) <- names(x2)
 
-      if(is.null(split)){
-        print(paste("Started ", names(y)[j], " at ", Sys.time(), sep = ""))
-      }else{
-        print(paste("Started ", names(y)[j], " for group ", names(specs)[i], " at ", Sys.time(), sep = ""))
-      }
-
-      if(is.null(bw)){
-        if(nrow(y1) >= 100){
-          y2 <- activity::fitact(y1$time_radians, sample = "data", reps = rep, bw = NULL, adj = 1.5)
-        }else if(nrow(y1) >= 70){
-          message("This group has between 70 and 100 events. Confidence bands will be estimated from the fitted model")
-          y2 <- activity::fitact(y1$time_radians, sample = "model", reps = rep, bw = NULL, adj = 1.5)
-        }else{
-          message("This group has less than 70 events. An activity curve cannot be estimated. Skipping...")
-          y2 <- "Cannot estimate activity"
-        }
-      }else{
-        if(nrow(y1) >= 100){
-          y2 <- activity::fitact(y1$time_radians, sample = "data", reps = rep, bw = bw, adj = 1.5)
-        }else if(nrow(y1) >= 70){
-          message("This group has between 70 and 100 events. Confidence bands will be estimated from the fitted model")
-          y2 <- activity::fitact(y1$time_radians, sample = "model", reps = rep, bw = bw, adj = 1.5)
-        }else{
-          message("This group has less than 70 events. An activity curve cannot be reliably estimated. Skipping...")
-          y2 <- "Cannot estimate activity"
-        }
-      }
-      return(y2)
-      #rm(y1, y2)
+  # Finalize and format the output
+  formatFun <- function(a, top, bottom){
+    a1 <- lapply(top, function(z){
+      z1 <- a[which(grepl(z, names(a)))]
+      names(z1) <- bottom
+      return(z1)
     })
-    names(z) <- names(y)
-    return(z)
-    #rm(y, z)
-  })
-  names(act) <- names(specs)
-
-  # Flip the list from split first to species first. Important depending on what is compared
-  flipFun <- function(input){
-    group.name <- names(input)
-    spec.name <- names(input[[1]])
-
-    a1 <- unlist(input, recursive = F)
-
-    a2 <- lapply(spec.name, function(b){
-      b1 <- a1[grep(b, names(a1))]
-      names(b1) <- group.name
-      return(b1)
-      #rm(b1)
-    })
-    names(a2) <- spec.name
-
-    return(a2)
-    #rm(group.name, spec.name, a1, a2)
+    names(a1) <- top
+    return(a1)
   }
 
-  # Should the function return species as the top level of the list, the grouping factor, or both?
-  if(return == "species"){
-    out <- list(data = flipFun(specs), activity = flipFun(act))
-  }else if(return == "group"){
-    out <- list(data = specs, activity = act)
-  }else if(return == "both"){
-    out <- list(species = list(data = flipFun(specs), activity = flipFun(act)),
-                split = list(data = specs, activity = act))
+  if(is.null(split)){
+    message("You never specified a split output. return will be ignored and species will be on top.")
+    out1 <- list(data = x2, activity = act)
   }else{
-    message("You did not specify a valid return type. Data will be returned with both species and group as the top.")
-    out <- list(species = list(data = flipFun(specs), activity = flipFun(act)),
-                split = list(data = specs, activity = act))
+    if(return == "species"){
+      arg <- list(top = include, bottom = split_unique)
+      out1 <- list(data = do.call(formatFun, c(list(x2), arg)), activity = do.call(formatFun, c(list(act), arg)))
+    }else if(return == "group"){
+      arg <- list(top = split_unique, bottom = include)
+      out1 <- list(data = do.call(formatFun, c(list(x2), arg)), activity = do.call(formatFun, c(list(act), arg)))
+    }else if(return == "both"){
+      arg1 <- list(top = include, bottom = split_unique)
+      out1a <- list(data = do.call(formatFun, c(list(x2), arg1)), activity = do.call(formatFun, c(list(act), arg)))
+      arg2 <- list(top = split_unique, bottom = include)
+      out1b <- list(data = do.call(formatFun, c(list(x2), arg2)), activity = do.call(formatFun, c(list(act), arg)))
+      out1 <- list(species = out1a, group = out1b)
+    }else{
+      message("You did not specify a valid return type. Data will be returned with species and groups as one level.")
+      out1 <- list(data = x2, activity = act)
+    }
   }
-  return(out)
 
-  rm(AP, specs, act, out, flipFun)
-  #rm(x, split, include, return, bw, rep)
+  return(out1)
+  #rm(split_unique, x1, x2, cl1, act, out1, out1a, out1b, show)
+  #rm(a, d, y1, y2, i, z)
+  #rm(x, split, include, return, bw, rep, pp, cores.left)
 }
 
 
@@ -221,50 +244,76 @@ actPlot <- function(act, top = "species"){
   }
   x1 <- act$activity
 
+
   x2 <- lapply(1:length(x1), function(i){
     name1 <- names(x1)[i]
-    y1 <- lapply(1:length(x1[[i]]), function(j){
-      name2 <- names(x1[[i]])[j]
 
-      if(class(x1[[i]][[j]]) == "actmod"){
-        pdf <- data.frame(x1[[i]][[j]]@pdf)
-        colnames(pdf) <- c("x_day", "y_rads", "se", "lcl_rads", "ucl_rads")
-        fdata <- x1[[i]][[j]]@data
+    if(class(x1[[i]]) == "actmod"){
+      print("This dataset is just species. No grouping occurred.")
 
-        # All of these formulas are taken from the activity::plot.actmod method
-        pdf$x_night <- pdf$x_day - ifelse(pdf$x_day>pi, 2*pi, 0)             # Convert day x units to night x units by subtracting 2*pi from values greater than pi (12 noon)
-        pdf$y_dens <- pdf$y_rads*pi/12                                       # Convert to density from radians
-        pdf$lcl_dens <- pdf$lcl_rads*pi/12                                   # Convert to density from radians
-        pdf$ucl_dens <- pdf$ucl_rads*pi/12                                   # Convert to density from radians
-        pdf$y_freq <- pdf$y_rads*length(fdata)*pi/12                         # Convert density y axis to frequency y axis
-        pdf$lcl_freq <- pdf$lcl_rads*length(fdata)*pi/12                     # Convert density lower confidence interval to frequency lower confidence interval
-        pdf$ucl_freq <- pdf$ucl_rads*length(fdata)*pi/12                     # Convert density upper confidence interval to frequency upper confidence interval
+      pdf <- data.frame(x1[[i]]@pdf)
+      colnames(pdf) <- c("x_day", "y_rads", "se", "lcl_rads", "ucl_rads")
+      fdata <- x1[[i]]@data
 
-        if(top == "species"){
-          pdf$species <- name1
-          pdf$group <- name2
-        }else if(top == "group"){
-          pdf$species <- name2
-          pdf$group <- name1
+      # All of these formulas are taken from the activity::plot.actmod method
+      pdf$x_night <- pdf$x_day - ifelse(pdf$x_day>pi, 2*pi, 0)             # Convert day x units to night x units by subtracting 2*pi from values greater than pi (12 noon)
+      pdf$y_dens <- pdf$y_rads*pi/12                                       # Convert to density from radians
+      pdf$lcl_dens <- pdf$lcl_rads*pi/12                                   # Convert to density from radians
+      pdf$ucl_dens <- pdf$ucl_rads*pi/12                                   # Convert to density from radians
+      pdf$y_freq <- pdf$y_rads*length(fdata)*pi/12                         # Convert density y axis to frequency y axis
+      pdf$lcl_freq <- pdf$lcl_rads*length(fdata)*pi/12                     # Convert density lower confidence interval to frequency lower confidence interval
+      pdf$ucl_freq <- pdf$ucl_rads*length(fdata)*pi/12                     # Convert density upper confidence interval to frequency upper confidence interval
+
+      pdf$species <- name1
+
+      pdf2 <- pdf[,c("species", "x_day", "x_night", "y_rads", "lcl_rads", "ucl_rads", "y_dens", "lcl_dens", "ucl_dens", "y_freq", "lcl_freq", "ucl_freq", "se")]
+      return(pdf2)
+    }else if(class(x1)[[i]] == "character"){
+      return(NULL)
+    }else{
+      y1 <- lapply(1:length(x1[[i]]), function(j){
+        name2 <- names(x1[[i]])[j]
+
+        if(class(x1[[i]][[j]]) == "actmod"){
+          pdf <- data.frame(x1[[i]][[j]]@pdf)
+          colnames(pdf) <- c("x_day", "y_rads", "se", "lcl_rads", "ucl_rads")
+          fdata <- x1[[i]][[j]]@data
+
+          # All of these formulas are taken from the activity::plot.actmod method
+          pdf$x_night <- pdf$x_day - ifelse(pdf$x_day>pi, 2*pi, 0)             # Convert day x units to night x units by subtracting 2*pi from values greater than pi (12 noon)
+          pdf$y_dens <- pdf$y_rads*pi/12                                       # Convert to density from radians
+          pdf$lcl_dens <- pdf$lcl_rads*pi/12                                   # Convert to density from radians
+          pdf$ucl_dens <- pdf$ucl_rads*pi/12                                   # Convert to density from radians
+          pdf$y_freq <- pdf$y_rads*length(fdata)*pi/12                         # Convert density y axis to frequency y axis
+          pdf$lcl_freq <- pdf$lcl_rads*length(fdata)*pi/12                     # Convert density lower confidence interval to frequency lower confidence interval
+          pdf$ucl_freq <- pdf$ucl_rads*length(fdata)*pi/12                     # Convert density upper confidence interval to frequency upper confidence interval
+
+          if(top == "species"){
+            pdf$species <- name1
+            pdf$group <- name2
+          }else if(top == "group"){
+            pdf$species <- name2
+            pdf$group <- name1
+          }else{
+            message("You did not properly specify which level is the species level. Assuming group is on top...")
+            pdf$species <- name2
+            pdf$group <- name1
+          }
+
+          pdf2 <- pdf[,c("species", "group", "x_day", "x_night", "y_rads", "lcl_rads", "ucl_rads", "y_dens", "lcl_dens", "ucl_dens", "y_freq", "lcl_freq", "ucl_freq", "se")]
+          return(pdf2)
         }else{
-          message("You did not properly specify which level is the species level. Assuming group is on top...")
-          pdf$species <- name2
-          pdf$group <- name1
+          return(NULL)
         }
-
-        pdf2 <- pdf[,c("species", "group", "x_day", "x_night", "y_rads", "lcl_rads", "ucl_rads", "y_dens", "lcl_dens", "ucl_dens", "y_freq", "lcl_freq", "ucl_freq", "se")]
-        return(pdf2)
-      }else{
-        return(NULL)
-      }
-    })
-    do.call(rbind, y1)
+      })
+      do.call(rbind, y1)
+    }
   })
   x3 <- do.call(rbind, x2)
 
   return(x3)
   rm(x1, x2, x3)
-  #rm(act)
+  #rm(act, top)
 }
 
 

@@ -83,7 +83,7 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
   #rm(timelapse, in.dir, out.dir, copy, sorted)
 }
 
-### Create a dataorganize like output from sorted images (Added 2022-08-25) ####
+### Create a dataorganize like output from sorted images (Added 2022-08-25, Modified 2023-07-06) ####
 ##' @description This is an R version of the DataOrganize program developed by Jim Sanderson and Grant Harris. While untested, it should provide a little more flexibility in naming of folders than the original DataOrganize program. It also can do basic diagnostics so you can check camera and species names.
 ##'
 ##' @title DataOrganize
@@ -134,6 +134,7 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##'
 ##' @importFrom dplyr summarise group_by n
 ##' @importFrom pbapply pblapply
+##' @importFrom fs path_ext_remove dir_ls, path_split
 ##' @export
 ##'
 ##' @examples \dontrun{
@@ -151,57 +152,56 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
     ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
   }
 
-  out1 <- pbapply::pblapply(ext, function(x){
-    files1 <- list.files(in.dir, pattern = x, ignore.case = T, full.names = T, recursive = T)
-    files2 <- data.frame(do.call(rbind, strsplit(files1, "/")))
-    files3 <- data.frame(files2[,(ncol(files2)-3):(ncol(files2)-1)], do.call(rbind, strsplit(sub(x, "", files2[,ncol(files2)], ignore.case = T), " ")))
+  if(any(!grepl("\\*", ext))){
+    message("Adding a '*' to file extensions.")
+    ext[which(!grepl("\\*", ext))] <- paste("*", ext[which(!grepl("\\*", ext))], sep = "")
+  }
 
-    if(ncol(files3)==10){
-      if(!exists("do_format")){
-        files4 <- files3[,-ncol(files3)]
-        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-        message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-      }else if(do_format == "serial"){
-        files4 <- files3
-        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
-      }else if(do_format == "original"){
-        files4 <- files3[,-ncol(files3)]
-        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }else{
-        files4 <- files3[,-ncol(files3)]
-        colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-      }
-    }else if(ncol(files3)==9){
-      files4 <- files3
-      colnames(files4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+  fs1 <- fs::path_ext_remove(do.call(c, pbapply::pblapply(ext, function(x){fs::dir_ls(path = in.dir, recurse = T, type = "file", glob = x)})))
+  fs2 <- data.frame(do.call(rbind, fs::path_split(fs1)))
+  fs3 <- data.frame(fs2[,(ncol(fs2)-3):(ncol(fs2)-1)], do.call(rbind, strsplit(fs2[,ncol(fs2)], " ")))
+
+  if(ncol(fs3)==10){
+    if(!exists("do_format")){
+      fs4 <- fs3[,-ncol(fs3)]
+      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+    }else if(do_format == "serial"){
+      fs4 <- fs3
+      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
+    }else if(do_format == "original"){
+      fs4 <- fs3[,-ncol(fs3)]
+      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
     }else{
-      message("Your file and folder structure in your input directory does not have an expected number of columns. If you are attempting to use this function with a different structure, the function may not work properly.")
-      files4 <- files3
+      fs4 <- fs3[,-ncol(fs3)]
+      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
     }
-
-    return(files4)
-    rm(files1, files2, files3, files4)
-  })
-  out2 <- do.call(rbind, out1)
+  }else if(ncol(fs3)==9){
+    fs4 <- fs3
+    colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+  }else{
+    message("Your file and folder structure in your input directory does not have an expected number of columns. If you are attempting to use this function with a different structure, the function may not work properly.")
+    fs4 <- fs3
+  }
 
   if(diagnostics == T){
-    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(out2, site), species = length(unique(species)), images = dplyr::n())),
-                  "Unique Species" = sort(unique(out2$species)),
-                  "Unique Number of Individuals" = sort(unique(out2$individuals)))
+    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(files4, site), species = length(unique(species)), images = dplyr::n())),
+                  "Unique Species" = sort(unique(files4$species)),
+                  "Unique Number of Individuals" = sort(unique(files4$individuals)))
     print(diagn)
     rm(diagn)
   }
 
   if(isTRUE(save)){
     print("Writing a text file to the in.dir.")
-    write.table(out2, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = T)
+    write.table(fs4, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = T)
   }
 
-  return(out2)
+  return(fs4)
 
-  rm(out1, out2)
-  #rm(in.dir, ext, save, diagnostics)
+  rm(fs1, fs2, fs3, fs4)
+  #rm(in.dir, ext, do_format, save, diagnostics)
 }
 
 ### Convert a Timelapse file to a dataorganize output (Added 2022-08-25, Updated 2023-02-02) ####
@@ -210,10 +210,11 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 ##' @title Convert a Timelapse csv to a format for use with APFun_env
 ##'
 ##' @param timelapse data.frame. A data frame representing a Timelapse csv file formatted using my timelapse template.
-##' @param ext String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for to run DataOrganize on?
 ##' @param do_format String. Defaults to "serial". Should dataOrganize include the camera's serial number if it has one? Choose one of c("serial", "original"). See details below.
 ##'
 ##' @details The timelapse file must contain the following column names: c("Species1", "Species1_Ind", "Species2", "Species2_Ind", "Species3", "Species3_Ind", "SpeciesOther", "Other_Ind").
+##'
+##' File extensions are automatically removed so it is no longer necessary to specify file extensions in this function.
 ##'
 ##' This function's original intention was to replicate the results of the DataOrganize program and its file format.
 ##' Due to a modification with the \code{\link{movePictures}} to accommodate a DataOrganize file as an input, this function was modified to allow the inclusion of the camera serial number in the output.
@@ -251,12 +252,13 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 ##' @concept timelapse
 ##' @concept DataOrganize
 ##'
+##' @importFrom fs path_ext_remove path_split
 ##' @export
 ##'
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-doTimelapse <- function(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial"){
+doTimelapse <- function(timelapse, do_format = "serial"){
   #timelapse <- read.csv("timelapse_out_20221028.csv")
 
   images1 <- timelapse[,c("File", "RelativePath", "Species1", "Species1_Ind")]
@@ -282,58 +284,37 @@ doTimelapse <- function(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial"
   }
   x1 <- rbind(images1,images2,images3,images4)
 
-  if(any(!grepl("[.]", ext))){
-    message("Some of your file extensions did not include the '.'. This is being added. Add a '.' to each ext to avoid this message")
-    ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
+  x1$filename <- fs::path_ext_remove(x1$File)
+  x2 <- data.frame(do.call(rbind, fs::path_split(x1$Path))[,2], x1[,3:4], do.call(rbind, strsplit(x1$filename, " ")))
+
+  if(ncol(x2)==10){
+    if(!exists("do_format")){
+      x3 <- x2[,-ncol(x2)]
+      colnames(x3) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+    }else if(do_format == "serial"){
+      x3 <- x2
+      colnames(x3) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
+    }else if(do_format == "original"){
+      x3 <- x2[,-ncol(x2)]
+      colnames(x3) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+    }else{
+      x3 <- x2[,-ncol(x2)]
+      colnames(x3) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+      message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+    }
+  }else if(ncol(x2)==9){
+    x3 <- x2
+    colnames(x3) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+  }else{
+    message("Your file and folder structure in your input directory does not have an expected number of columns. If you are attempting to use this function with a different structure, the function may not work properly.")
+    x3 <- x2
   }
 
-  out1 <- lapply(ext, function(y){
-    y2 <- x1[grep(y, x1$File),]
-    if(nrow(y2)==0){
-      return(NULL)
-    }
-    y3 <- data.frame(do.call(rbind, strsplit(y2$Path, split = "\\\\")), do.call(rbind, strsplit(sub(y, "", y2$File, ignore.case = T), split = " ")), y2[,3:4])
-    if(ncol(y3)==12){
-      if(!exists("do_format")){
-        message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }else if(do_format == "serial"){
-        y4 <- y3[,c(2,11,12,4:10)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
-      }else if(do_format == "original"){
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }else{
-        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }
-    }else if(ncol(y3)==11){
-      if(!exists("do_format")){
-        message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }else if(do_format == "serial"){
-        message("Your image names do not have a serial number. Outputting in original format.")
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }else if(do_format == "original"){
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }else{
-        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-        y4 <- y3[,c(2,11,12,4:9)]
-        colnames(y4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      }
-    }
-    return(y4)
-    #rm(y2, y3, y4)
-  })
-  out2 <- do.call(rbind, out1)
+  x3$individuals <- formatC(x3$individuals, width = 2, flag = "0")
 
-  return(out2)
-  rm(images1, images2, images3, images4, x1, out1, out2)
+  return(x3)
+  rm(images1, images2, images3, images4, x1, x2, x3)
   #rm(timelapse)
 }
 
@@ -347,8 +328,8 @@ doTimelapse <- function(timelapse, ext = c(".jpg", ".mp4"), do_format = "serial"
 ##' @param in.dir String. The directory containing the root folder for the timelapse file. For example, if all your images were a folder called "images" which sits in an external drive, labelled "F:", then you would specify the in.dir as "F:".
 ##' @param out.dir String. The directory where you want to store the sorted images
 ##' @param create.dirs Logical. Should the function create the directories it needs?
-##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')
-##' @param exclude String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species
+##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none'). If 'move' is selected but there are duplicate files, the function will use 'copy' instead of 'move' to allow transfer of all files.
+##' @param exclude String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species.
 ##' @param ... Additional arguments used when specifying a DataOrganize file. Only img_format and do_format are used. All other inputs are ignored. Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.
 ##'
 ##' @details When this function creates its folder structure, it uses the Individuals column in the Timelapse output.
@@ -545,7 +526,8 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
   }
 
   if(length(unique(x3in)) != length(unique(x3out))){
-    message("You have a different number of in and out files, likely because more than one species was detected in a single picture. \nSuggest using 'copy' instead of 'move' for images.")
+    message("You have a different number of in and out files, likely because more than one species was detected in a single picture. \nIf type = 'move', this will be switched to 'copy'.")
+    if(type == "move"){type <- "copy"}
   }
 
   if(type == "move"){

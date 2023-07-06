@@ -26,9 +26,9 @@ movePictures(
 
 \item{create.dirs}{Logical. Should the function create the directories it needs?}
 
-\item{type}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none')}
+\item{type}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none'). If 'move' is selected but there are duplicate files, the function will use 'copy' instead of 'move' to allow transfer of all files.}
 
-\item{exclude}{String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species}
+\item{exclude}{String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species.}
 
 \item{...}{Additional arguments used when specifying a DataOrganize file. Only img_format and do_format are used. All other inputs are ignored. Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.}
 }

@@ -133,11 +133,11 @@
 
 ## Version 0.0.0.22 (2023-06-01)
 
-* Added progress line to rename section of cameraRename3 function
+* Added progress line to rename section of cameraRename3 function.
 
 ## Version 0.0.0.23 (2023-06-23)
 
-* Fixed problem with package install where the openxlsx package is set to required instead of suggested
+* Fixed problem with package install where the openxlsx package is set to required instead of suggested.
 
 ## Version 0.0.0.24 (2023-06-26)
 
@@ -145,8 +145,16 @@
 
 ## Version 0.0.0.25 (2023-06-30)
 
-* Fixed a bug in imageEffort where the total capture rate was not being calculated correctly
-* Fixed a bug in timelapseQC where the function would not check if there is a missing species in SpeciesOther when there is a missing species in Species1
-* Fixed a bug in unsortImages where date.col was improperly specified and the function could not rename anything
+* Fixed a bug in imageEffort where the total capture rate was not being calculated correctly.
+* Fixed a bug in timelapseQC where the function would not check if there is a missing species in SpeciesOther when there is a missing species in Species1.
+* Fixed a bug in unsortImages where date.col was improperly specified and the function could not rename anything.
 
+## Version 0.0.0.26 (2023-07-06)
+
+* Forced use of copy instead of move when duplicates exist in movePictures.
+* Updated doTimelapse and doFolder to more effectively find files and remove file extensions. doTimelapse no longer requires specification of file extensions. 
+* Modified the cameraDiagnostics function to use dplyr::reframe() instead of dplyr::summarize() because cameras sometimes produce both photos and videos which prevents a one to one grouping of data. 
+* Added functionality to cameraDiagnostics to add the camera name defined from the folder structure for comparisons of the camera label to actual camera name. 
+* Modified actFun to allow for parallel processing of animal diel activity. 
+* Fixed a bug in actPlot where the function would not work if no grouping variable was given in actFun. 
 

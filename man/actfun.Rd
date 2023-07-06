@@ -4,20 +4,40 @@
 \alias{actFun}
 \title{Animal Diel Activity}
 \usage{
-actFun(x, split = NULL, include, return = "species", bw = NULL, rep = 999)
+actFun(
+  x,
+  split = NULL,
+  include,
+  return = "species",
+  bw = NULL,
+  rep = 999,
+  pp = F,
+  cores.left = NULL
+)
 }
 \arguments{
 \item{x}{data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.}
 
-\item{split}{character or NULL. How should the data be grouped before running \code{\link[activity]{fitact}} on the data. This can take NULL for no grouping or a vector of column names or index numbers. The default is NULL.}
+\item{split}{String or NULL. How should the data be grouped before running \code{\link[activity]{fitact}} on the data. This can take NULL for no grouping or a vector of column names or index numbers. The default is NULL.}
 
-\item{include}{string. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").}
+\item{include}{String. Which species do you want to run diel activity on? Use form c("Species 1", "Species 2", "etc.").}
 
-\item{return}{string. Should the species or the grouping factor be placed on top of the output list. Valid options include c("species", "group", "both"). This defaults to "species". If an inproper option is provided, the function outputs as "both".}
+\item{return}{String. Should the species or the grouping factor be placed on top of the output list. Valid options include c("species", "group", "both"). This defaults to "species". If an inproper option is provided, the function outputs as "both".}
 
-\item{bw}{numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.}
+\item{bw}{Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.}
 
-\item{rep}{numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.}
+\item{rep}{Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.}
+
+\item{pp}{Logical. Should this function take advantage of parallel processing.
+The default is FALSE. Because the function separates tasks by camera directory, it can use parallel processing to run multiple cameras at the same time.
+This is currently set up to run in Windows OS so I do not know if this will work on a Mac or Linux system.
+If you want this functionality on a Unix device and know how to set it up, let me know and I can incorporate it.}
+
+\item{cores.left}{Numeric. How many cores should be left available when using parallel processing?
+The default is NULL. This is only necessary when pp=TRUE.
+If left at the default, the function will default to 2 cores remaining which is generally enough to continue using a PC while the function runs.
+I would set this to be greater than 0, otherwise the function will use the entire processing power of your computer.
+To see how many cores you have available for parallel processing, use: parallel::detectCores().}
 }
 \value{
 data:

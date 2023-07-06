@@ -4,10 +4,14 @@
 \alias{cameraDiagnostics}
 \title{Camera basic diagnostics}
 \usage{
-cameraDiagnostics(x)
+cameraDiagnostics(x, cam_dir_level, from_bottom)
 }
 \arguments{
-\item{x}{data.frame. A data frame outputted from the \code{\link{cameraRename3}} function}
+\item{x}{data.frame. A data frame outputted from the \code{\link{cameraRename3}} function.}
+
+\item{cam_dir_level}{Integer. The level of the directory where the camera name is. This can be a number of levels from the top or bottom directory, specified using the 'from_bottom' argument.}
+
+\item{from_bottom}{Logical. Should cam_dir_level be calculated from the lowest directory (TRUE) or highest directory (FALSE)}
 }
 \value{
 A data frame containing the outpath for the images, the user label, number of pictures, first picture date, and last picture date
