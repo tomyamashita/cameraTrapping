@@ -158,3 +158,7 @@
 * Modified actFun to allow for parallel processing of animal diel activity. 
 * Fixed a bug in actPlot where the function would not work if no grouping variable was given in actFun. 
 
+## Version 0.0.0.27 (2023-07-21)
+
+* Fixed bug where namespace wasn't loading properly
+
