@@ -158,3 +158,10 @@
 * Modified actFun to allow for parallel processing of animal diel activity. 
 * Fixed a bug in actPlot where the function would not work if no grouping variable was given in actFun. 
 
+## Version 0.0.0.27 (2023-07-24)
+
+* Major update to the cameraRename3 function including: 
+  * Increased speed by utilizing more functions from the fs package
+  * A bug fix preventing renaming from occurring
+  * Added functionality to rename multiple file types at once
+  * Other performance improvements and code simplification. 

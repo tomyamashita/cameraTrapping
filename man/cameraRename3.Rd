@@ -29,15 +29,10 @@ You can use this to change the output location for each camera directory.
 You can specify this with a single string, in which case it will use the relative paths to the images to locate the directory location or you can specify a vector of directories.
 The length of this vector must equal the number of camera directories in the in.dir. If rename="copy", you should specify a different out.dir than in.dir although the function does not check for this.}
 
-\item{file.type}{String. The type of file you want to rename.
-For images, this is likely to be ".jpg". For videos, this is likely to be ".mp4".
-This can also take c("image", "video"). For "image", this will default the file type to ".jpg", for "video", it will default to ".mp4".
-If a different file type is needed, this function will need to be updated to accommodate this. Please let me know and I will add it.
-This function can theoretically take any image format, although I do not know how exiftool reads file types other than ".jpg" and ".mp4". The function will ignore case when looking for file types.}
-
 \item{trigger.info}{String or NULL. Should additional information besides the date-time be included in the output?
 This defaults to NULL where no additional information is included, only date-time information.
 Because camera-specific information is variable between camera models, you must specify the camera model if you want additional information.
+When specifying multiple file types, you can currently only specify one format for trigger.info. If Reconyx is used, it will output both image exif data and video exif data. No other camera models are supported for multiple file extensions at this time.
 Currently, for image formats c("Reconyx", "PC900", "Hyperfire2","Ultrafire_image", "Browning", "Cuddyback") are supported and for video formats, c("Ultrafire_video") are supported.
 Note that all Reconyx camera models tested (PC900, Hyperfire2, Ultrafire) use the same metadata.
 Additional camera models could be added. See details for more information on this.}
@@ -74,6 +69,12 @@ The default is NULL. This is only necessary when pp=TRUE.
 If left at the default, the function will default to 2 cores remaining which is generally enough to continue using a PC while the function runs.
 I would set this to be greater than 0, otherwise the function will use the entire processing power of your computer.
 To see how many cores you have available for parallel processing, use: parallel::detectCores().}
+
+\item{ext}{String. The type(s) of file you want to rename.
+For images, this is likely to be ".jpg". For videos, this is likely to be ".mp4".
+Starting in package version 0.0.0.27, ext is used instead of file.type. This allows for specification of multiple file extensions, speeding up the renaming process.
+If a different file type is needed, this function will need to be updated to accommodate this. Please let me know and I will add it.
+This function can theoretically take any image format, although I do not know how exiftool reads file types other than ".jpg" and ".mp4". The function will ignore case when looking for file types.}
 }
 \value{
 This function outputs either a list or a data.frame, depending on whether return.type = c("list", "df")
@@ -110,6 +111,9 @@ By specifying this, it is telling the tool to check if the images are in the for
 When it does this, if an image does not fit this form, it replaces the name with the new date-time information derived from the metadata.
 The reason for this is that sometimes camera date-times are wrong so we needed to make an adjustment using SpecialRename, similar to what is done with the adjust call in this function.
 Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust improperly named images.
+
+Starting in package version 0.0.0.27, the file.type parameter was replaced with ext to allow for specification of multiple file extensions.
+As part of this, the c("image", "video") options have been removed. Please begin using c(".jpg", ".mp4") instead.
 }
 \note{
 Differences between this function and \code{\link{cameraRename2}}:
