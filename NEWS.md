@@ -160,6 +160,7 @@
 
 ## Version 0.0.0.27 (2023-07-24)
 
+* Fixed bug where namespace wasn't loading properly
 * Major update to the cameraRename3 function including: 
   * Increased speed by utilizing more functions from the fs package
   * A bug fix preventing renaming from occurring
