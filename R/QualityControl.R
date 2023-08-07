@@ -68,9 +68,9 @@ cameraDiagnostics <- function(x, cam_dir_level, from_bottom){
   x$ext <- fs::path_ext(x$new.name)
 
   if(any(colnames(x) == "UserLabel")){
-    out <- dplyr::reframe(dplyr::group_by(x, outpath, ext), Camera = unique(camname), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date))
+    out <- dplyr::reframe(dplyr::group_by(x, outpath, ext), Camera = unique(camname), Label = unique(UserLabel), num_pics = dplyr::n(), first_pic = min(Date, na.rm = T), last_pic = max(Date, na.rm = T))
   }else{
-    out <- dplyr::reframe(dplyr::group_by(x, outpath, ext), Camera = unique(camname), Label = NA, num_pics = dplyr::n(), first_pic = min(Date), last_pic = max(Date))
+    out <- dplyr::reframe(dplyr::group_by(x, outpath, ext), Camera = unique(camname), Label = NA, num_pics = dplyr::n(), first_pic = min(Date, na.rm = T), last_pic = max(Date, na.rm = T))
   }
 
   print(paste("The total number of photos is: ", sum(out$num_pics), sep = ""))

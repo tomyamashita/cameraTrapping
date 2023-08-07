@@ -166,3 +166,8 @@
   * A bug fix preventing renaming from occurring
   * Added functionality to rename multiple file types at once
   * Other performance improvements and code simplification. 
+
+## Version 0.0.0.28 (2023-08-07)
+
+* Fixed bug in cameraDiagnostics to ensure that corrupt images which produce NA for their date time are skipped when computing first and last pics. 
+
