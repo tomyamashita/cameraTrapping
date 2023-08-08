@@ -186,9 +186,9 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
   }
 
   if(diagnostics == T){
-    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(files4, site), species = length(unique(species)), images = dplyr::n())),
-                  "Unique Species" = sort(unique(files4$species)),
-                  "Unique Number of Individuals" = sort(unique(files4$individuals)))
+    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(fs4, site), species = length(unique(species)), images = dplyr::n())),
+                  "Unique Species" = sort(unique(fs4$species)),
+                  "Unique Number of Individuals" = sort(unique(fs4$individuals)))
     print(diagn)
     rm(diagn)
   }
