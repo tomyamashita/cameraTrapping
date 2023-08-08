@@ -9,10 +9,10 @@ subsetImages(
   out.dir,
   ext = c(".jpg", ".mp4"),
   datatype,
-  from,
-  to,
-  date.col,
-  species.col,
+  from = NULL,
+  to = NULL,
+  date.col = NULL,
+  species.col = NULL,
   create.dirs = F,
   type = "none"
 )
@@ -26,13 +26,13 @@ subsetImages(
 
 \item{datatype}{String. Does the in.dir contain raw or sorted images. This can only be c("raw", "sorted").}
 
-\item{from}{String. Optional. The start date for images you want to subset. This is not required. See details below.}
+\item{from}{String. Defaults to NULL. The start date for images you want to subset. This is not required. See details below.}
 
-\item{to}{String. Optional. The end date for images you want to subset. This is not required. See details below.}
+\item{to}{String. Defaults to NULL The end date for images you want to subset. This is not required. See details below.}
 
-\item{date.col}{String. Optional. Which date collected folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "sorted".}
+\item{date.col}{String. Defaults to NULL Which date collected folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "sorted".}
 
-\item{species.col}{String. Optional. Which species folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "raw".}
+\item{species.col}{String. Defaults to NULL Which species folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "raw".}
 
 \item{create.dirs.}{Logical. Defaults to FALSE. Should the function create the directories it needs to do a file transfer?}
 
@@ -64,7 +64,7 @@ As I come across errors, I attempt to further generalize the functions but this 
 }
 }
 \seealso{
-\code{\link{unsortImages}}, \code{\link{movePictures}}, \code{\link{removeGhosts}}
+\code{\link{unsortImages}}, \code{\link{movePictures}}
 }
 \concept{camera trapping}
 \concept{subsetting images}

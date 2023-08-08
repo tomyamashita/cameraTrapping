@@ -174,4 +174,6 @@
 ## Version 0.0.0.29 (2023-08-08)
 
 * Fixed bug in doFolder where diagnostics portion of function was attempting to use an object that no longer exists. 
+* Updated the subsetImages function to run faster and have better functionality. 
+
 
