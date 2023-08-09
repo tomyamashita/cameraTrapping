@@ -384,6 +384,7 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
   if(datatype == "sorted" & isFALSE(nulldate)){stop("You cannot use a set of date collected folders when using datatype='sorted'.")}
 
   # Load files
+  print("Loading files...")
   x1 <- unlist(lapply(ext, function(ex){fs::dir_ls(path = in.dir, type = "file", recurse = TRUE, glob = ex, ignore.case = T)}))
   if(length(x1) == 0){
     stop("You chose an invalid directory or file extension. No files returned.")
@@ -427,6 +428,7 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
                    datetime = with(x3, lubridate::ymd_hms(paste(year, month, day, hour, minute, second, sep = " "))))
 
   # Subset the data by date, date collected, and/or species
+  print(paste("File loading complete. Subsetting data..."))
   if(nullfrom){from1 <- 0}else{from1 <= from}
   if(nullto){to1 <- Inf}else{to1 <- to}
 
@@ -463,6 +465,8 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
   }
 
   out <- x5[,c("oldpath", "newpath")]
+
+  print(paste("This function completed at ", Sys.time(), sep = ""))
 
   return(out)
   rm(nullfrom, nullto, nulldate, nullspec, x1, x2, x3, x4, x5, x6, out, date.col1, from1, to1, spec.col1)
