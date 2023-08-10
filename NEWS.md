@@ -176,4 +176,8 @@
 * Fixed bug in doFolder where diagnostics portion of function was attempting to use an object that no longer exists. 
 * Updated the subsetImages function to run faster and have better functionality. 
 
+## Version 0.0.0.30 (2023-08-10)
+
+* Updated subsetImages to allow use of list.files or fs::dir_ls in case there are errors running fs::dir_ls. 
+
 

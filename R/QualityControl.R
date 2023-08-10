@@ -307,7 +307,7 @@ mergeFiles <- function(in.dir, pattern, save = F){
   #rm(in.dir, pattern, save)
 }
 
-### Subsetting sets of images from directories (Modified 2023-08-08) ####
+### Subsetting sets of images from directories ####
 ##' @description Subset images from a larger image directory
 ##'
 ##' @title Subset Images
@@ -322,6 +322,10 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @param species.col String. Defaults to NULL Which species folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "raw".
 ##' @param create.dirs. Logical. Defaults to FALSE. Should the function create the directories it needs to do a file transfer?
 ##' @param type. String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').
+##' @param alt.method. String. Options could include c("alt1", "alt2"). All other options use the default.
+##' Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
+##' alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
+##' alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}
 ##'
 ##' @details When this function does its subset, you must specify at least one of from, to, date.col, or species.col.
 ##' date.col can only be used with raw data and species.col can only be used with sorted data.
@@ -352,17 +356,21 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, from = NULL, to = NULL, date.col = NULL, species.col = NULL, create.dirs = F, type = "none"){
-  #in.dir <- "I:/Sorted/Sorted_REZ_FM1847"
-  #out.dir <- "I:/Sorted_update"
+subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, from = NULL, to = NULL, date.col = NULL, species.col = NULL, create.dirs = F, type = "none", alt.load = NA){
+  #in.dir <- "H:/Raw/Raw_1847_PostCon"
+  #in.dir <- c("H:/Raw/Raw_77_PostCon", "H:/Raw/Raw_1847_PostCon")
+  #in.dir <- "H:/Raw"
+  #out.dir <- "M:/lostdata"
   #ext <- c(".jpg", ".mp4")
-  #datatype = "sorted"
+  #datatype = "raw"
+  #from <- NULL; to <- NULL; species.col <- NULL
   #from <- "2022-05-09 00:00:00"
   #to <- "2022-06-01 00:00:00"
-  #date.col <- "20220902"
+  #date.col <- c("20230106", "20230201", "20230228", "20230328", "20230427")
   #species.col <- c("bobcat", "coyote")
-  #create.dirs <- F
-  #type <- "none"
+  #create.dirs <- T
+  #type <- "copy"
+  #alt.load <- NA
 
   print(paste("This function started at ", Sys.time(), sep = ""))
   if(any(!grepl("[.]", ext))){
@@ -385,7 +393,17 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
 
   # Load files
   print("Loading files...")
-  x1 <- unlist(lapply(ext, function(ex){fs::dir_ls(path = in.dir, type = "file", recurse = TRUE, glob = ex, ignore.case = T)}))
+
+  ## For some reason, there is a weird issue loading files. An alternate method may help either identify the problem or fix it
+  if(alt.load == "alt1"){
+    dirs <- fs::dir_ls(path = in.dir, type = "directory", recurse = TRUE)
+    x1 <- lapply(ext, function(ex){lapply(dirs, function(x){fs::dir_ls(path = x, type = "file", recurse = TRUE, glob = ex, ignore.case = TRUE)})})
+  }else if(alt.load == "alt2"){
+    x1 <- do.call(c, lapply(ext, function(ex){list.files(path = in.dir, pattern = ex, full.names = TRUE, recursive = TRUE, ignore.case = TRUE)}))
+  }else{
+    x1 <- unlist(lapply(ext, function(ex){fs::dir_ls(path = in.dir, type = "file", recurse = TRUE, glob = ex, ignore.case = T)}))
+  }
+
   if(length(x1) == 0){
     stop("You chose an invalid directory or file extension. No files returned.")
   }
@@ -428,15 +446,27 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
                    datetime = with(x3, lubridate::ymd_hms(paste(year, month, day, hour, minute, second, sep = " "))))
 
   # Subset the data by date, date collected, and/or species
-  print(paste("File loading complete. Subsetting data..."))
-  if(nullfrom){from1 <- 0}else{from1 <= from}
-  if(nullto){to1 <- Inf}else{to1 <- to}
+  print("Subsetting data...")
+  if(nullfrom){from1 <- "2010-01-01"}else{from1 <= from}
+  if(nullto){to1 <- Sys.Date()}else{to1 <- to}
 
   if(datatype == "raw"){
-    if(nulldate){date.col1 <- unique(x4$date.col)}else{date.col1 <- date.col}
+    if(nulldate){
+      message(paste("This function is using all date collected folders between ", from1, " and ", to1, ".", sep = ""))
+      date.col1 <- unique(x4$date.col)
+    }else{
+      message(paste("This function is using ", paste(date.col, collapse = ", "), " date collected folders between ", from1, " and ", to1, ".", sep = ""))
+      date.col1 <- date.col
+    }
     x5 <- x4[x4$date.col %in% date.col1 & x4$datetime >= from1 & x4$datetime <= to1,]
   }else if(datatype == "sorted"){
-    if(nullspec){spec.col1 <- unique(x4$species)}else{spec.col1 <- species.col}
+    if(nullspec){
+      message(paste("This function is using all species folders between ", from1, " and ", to1, ".", sep = ""))
+      spec.col1 <- unique(x4$species)
+    }else{
+      message(paste("This function is using ", paste(species.col, collapse = ", "), " species folders between ", from1, " and ", to1, ".", sep = ""))
+      spec.col1 <- species.col
+    }
     x5 <- x4[x$species %in% spec.col1 & x4$datetime >= from1 & x4$datetime <= to1,]
   }
 
@@ -466,10 +496,8 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
 
   out <- x5[,c("oldpath", "newpath")]
 
-  print(paste("This function completed at ", Sys.time(), sep = ""))
-
   return(out)
-  rm(nullfrom, nullto, nulldate, nullspec, x1, x2, x3, x4, x5, x6, out, date.col1, from1, to1, spec.col1)
+  rm(nullfrom, nullto, nulldate, nullspec, x1, x2, x3, x4, x5, out, date.col1, from1, to1, spec.col1)
   #rm(in.dir, out.dir, ext, datatype, from, to, date.col, species.col, create.dirs, type)
 }
 
