@@ -180,4 +180,9 @@
 
 * Updated subsetImages to allow use of list.files or fs::dir_ls in case there are errors running fs::dir_ls. 
 
+## Version 0.0.0.31 (2023-08-11)
+
+* Fixed bug in movePictures where it may include timelapse rows that are NA when a combined timelapse file is provided. 
+
+
 

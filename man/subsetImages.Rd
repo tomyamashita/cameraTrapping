@@ -14,7 +14,8 @@ subsetImages(
   date.col = NULL,
   species.col = NULL,
   create.dirs = F,
-  type = "none"
+  type = "none",
+  alt.load = NA
 )
 }
 \arguments{
@@ -37,6 +38,11 @@ subsetImages(
 \item{create.dirs.}{Logical. Defaults to FALSE. Should the function create the directories it needs to do a file transfer?}
 
 \item{type.}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').}
+
+\item{alt.method.}{String. Options could include c("alt1", "alt2"). All other options use the default.
+Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
+alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
+alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}}
 }
 \value{
 data.frame containing the old file path and new file path

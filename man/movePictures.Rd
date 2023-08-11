@@ -74,7 +74,7 @@ As I come across errors, I attempt to further generalize the functions but this 
 \seealso{
 \code{\link{dataOrganize}}
 
-\code{\link{APFun_env}}
+\code{\link{calculateEvents}}
 }
 \concept{camera trapping}
 \concept{timelapse}

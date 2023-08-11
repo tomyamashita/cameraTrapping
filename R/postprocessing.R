@@ -359,7 +359,7 @@ doTimelapse <- function(timelapse, do_format = "serial"){
 ##'
 ##' @seealso \code{\link{dataOrganize}}
 ##'
-##' \code{\link{APFun_env}}
+##' \code{\link{calculateEvents}}
 ##'
 ##' @keywords files
 ##' @keywords manip
@@ -367,7 +367,8 @@ doTimelapse <- function(timelapse, do_format = "serial"){
 ##' @concept camera trapping
 ##' @concept timelapse
 ##'
-##' @importFrom fs file_move file_copy
+##' @importFrom fs file_move file_copy dir_create
+##' @importFrom pbapply pblapply
 ##'
 ##' @export
 ##'
@@ -406,19 +407,19 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
     colnames(images1) <- c("File", "Path", "Species", "Individuals")
 
     if(!all(is.na(timelapse$Species2))){
-      images2 <- timelapse[timelapse$Species2!="",c("File", "RelativePath", "Species2", "Species2_Ind")]
+      images2 <- timelapse[timelapse$Species2 != "" & !is.na(timelapse$Species2), c("File", "RelativePath", "Species2", "Species2_Ind")]
       colnames(images2) <- c("File", "Path", "Species", "Individuals")
     }else{
       images2 <- NULL
     }
     if(!all(is.na(timelapse$Species3))){
-      images3 <- timelapse[timelapse$Species3!="",c("File", "RelativePath", "Species3", "Species3_Ind")]
+      images3 <- timelapse[timelapse$Species3 != "" & !is.na(timelapse$Species3), c("File", "RelativePath", "Species3", "Species3_Ind")]
       colnames(images3) <- c("File", "Path", "Species", "Individuals")
     }else{
       images3 <- NULL
     }
     if(!all(is.na(timelapse$SpeciesOther))){
-      images4 <- timelapse[timelapse$SpeciesOther!="",c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
+      images4 <- timelapse[timelapse$SpeciesOther != "" & !is.na(timelapse$SpeciesOther), c("File", "RelativePath", "SpeciesOther", "Other_Ind")]
       colnames(images4) <- c("File", "Path", "Species", "Individuals")
     }else{
       images4 <- NULL
@@ -515,14 +516,9 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
 
   if(isTRUE(create.dirs)){
     print("Creating Directories")
-    dirs <- with(x3, list(unique(paste(out.dir, Camera, sep = "/")),
-                          unique(paste(out.dir, Camera, Species, sep = "/")),
-                          unique(paste(out.dir, Camera, Species, Individuals, sep = "/"))))
-    dirsTemp <- lapply(dirs, function(x){
-      lapply(x, function(y){
-        ifelse(!dir.exists(y), dir.create(y), print("Folder exists"))
-      })
-    })
+    dirs <- with(x3, unique(file.path(out.dir, Camera, Species, Individuals)))
+    fs::dir_create(dirs)
+    rm(dirs)
   }
 
   if(length(unique(x3in)) != length(unique(x3out))){
