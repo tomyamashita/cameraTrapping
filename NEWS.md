@@ -184,5 +184,9 @@
 
 * Fixed bug in movePictures where it may include timelapse rows that are NA when a combined timelapse file is provided. 
 
+## Version 0.0.0.32 (2023-08-17)
+
+* Fixed bug in cameraRename3 that properly requires the new ext input instead of file.type. 
+
 
 

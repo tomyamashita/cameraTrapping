@@ -420,7 +420,7 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
 ##' # No example provided yet
 ##' }
 ##'
-cameraRename3 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, rename="none", return.type = "list", adjust = NULL, fix.names = FALSE, pp = FALSE, cores.left = NULL){
+cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="none", return.type = "list", adjust = NULL, fix.names = FALSE, pp = FALSE, cores.left = NULL){
   #in.dir <- "J:/new_20230720" # More than likely, this must be a folder containing camera folders
   #out.dir <- NULL             # Where should the files be outputted to?
   #ext <- c(".jpg", ".mp4")    # What type(s) of file do you want to rename
