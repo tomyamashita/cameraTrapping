@@ -188,5 +188,9 @@
 
 * Fixed bug in cameraRename3 that properly requires the new ext input instead of file.type. 
 
+## Version 0.0.0.33 (2023-09-04)
+
+* Fixed bug in cameraRename3 that handles an issue with the Tag expansion for do.call. 
+
 
 

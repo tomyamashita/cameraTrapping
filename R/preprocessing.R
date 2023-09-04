@@ -288,7 +288,7 @@ cameraRename2 <- function(in.dir, out.dir=NULL, file.type, trigger.info=NULL, re
   #rm(in.dir, out.dir, file.type, trigger.info, rename, adjust, fix.names)
 }
 
-## Another major update to the renaming function (Added 2022-08-25, modified 2023-07-24) ####
+## Another major update to the renaming function (Added 2022-08-25, modified 2023-07-24, modified 2023-09-04) ####
 ##' @description This function is used to extract metadata information and rename camera trap images using date-times and an assigned serial number to each image.
 ##' This function has all the same capabilities as the cameraRename2 function but should handle large datasets and corrupt files better.
 ##' Unlike the cameraRename2 functions, this version keeps everything within each camera directory, running the same process on each camera.
@@ -457,22 +457,22 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
   }else if(length(ext) == 1){
     if(ext %in% c(".jpg", ".JPG")){
       if(isTRUE(is.null(trigger.info))){
-        Tag1 <- c("DateTimeOriginal")
+        Tag1 <- list(image = c("DateTimeOriginal"))
       }else if(trigger.info %in% c("Reconyx", "Hyperfire2", "PC900", "Ultrafire_image")){
-        Tag1 <- c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber")
+        Tag1 <- list(image = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"))
       }else if(trigger.info %in% c("Browning", "Cuddyback")){
-        Tag1 <- c("DateTimeOriginal", "UserComment")
+        Tag1 <- list(image = c("DateTimeOriginal", "UserComment"))
       }else{
-        Tag1 <- c("DateTimeOriginal")
+        Tag1 <- list(image = c("DateTimeOriginal"))
         message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor image file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback').")
       }
     }else if(ext %in% c(".mp4", ".MP4")){
       if(isTRUE(is.null(trigger.info))){
-        Tag1 <- c("CreateDate")
+        Tag1 <- list(video = c("CreateDate"))
       }else if(trigger.info %in% c("Reconyx", "Ultrafire_Video")){
-        Tag1 <- c("CreateDate")
+        Tag1 <- list(video = c("CreateDate"))
       }else{
-        Tag1 <- c("CreateDate")
+        Tag1 <- list(video = c("CreateDate"))
         message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor video file types, choose one of c('Ultrafire_Video').")
       }
     }else{
@@ -523,7 +523,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
     }
 
     imagelist1 <- tryCatch(data.frame(t(sapply(fs::path_split(x), function(y){names(y) <- paste("X", seq(1:length(y)), sep = ""); return(y)}))),
-                           error = function(e){print(e); stop("You have images in sub-directories of different lengths. This function likely will not work properly.")})
+                          error = function(e){print(e); stop("You have images in sub-directories of different lengths. This function likely will not work properly.")})
     colnames(imagelist1)[ncol(imagelist1)] <- "image"
     imagelist1$dir <- apply(imagelist1, 1, function(p){fs::path_join(p[-length(p)])})
     imagelist1$path <- file.path(imagelist1$dir, imagelist1$image)
