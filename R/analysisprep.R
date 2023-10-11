@@ -673,7 +673,6 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
   #rm(x, ct, unit, subset, stationCol, sessionCol, ct_probs, count)
 }
 
-
 ### Summarize number of events by a time period (Added 2023-01-20) ####
 ##' @description Summarize raw camera trap events by a user-specified time period for various analyses
 ##'

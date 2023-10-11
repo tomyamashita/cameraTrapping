@@ -134,7 +134,7 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##'
 ##' @importFrom dplyr summarise group_by n
 ##' @importFrom pbapply pblapply
-##' @importFrom fs path_ext_remove path_ext dir_ls, path_split
+##' @importFrom fs path_ext_remove path_ext dir_ls path_split
 ##' @export
 ##'
 ##' @examples \dontrun{
