@@ -134,7 +134,7 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##'
 ##' @importFrom dplyr summarise group_by n
 ##' @importFrom pbapply pblapply
-##' @importFrom fs path_ext_remove dir_ls path_split
+##' @importFrom fs path_ext_remove path_ext dir_ls, path_split
 ##' @export
 ##'
 ##' @examples \dontrun{
@@ -147,18 +147,15 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
   #save <- FALSE
   #diagnostics <- TRUE
 
-  if(any(!grepl("[.]", ext))){
-    message("Some of your file extensions did not include the '.'. This is being added. Add a '.' to each ext to avoid this message")
-    ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
+  if(any(grepl("[.]", ext))){
+    message("File extensions cannot include a '.'. This is being removed. Remove the '.' to each ext to avoid this message")
+    ext[which(grepl("[.]", ext))] <- gsub("\\.", "", ext)
   }
 
-  if(any(!grepl("\\*", ext))){
-    message("Adding a '*' to file extensions.")
-    ext[which(!grepl("\\*", ext))] <- paste("*", ext[which(!grepl("\\*", ext))], sep = "")
-  }
+  Ext <- c(toupper(ext), tolower(ext))
 
-  fs1 <- fs::path_ext_remove(do.call(c, pbapply::pblapply(ext, function(x){fs::dir_ls(path = in.dir, recurse = T, type = "file", glob = x)})))
-  fs2 <- data.frame(do.call(rbind, fs::path_split(fs1)))
+  fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
+  fs2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(fs1[fs::path_ext(fs1) %in% Ext]))))
   fs3 <- data.frame(fs2[,(ncol(fs2)-3):(ncol(fs2)-1)], do.call(rbind, strsplit(fs2[,ncol(fs2)], " ")))
 
   if(ncol(fs3)==10){

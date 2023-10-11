@@ -192,5 +192,10 @@
 
 * Fixed bug in cameraRename3 that handles an issue with the Tag expansion for do.call. 
 
+## Version 0.0.0.34 (2023-10-11)
+
+* Fixed a bug in doFolder where files wouldn't load properly. 
+* Altered the code to locate images using fs::dir_ls() to improve stability and speed. 
+* Updated cameraRename3 to use this new method for dir_ls() to hopefully increase speed and stability. 
 
 

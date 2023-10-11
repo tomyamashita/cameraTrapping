@@ -439,17 +439,17 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
   # Check file types and define metadata tags for particular camera models
   if(length(ext) == 2){
     if(any(grepl(".jpg", ext, ignore.case = T)) & any(grepl(".mp4", ext, ignore.case = T))){
-      message("You are running both image and video files. Selecting appropriate exif tags")
+      message("You are running both photo and video files. Selecting appropriate exif tags")
       if(isTRUE(is.null(trigger.info))){
-        Tag1 <- list(image = c("DateTimeOriginal"), video = c("CreateDate"))
+        Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
       }else if(trigger.info %in% c("Reconyx")){
-        Tag1 <- list(image = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"), video = c("CreateDate"))
+        Tag1 <- list(photo = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"), video = c("CreateDate"))
       }else if(trigger.info %in% c("Browning", "Cuddyback")){
         message("This function does not yet support video files from Browning or Cuddyback cameras. Only date-time information will be provided. \nPlease send me the tags you wish to include.")
-        Tag1 <- list(image = c("DateTimeOriginal"), video = c("CreateDate"))
+        Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
       }else{
-        Tag1 <- list(image = c("DateTimeOriginal"), video = c("CreateDate"))
-        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor image file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback') and for video file types, choose one of c('Reconyx', 'Ultrafire_Video').")
+        Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
+        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor photo file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback') and for video file types, choose one of c('Reconyx', 'Ultrafire_Video').")
       }
     }else{
       stop("Providing multiple file extensions that are not '.jpg' and '.mp4' files is not supported at this time. \nContact me if you need this support.")
@@ -457,14 +457,14 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
   }else if(length(ext) == 1){
     if(ext %in% c(".jpg", ".JPG")){
       if(isTRUE(is.null(trigger.info))){
-        Tag1 <- list(image = c("DateTimeOriginal"))
+        Tag1 <- list(photo = c("DateTimeOriginal"))
       }else if(trigger.info %in% c("Reconyx", "Hyperfire2", "PC900", "Ultrafire_image")){
-        Tag1 <- list(image = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"))
+        Tag1 <- list(photo = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"))
       }else if(trigger.info %in% c("Browning", "Cuddyback")){
-        Tag1 <- list(image = c("DateTimeOriginal", "UserComment"))
+        Tag1 <- list(photo = c("DateTimeOriginal", "UserComment"))
       }else{
-        Tag1 <- list(image = c("DateTimeOriginal"))
-        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor image file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback').")
+        Tag1 <- list(photo = c("DateTimeOriginal"))
+        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor photo file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback').")
       }
     }else if(ext %in% c(".mp4", ".MP4")){
       if(isTRUE(is.null(trigger.info))){
@@ -506,51 +506,47 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
     }
   }
 
-  if(any(!grepl("\\*", ext))){
-    message("Adding a '*' to file extensions.")
-    ext[which(!grepl("\\*", ext))] <- paste("*", ext[which(!grepl("\\*", ext))], sep = "")
+  if(any(grepl("[.]", ext))){
+    message("File extensions cannot include a '.'. This is being removed. Remove the '.' to each ext to avoid this message")
+    ext[which(grepl("[.]", ext))] <- gsub("\\.", "", ext)
   }
-  ext1 <- sub("\\*.", "", ext)
+
+  Ext <- c(toupper(ext), tolower(ext))
 
   # Find files and check directory structure
-  images1 <- lapply(ext, function(ex){fs::dir_ls(path = in.dir, type = "file", recurse = TRUE, glob = ex, ignore.case = T)})
+  fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
+  fs2 <- fs1[fs::path_ext(fs1) %in% Ext]
 
-  images2 <- lapply(1:length(images1), function(i){
-    x <- images1[[i]]
+  if(length(fs1) != length(fs2)){
+    warning("Some files were not included because file extensions were not provided. Function will skip unknown file extensions")
+  }
 
-    if(length(x)==0){
-      stop("You have no images in your directory. Did you specify your path and file type correctly?")
-    }
+  # Split files by directory
+  fs3 <- tryCatch(data.frame(t(sapply(fs::path_split(fs2), function(y){names(y) <- paste("X", seq(1:length(y)), sep = ""); return(y)}))),
+                  error = function(e){print(e); stop("You have images in sub-directories of different lengths. This function likely will not work properly.")})
+  colnames(fs3)[seq(ncol(fs3)-2,ncol(fs3))] <- c("secondlow", "lowest", "image")
+  fs3$dir <- apply(fs3, 1, function(p){fs::path_join(p[-length(p)])})
+  fs3$path <- file.path(fs3$dir, fs3$image)
+  fs3$ext <- fs::path_ext(fs3$image)
+  fs3$type <- ifelse(fs3$ext %in% c("JPG", "jpg"), "photo", ifelse(fs3$ext %in% c("MP4", "mp4"), "video", "unknown"))
+  fs4 <- split(fs3, f = ~fs3$type + fs3$dir)
+  fs5 <- fs4[sapply(fs4, nrow) != 0]
 
-    imagelist1 <- tryCatch(data.frame(t(sapply(fs::path_split(x), function(y){names(y) <- paste("X", seq(1:length(y)), sep = ""); return(y)}))),
-                          error = function(e){print(e); stop("You have images in sub-directories of different lengths. This function likely will not work properly.")})
-    colnames(imagelist1)[ncol(imagelist1)] <- "image"
-    imagelist1$dir <- apply(imagelist1, 1, function(p){fs::path_join(p[-length(p)])})
-    imagelist1$path <- file.path(imagelist1$dir, imagelist1$image)
-
-    imagelist2 <- split(imagelist1, f = imagelist1$dir)
-    names(imagelist2) <- paste(ext1[[i]], names(imagelist2), sep = "_")
-
-    return(imagelist2)
-    rm(x, imagelist1, imagelist2)
-  })
-
-  Tag2 <- lapply(1:length(Tag1), function(i){replicate(length(images2[[i]]), Tag1[[i]], simplify = FALSE)})
-
-  images3 <- do.call(c, images2)
-  Tag3 <- do.call(c, Tag2)
+  # Apply appropriate exif tags to each camera and data type
+  Tag2 <- list()
+  Tag2[grep("photo", names(fs5))] <- Tag1["photo"]
+  Tag2[grep("video", names(fs5))] <- Tag1["video"]
 
   # Some directory diagnostics
   print(paste("Images loaded at ", Sys.time(), ". Checking file structure of the lowest two directories...", sep = ""))
-  images4 <- do.call(rbind, images3)
-  message(paste(length(unique(images4[,ncol(images4)-3])), " unique folder(s) was detected at the lowest directory. Is this correct?", sep = ""))
-  message(paste(length(unique(images4[,ncol(images4)-4])), " unique folder(s) were detected at the second lowest directory. Is this correct?", sep = ""))
+  message(paste(length(unique(fs3[,"lowest"])), " unique folder(s) was detected at the lowest directory. Is this correct?", sep = ""))
+  message(paste(length(unique(fs3[,"secondlow"])), " unique folder(s) were detected at the second lowest directory. Is this correct?", sep = ""))
 
   # Checking the out directory
   if(length(out.dir)==1){
     out.dir.length <- "one"
     message("The length of out.dir is 1. out.dir will reference a relative path for all images")
-  }else if(length(out.dir)==length(images_split2)){
+  }else if(length(out.dir)==length(fs5)){
     out.dir <- as.list(out.dir)
     out.dir.length <- "cams"
     message("The length of out.dir is the same as the number of unique directories. out.dir will be unique for each camera folder")
@@ -569,21 +565,21 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
                              warning = function(w){message("Could not coerce cores.left to a number. The default of 2 cores are not utilized"); return(2)})
     }
     cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
-    parallel::clusterExport(cl1, varlist = c("images3", "Tag3"), envir = environment())
+    parallel::clusterExport(cl1, varlist = c("fs5", "Tag2"), envir = environment())
   }else{
     cl1 <- NULL
   }
 
-  exif1 <- pbapply::pblapply(1:length(images3), cl = cl1, function(i){
+  exif1 <- pbapply::pblapply(1:length(fs5), cl = cl1, function(i){
     # Run exiftoolr to get metadata information
-    arg <- list(path = images3[[i]]$path, tags = Tag3[[i]])
+    arg <- list(path = fs5[[i]]$path, tags = Tag2[[i]])
     x <- tryCatch(do.call(exiftoolr::exif_read, args = arg),
-                  error = function(e){message(paste("There is likely a corrupt file in: \n", names(images3)[i], "\nThe original error is: ", sep = "")); message(e); return(names(images_split2)[i])})
+                  error = function(e){message(paste("There is likely a corrupt file in: \n", names(fs5)[i], "\nThe original error is: ", sep = "")); message(e); return(names(fs5)[i])})
 
     # Change the column name for video files because DateTimeOriginal does not exist
     colnames(x) <- sub("CreateDate", "DateTimeOriginal", colnames(x))
     x1 <- x[order(x$DateTimeOriginal),]
-    print(paste("Exiftool completed on ", names(images3)[i], ". This is ", i, " of ", length(images3), ".", sep = ""))
+    print(paste("Exiftool completed on ", names(fs5)[i], ". This is ", i, " of ", length(fs5), ".", sep = ""))
     return(x1)
     rm(arg, x, x1)
   })
@@ -591,7 +587,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
   if(isTRUE(pp)){
     parallel::stopCluster(cl1)
   }
-  names(exif1) <- names(images3)
+  names(exif1) <- names(fs5)
   print(paste("Exiftool completed at ", Sys.time(), ". Specifying image paths...", sep = ""))
 
   # Specify the proper paths for renaming images
@@ -753,7 +749,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
     exif3 <- exif2
   }
   return(exif3)
-  rm(Tag1, Tag2, Tag3, ext1, images1, images2, images3, images4, exif1, exif2, exif3, cl1, paths1, folders, indir, out.dir.length, equal.dirs, dt.diff)
+  rm(Tag1, Tag2, Ext, fs1, fs2, fs3, fs4, fs5, exif1, exif2, exif3, cl1, paths1, folders, indir, out.dir.length, equal.dirs, dt.diff)
   #rm(in.dir, out.dir, ext, trigger.info, rename, return.type, adjust, fix.names, pp, cores.left)
 }
 

@@ -7,7 +7,7 @@
 cameraRename3(
   in.dir,
   out.dir = NULL,
-  file.type,
+  ext,
   trigger.info = NULL,
   rename = "none",
   return.type = "list",
@@ -28,6 +28,12 @@ Another way to specify the output location to be the input location is to set ou
 You can use this to change the output location for each camera directory.
 You can specify this with a single string, in which case it will use the relative paths to the images to locate the directory location or you can specify a vector of directories.
 The length of this vector must equal the number of camera directories in the in.dir. If rename="copy", you should specify a different out.dir than in.dir although the function does not check for this.}
+
+\item{ext}{String. The type(s) of file you want to rename.
+For images, this is likely to be ".jpg". For videos, this is likely to be ".mp4".
+Starting in package version 0.0.0.27, ext is used instead of file.type. This allows for specification of multiple file extensions, speeding up the renaming process.
+If a different file type is needed, this function will need to be updated to accommodate this. Please let me know and I will add it.
+This function can theoretically take any image format, although I do not know how exiftool reads file types other than ".jpg" and ".mp4". The function will ignore case when looking for file types.}
 
 \item{trigger.info}{String or NULL. Should additional information besides the date-time be included in the output?
 This defaults to NULL where no additional information is included, only date-time information.
@@ -69,12 +75,6 @@ The default is NULL. This is only necessary when pp=TRUE.
 If left at the default, the function will default to 2 cores remaining which is generally enough to continue using a PC while the function runs.
 I would set this to be greater than 0, otherwise the function will use the entire processing power of your computer.
 To see how many cores you have available for parallel processing, use: parallel::detectCores().}
-
-\item{ext}{String. The type(s) of file you want to rename.
-For images, this is likely to be ".jpg". For videos, this is likely to be ".mp4".
-Starting in package version 0.0.0.27, ext is used instead of file.type. This allows for specification of multiple file extensions, speeding up the renaming process.
-If a different file type is needed, this function will need to be updated to accommodate this. Please let me know and I will add it.
-This function can theoretically take any image format, although I do not know how exiftool reads file types other than ".jpg" and ".mp4". The function will ignore case when looking for file types.}
 }
 \value{
 This function outputs either a list or a data.frame, depending on whether return.type = c("list", "df")
