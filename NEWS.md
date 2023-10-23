@@ -198,4 +198,8 @@
 * Altered the code to locate images using fs::dir_ls() to improve stability and speed. 
 * Updated cameraRename3 to use this new method for dir_ls() to hopefully increase speed and stability. 
 
+## Version 0.0.0.35 (2023-10-23)
+
+* Fixed a bug in actPlot where the function failed to run when the input was not an "actmod" class object. 
+
 

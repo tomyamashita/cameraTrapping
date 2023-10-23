@@ -268,7 +268,7 @@ actPlot <- function(act, top = "species"){
 
       pdf2 <- pdf[,c("species", "x_day", "x_night", "y_rads", "lcl_rads", "ucl_rads", "y_dens", "lcl_dens", "ucl_dens", "y_freq", "lcl_freq", "ucl_freq", "se")]
       return(pdf2)
-    }else if(class(x1)[[i]] == "character"){
+    }else if(class(x1[[i]]) == "character"){
       return(NULL)
     }else{
       y1 <- lapply(1:length(x1[[i]]), function(j){
