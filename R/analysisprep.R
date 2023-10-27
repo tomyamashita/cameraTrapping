@@ -70,16 +70,16 @@
 ##' # No example provided
 ##' }
 actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep = 999, pp = F, cores.left = NULL){
-  x <- AP2_1min
-  split <- "Urbanization"
+  #x <- AP2_1min
+  #split <- "Urbanization"
   #split <- c("Location", "DistInt")
-  include <- c("bobcat", "coyote", "raccoon")
+  #include <- c("bobcat", "coyote", "raccoon")
   #include <- c("bobcat", "coyote")
-  return <- "species"
-  bw <- NULL
-  rep <- 99
-  pp <- F
-  cores.left <- 4
+  #return <- "species"
+  #bw <- NULL
+  #rep <- 99
+  #pp <- F
+  #cores.left <- 4
 
   # First, check if the data is going to be split into groups before conducting the analysis
   print(paste("This function started at ", Sys.time(), ".", sep = ""))
