@@ -70,16 +70,19 @@
 ##' # No example provided
 ##' }
 actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep = 999, pp = F, cores.left = NULL){
-  #x <- AP2_1min
+  x <- AP2_1min
+  split <- "Urbanization"
   #split <- c("Location", "DistInt")
+  include <- c("bobcat", "coyote", "raccoon")
   #include <- c("bobcat", "coyote")
-  #return <- "species"
-  #bw <- NULL
-  #rep <- 99
-  #pp <- F
-  #cores.left <- 4
+  return <- "species"
+  bw <- NULL
+  rep <- 99
+  pp <- F
+  cores.left <- 4
 
   # First, check if the data is going to be split into groups before conducting the analysis
+  print(paste("This function started at ", Sys.time(), ".", sep = ""))
   if(!is.null(split)){
     if(!all(split %in% colnames(x))){
       stop("You must specify split as NULL or as one or more valid column names or index numbers.")
@@ -90,6 +93,7 @@ actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep 
       x$Split <- x[,split]
     }
     split_unique <- unique(x$Split)
+
     x$SplitSpecies <- with(x, paste(Split, species, sep = "__"))
   }else{
     x$SplitSpecies <- x$species
@@ -161,12 +165,15 @@ actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep 
 
   # Finalize and format the output
   formatFun <- function(a, top, bottom){
-    a1 <- lapply(top, function(z){
-      z1 <- a[which(grepl(z, names(a)))]
-      names(z1) <- bottom
+    names_str <- data.frame(do.call(rbind, strsplit(names(a), "__")))
+    colnames(names_str) <- c("Split", "species")
+
+    a1 <- lapply(unique(names_str[,top]), function(z){
+      z1 <- a[which(names_str[,top] == z)]
+      names(z1) <- names_str[names_str[,top] == z, bottom]
       return(z1)
     })
-    names(a1) <- top
+    names(a1) <- unique(names_str[,top])
     return(a1)
   }
 
@@ -175,15 +182,15 @@ actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep 
     out1 <- list(data = x2, activity = act)
   }else{
     if(return == "species"){
-      arg <- list(top = include, bottom = split_unique)
+      arg <- list(top = "species", bottom = "Split")
       out1 <- list(data = do.call(formatFun, c(list(x2), arg)), activity = do.call(formatFun, c(list(act), arg)))
     }else if(return == "group"){
-      arg <- list(top = split_unique, bottom = include)
+      arg <- list(top = "Split", bottom = "species")
       out1 <- list(data = do.call(formatFun, c(list(x2), arg)), activity = do.call(formatFun, c(list(act), arg)))
     }else if(return == "both"){
-      arg1 <- list(top = include, bottom = split_unique)
+      arg1 <- list(top = "species", bottom = "Split")
       out1a <- list(data = do.call(formatFun, c(list(x2), arg1)), activity = do.call(formatFun, c(list(act), arg)))
-      arg2 <- list(top = split_unique, bottom = include)
+      arg2 <- list(top = "Split", bottom = "species")
       out1b <- list(data = do.call(formatFun, c(list(x2), arg2)), activity = do.call(formatFun, c(list(act), arg)))
       out1 <- list(species = out1a, group = out1b)
     }else{
@@ -192,12 +199,12 @@ actFun <- function(x, split = NULL, include, return = "species", bw = NULL, rep 
     }
   }
 
+  print(paste("This function finished at ", Sys.time(), ".", sep = ""))
   return(out1)
   #rm(split_unique, x1, x2, cl1, act, out1, out1a, out1b, show)
   #rm(a, d, y1, y2, i, z)
   #rm(x, split, include, return, bw, rep, pp, cores.left)
 }
-
 
 ### Manipulating the actFun output to be plottable using ggplot2 or another plotting function (Added 2023-05-09) ####
 ##' @description A function for taking an actmod object and prepping it for plotting in ggplot

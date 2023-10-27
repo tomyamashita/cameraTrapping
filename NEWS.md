@@ -202,4 +202,8 @@
 
 * Fixed a bug in actPlot where the function failed to run when the input was not an "actmod" class object. 
 
+## Version 0.0.0.36 (2023-10-27)
+
+* Fixed a bug in actFun where the function would fail if some levels of the grouping factor did not exist for all species. 
+* Added print output for the start and end times of the function. This is especially useful when running the function using parallel processing. 
 
