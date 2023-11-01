@@ -30,16 +30,12 @@ movePictures(
 
 \item{exclude}{String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species.}
 
-\item{...}{Additional arguments used when specifying a DataOrganize file. Only img_format and do_format are used. All other inputs are ignored. Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.}
+\item{...}{Additional arguments used when specifying a DataOrganize file. Only img_format, do_format, and ext are used. All other inputs are ignored.
+Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.
+ext is used to specify which file paths should be included from the raw data in the file transfer.}
 }
 \value{
-list of the full file path to the in files and out files
-
-in.files:
-String. Full file paths to the in files
-
-out.files:
-String. Full file paths to the out files
+data.frame of the full file path to the in files and out files
 }
 \description{
 This function uses a Timelapse csv file to move or copy images from an unsorted folder to sorted folders based on species and number of individuals (in the same format as required for \code{link{dataorganize}}), although see details.
@@ -72,7 +68,7 @@ As I come across errors, I attempt to further generalize the functions but this 
 }
 }
 \seealso{
-\code{\link{dataOrganize}}
+\code{\link{doFolder, doTimelapse}}
 
 \code{\link{calculateEvents}}
 }

@@ -207,3 +207,10 @@
 * Fixed a bug in actFun where the function would fail if some levels of the grouping factor did not exist for all species. 
 * Added print output for the start and end times of the function. This is especially useful when running the function using parallel processing. 
 
+## Version 0.0.0.37 (2023-11-01)
+
+* Updated movePictures to run faster when using a dataorganize file. 
+* Updated movePictures to determine if files exist in the in and out directories and adjust the transfer appropriately. 
+
+
+

@@ -315,7 +315,7 @@ doTimelapse <- function(timelapse, do_format = "serial"){
   #rm(timelapse)
 }
 
-## Move all pictures into sorted folders (Added 2022-08-25, Modified 2022-09-13) ####
+## Move all pictures into sorted folders (Added 2022-08-25, Modified 2022-09-13, Modified 2023-11-01) ####
 ##' @description This function uses a Timelapse csv file to move or copy images from an unsorted folder to sorted folders based on species and number of individuals (in the same format as required for \code{link{dataorganize}}), although see details.
 ##'
 ##' @title Move pictures from unsorted to sorted folders
@@ -327,7 +327,9 @@ doTimelapse <- function(timelapse, do_format = "serial"){
 ##' @param create.dirs Logical. Should the function create the directories it needs?
 ##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none'). If 'move' is selected but there are duplicate files, the function will use 'copy' instead of 'move' to allow transfer of all files.
 ##' @param exclude String. Which species should not be sorted? The default is NULL which sorts all species. This can take multiple inputs. Use c("Species1", "Species2", "etc") to specify unique species.
-##' @param ... Additional arguments used when specifying a DataOrganize file. Only img_format and do_format are used. All other inputs are ignored. Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.
+##' @param ... Additional arguments used when specifying a DataOrganize file. Only img_format, do_format, and ext are used. All other inputs are ignored.
+##' Both img_format and do_format can only be c("serial", "original") and are used to indicate whether a serial number has been included in the image names and/or DataOrganize file.
+##' ext is used to specify which file paths should be included from the raw data in the file transfer.
 ##'
 ##' @details When this function creates its folder structure, it uses the Individuals column in the Timelapse output.
 ##' For some "species" (e.g., ghost, human, bird, rodent), we do not sort these by individual, therefore the Individuals column is a 0.
@@ -342,11 +344,7 @@ doTimelapse <- function(timelapse, do_format = "serial"){
 ##' The "serial" name is not required and is only used if do_format is specified as "serial".
 ##' These columns names are already produced by the \code{\link{doFolder}} and \code{\link{doTimelapse}} functions.
 ##'
-##' @return list of the full file path to the in files and out files
-##' @return in.files:
-##' String. Full file paths to the in files
-##' @return out.files:
-##' String. Full file paths to the out files
+##' @return data.frame of the full file path to the in files and out files
 ##'
 ##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
 ##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
@@ -354,7 +352,7 @@ doTimelapse <- function(timelapse, do_format = "serial"){
 ##' I build them for my own use and make no promises that they will work for different data formatting situations.
 ##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
 ##'
-##' @seealso \code{\link{dataOrganize}}
+##' @seealso \code{\link{doFolder, doTimelapse}}
 ##'
 ##' \code{\link{calculateEvents}}
 ##'
@@ -432,70 +430,62 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
 
     #rm(images1, images2, images3, images4)
   }else if(is.null(timelapse) & !is.null(do)){
-    #do_ins <- list(img_format = "serial", do_format = "serial")
+    #do_ins <- list(img_format = "serial", do_format = "serial", ext = c("jpg", "mp4"))
 
     print("Using a DataOrganize file. Loading images...")
     do_ins <- list(...)
 
-    if(!any(any(names(do_ins)=="img_format"), any(names(do_ins)=="do_format"))){
-      stop("To use a DataOrganize file for movePictures, you must specify c(img_format, do_format).")
+    ## Check that there are the correct inputs
+    if(!any(any(names(do_ins)=="img_format"), any(names(do_ins)=="do_format"), any(names(do_ins)=="ext"))){
+      stop("To use a DataOrganize file for movePictures, you must specify c(img_format, do_format, ext).")
     }
     img_format <- do_ins$img_format
     do_format <- do_ins$do_format
+    ext <- do_ins$ext
 
+    ## Ensure proper input file paths
     if(!(grepl("images", in.dir, ignore.case = T))){
-      in.dir <- file.path(in.dir, "images")
-      message("Your in.dir path does not include the images folder. File transfer from a dataOrganize file will likely not work properly. 'images' is being appended to the in.dir")
+      #in.dir <- file.path(in.dir, "images")
+      message("Your in.dir path does not include the images folder. File transfer from a dataOrganize file may not work properly. Make sure that in.dir leads to a folder containing camera folders.")
     }
 
+    ## Confirm that the inputs are correct
     if(img_format == "serial" & do_format == "original"){
       message("You specified that your images have serial numbers but your DataOrganize file does not. This function may not work properly")
     }else if(img_format == "original" & do_format == "serial"){
       message("You specified that your images do not have serial numbers but your DataOrganize does. This function may not work properly")
     }
-
-    if(img_format == "serial"){
-      files1 <- pbapply::pblapply(c(".jpg", ".mp4"), function(x){
-        a1 <- list.files(in.dir, pattern = x, full.names = T, recursive = T, ignore.case = T)
-        a2 <- data.frame(oldname = a1, do.call(rbind, strsplit(a1, "/")))
-        colnames(a2)[(ncol(a2)-3):ncol(a2)] <- c("Folder", "Camera", "Date", "File")
-        a3 <- data.frame(a2[,c("Folder", "Camera", "Date", "File")], do.call(rbind, strsplit(sub(x, "", a2$File), " ")))
-        colnames(a3)[(ncol(a3)-6):ncol(a3)] <- c("year", "month", "day", "hour", "minute", "second", "serial")
-        return(a3)
-        rm(a1, a2, a3)
-      })
-    }else if(img_format == "original"){
-      files1 <- pbapply::pblapply(c(".jpg", ".mp4"), function(x){
-        a1 <- list.files(in.dir, pattern = x, full.names = T, recursive = T, ignore.case = T)
-        a2 <- data.frame(do.call(rbind, strsplit(a1, "/")))
-        colnames(a2)[(ncol(a2)-3):ncol(a2)] <- c("Folder", "Camera", "Date", "File")
-        a3 <- data.frame(a2[,c("Folder", "Camera", "Date", "File")], do.call(rbind, strsplit(sub(x, "", a2$File), " ")))
-        colnames(a3)[(ncol(a3)-6):ncol(a3)] <- c("year", "month", "day", "hour", "minute", "second")
-        return(a3)
-        rm(a1, a2, a3)
-      })
-    }else{
-      stop("You did not specify a valid img_format. Choose one of c('serial', 'original').")
+    if(any(grepl("[.]", ext))){
+      message("File extensions cannot include a '.'. This is being removed. Remove the '.' to each ext to avoid this message")
+      ext[which(grepl("[.]", ext))] <- gsub("\\.", "", ext)
     }
-    files2 <- do.call(rbind, files1)
+
+    ## Load the input files
+    Ext <- c(toupper(ext), tolower(ext))
+    fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
+    fs1a <- fs1[fs::path_ext(fs1) %in% Ext]
+    fs2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(fs1a))), oldpath = fs1a, filename = basename(fs1a))
+    colnames(fs2)[(ncol(fs2)-5):(ncol(fs2)-2)] <- c("Folder", "Camera", "Date", "File")
 
     x1 <- do
 
+    ## Define an identifier for connecting the raw data to the dataorganize file
+    fs2$ID <- with(fs2, paste(Camera, File, sep = " "))
     if(do_format == "serial"){
-      files2$ID <- with(files2, paste(Camera, year, month, day, hour, minute, second, serial, sep = "_"))
-      x1$ID <- with(x1, paste(site, year, month, day, hour, minute, second, serial, sep = "_"))
+      x1$ID <- with(x1, paste(site, year, formatC(month, width = 2, flag = "0"), formatC(day, width = 2, flag = "0"), formatC(hour, width = 2, flag = "0"), formatC(minute, width = 2, flag = "0"), formatC(second, width = 2, flag = "0"), formatC(serial, width = 5, flag = "0"), sep = " "))
     }else if(do_format == "original"){
-      files2$ID <- with(files2, paste(Camera, year, month, day, hour, minute, second, sep=""))
-      x1$ID <- with(x1, paste(site, year, month, day, hour, minute, second, ".jpg", sep = ""))
+      x1$ID <- with(x1, paste(site, year, formatC(month, width = 2, flag = "0"), formatC(day, width = 2, flag = "0"), formatC(hour, width = 2, flag = "0"), formatC(minute, width = 2, flag = "0"), formatC(second, width = 2, flag = "0"), sep = " "))
     }else{
       stop("You specified an incorrect do_format. Choose one of c('serial', 'original').")
     }
 
-    x2 <- merge.data.frame(files2, x1, by = "ID")
+    ## Join the raw data with the dataorganize file
+    x2 <- merge.data.frame(fs2, x1, by = "ID", all.y = TRUE)
     x3 <- x2[!(x2$species %in% exclude), ]
 
-    x3in <- with(x3, file.path(Camera, Date, File))
-    x3out <- with(x3, file.path(site, species, individuals, File))
+    ## Define the input and output file paths
+    x3in <- with(x3, file.path(Camera, Date, filename))
+    x3out <- with(x3, file.path(site, species, formatC(individuals, width = 2, flag = "0"), filename))
 
     #rm(do_ins, img_format, do_format, files1, files2)
   }else{
@@ -506,11 +496,14 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
     stop("You have different numbers of files in the 'in' and 'out' directories. You broke my function...")
   }
 
-  rename <- list(in.files = file.path(in.dir, x3in),
-                 out.files = file.path(out.dir, x3out))
-  print(paste("The in files will look like: ", rename[["in.files"]][[1]], sep = ""))
-  print(paste("The out files will look like: ", rename[["out.files"]][[1]], sep = ""))
+  ## Create a data.frame to use for the file transfer
+  print(paste("File loading completed at ", Sys.time(), ". Ordering data for file transfer...", sep = ""))
+  rename <- data.frame(in.files = file.path(in.dir, x3in),
+                       out.files = file.path(out.dir, x3out))
+  print(paste("The in files will look like: ", rename$in.files[1], sep = ""))
+  print(paste("The out files will look like: ", rename$out.files[1], sep = ""))
 
+  ## Create directories
   if(isTRUE(create.dirs)){
     print("Creating Directories")
     dirs <- with(x3, unique(file.path(out.dir, Camera, Species, Individuals)))
@@ -518,17 +511,34 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
     rm(dirs)
   }
 
+  ## Make sure that all files get move/copied correctly
   if(length(unique(x3in)) != length(unique(x3out))){
     message("You have a different number of in and out files, likely because more than one species was detected in a single picture. \nIf type = 'move', this will be switched to 'copy'.")
     if(type == "move"){type <- "copy"}
   }
 
+  ## Check if all files that should get copied exist in the in.files path and do not exist in the out.files path
+  rename$inexists <- fs::file_exists(rename$in.files)
+  rename$outexists <- fs::file_exists(rename$out.files)
+  if(sum(!rename$inexists) > 0){
+    message(paste(sum(!rename$inexists), " files out of ", nrow(rename), " do not exist in the in.dir.\nThese files will be skipped during file transfer.", sep = ""))
+  }
+  if(sum(!rename$outexists) > 0){
+    message(paste(sum(!rename$outexists), " files out of ", nrow(rename), " already exist in the out.dir.\nThese files will be skipped during file transfer.", sep = ""))
+  }
+
+  ## Select only those photos that should be transferred
+  if(type != "none"){
+    transfer <- rename[rename$inexists == TRUE & rename$outexists == FALSE,]
+  }
+
+  ## Do the file transfer
   if(type == "move"){
-    print("File transfer in progress. Images are moved from in.dir to out.dir")
-    test <- fs::file_move(path = rename[["in.files"]], new_path = rename[["out.files"]])
+    print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(transfer), " files are being moved.", sep = ""))
+    test <- fs::file_move(path = transfer$in.files, new_path = transfer$out.files)
   }else if(type == "copy"){
-    print("File transfer in progress. Images are copied from in.dir to out.dir")
-    test <- fs::file_copy(path = rename[["in.files"]], new_path = rename[["out.files"]])
+    print(paste("File transfer in progress. Images are copied from in.dir to out.dir. ", nrow(transfer), " files are being copied.", sep = ""))
+    test <- fs::file_copy(path = transfer$in.files, new_path = transfer$out.files)
   }else if(type == "none"){
     print("No file transfer specified")
   }else{
