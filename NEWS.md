@@ -211,6 +211,7 @@
 
 * Updated movePictures to run faster when using a dataorganize file. 
 * Updated movePictures to determine if files exist in the in and out directories and adjust the transfer appropriately. 
+* Fixed a bug in cameraRename3 where the function fails when you do not include a "." in the file extensions. 
 
 
 

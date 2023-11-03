@@ -438,7 +438,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
 
   # Check file types and define metadata tags for particular camera models
   if(length(ext) == 2){
-    if(any(grepl(".jpg", ext, ignore.case = T)) & any(grepl(".mp4", ext, ignore.case = T))){
+    if(any(grepl("jpg", ext, ignore.case = T)) & any(grepl("mp4", ext, ignore.case = T))){
       message("You are running both photo and video files. Selecting appropriate exif tags")
       if(isTRUE(is.null(trigger.info))){
         Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
