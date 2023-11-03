@@ -214,4 +214,9 @@
 * Fixed a bug in cameraRename3 where the function fails when you do not include a "." in the file extensions. 
 
 
+## Version 0.0.0.38 (2023-11-03)
+
+* Added the copyFiles function to create backups of camera data. 
+
+
 

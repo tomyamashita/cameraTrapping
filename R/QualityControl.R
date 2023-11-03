@@ -2,6 +2,7 @@
 ## This script contains quality control and diagnostic functions for camera data.
 ## This script includes the following functions:
   ## cameraDiagnostics
+  ## copyFiles
   ## ctDates
   ## imageEffort
   ## mergeFiles
@@ -79,6 +80,76 @@ cameraDiagnostics <- function(x, cam_dir_level, from_bottom){
   return(out)
   rm(out)
   #rm(x)
+}
+
+
+## Direct copy of files to another location (Added 2023-11-03) ####
+##' @description This function copies or moves files from one location to another
+##'
+##' @title Copy files from one location to another
+##'
+##' @param in.dir String. The directory containing the files you want to transfer. This can be anything but all folders and files below the level specified will be copied
+##' @param out.dir String. The directory where you want to copy the files to.
+##' @param create.dirs Logical. Should the function create the directories it needs?
+##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').
+##'
+##' @details This function can be used to copy or move files from one location to another.
+##' It is useful for creating backups and duplicates of file structure and files on multiple drives or in multiple locations.
+##'
+##' @return data.frame containing the file paths of the input and output files.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{movePictuers}}
+##'
+##' @keywords files
+##' @keywords manip
+##'
+##' @concept camera trapping
+##' @concept data backup
+##'
+##' @importFrom fs dir_ls dir_create file_move file_copy
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+copyFiles <- function(in.dir, out.dir, create.dirs, type){
+  #in.dir <- "D:/new_77_20231103"
+  #out.dir <- "E:/Raw/Raw_77_PreCon"
+
+  fs1 <- fs::dir_ls(path = in.dir, recurse = TRUE, type = "file")
+  fs2 <- sub(in.dir, out.dir, fs1)
+
+  fs3 <- data.frame(in.dir = fs1, out.dir = fs2, row.names = NULL)
+
+  ## Create directories
+  if(isTRUE(create.dirs)){
+    print("Creating Directories")
+    dirs <- with(x3, unique(file.path(out.dir, site, species, individuals)))
+    fs::dir_create(dirs)
+    rm(dirs)
+  }
+
+  if(type == "move"){
+    print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(transfer), " files are being moved.", sep = ""))
+    test <- fs::file_move(path = transfer$in.files, new_path = transfer$out.files)
+  }else if(type == "copy"){
+    print(paste("File transfer in progress. Images are copied from in.dir to out.dir. ", nrow(transfer), " files are being copied.", sep = ""))
+    test <- fs::file_copy(path = transfer$in.files, new_path = transfer$out.files)
+  }else if(type == "none"){
+    print("No file transfer specified")
+  }else{
+    message("You chose an invalid type. No file transfer will occur. Choose one of c('move', 'copy', 'none') to avoid this warning")
+  }
+  return(fs3)
+  rm(fs1, fs2, fs3)
+  #rm(in.dir, out.dir, type)
 }
 
 
