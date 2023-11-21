@@ -425,6 +425,8 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
     x2$Individuals <- formatC(x2$Individuals, flag = "0", width = 2)
     x3 <- x2[!(x2$Species %in% exclude), ]  # Remove species from list of those to be sorted
 
+    x3$outpath <- with(x3, file.path(Camera, Species, Individuals))
+
     x3in <- with(x3, file.path(Folder, Camera, Date, File))
     x3out <- with(x3, file.path(Camera, Species, Individuals, File))
 
@@ -483,6 +485,8 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
     x2 <- merge.data.frame(fs2, x1, by = "ID", all.y = TRUE)
     x3 <- x2[!(x2$species %in% exclude), ]
 
+    x3$outpath <- with(x3, file.path(site, species, formatC(individuals, width = 2, flag = "0")))
+
     ## Define the input and output file paths
     x3in <- with(x3, file.path(Camera, Date, filename))
     x3out <- with(x3, file.path(site, species, formatC(individuals, width = 2, flag = "0"), filename))
@@ -506,7 +510,7 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
   ## Create directories
   if(isTRUE(create.dirs)){
     print("Creating Directories")
-    dirs <- with(x3, unique(file.path(out.dir, site, species, individuals)))
+    dirs <- with(x3, unique(outpath))
     fs::dir_create(dirs)
     rm(dirs)
   }

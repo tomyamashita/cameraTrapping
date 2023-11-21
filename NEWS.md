@@ -218,5 +218,10 @@
 
 * Added the copyFiles function to create backups of camera data. 
 
+## Version 0.0.0.39 (2023-11-21)
+
+* Fixed a bug in movePictures where it couldn't create directories from a Timelapse file input. 
+
+
 
 
