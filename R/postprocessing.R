@@ -510,7 +510,7 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
   ## Create directories
   if(isTRUE(create.dirs)){
     print("Creating Directories")
-    dirs <- with(x3, unique(outpath))
+    dirs <- with(x3, unique(out.dir, outpath))
     fs::dir_create(dirs)
     rm(dirs)
   }
