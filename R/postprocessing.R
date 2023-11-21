@@ -392,9 +392,6 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
     stop("Both a timelapse file and a dataorganize file were provided. Please only provide one.")
   }else if(!is.null(timelapse) & is.null(do)){
     print("Using a timelapse file. Loading images...")
-    if(grepl("images", in.dir, ignore.case = T)){
-      message("Your in.dir path includes the images folder. File transfer may not work properly if timelapse also references this folder")
-    }
 
     timelapse$RelativePath <- gsub("\\\\", "/", timelapse$RelativePath)
 
@@ -427,7 +424,7 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
 
     x3$outpath <- with(x3, file.path(Camera, Species, Individuals))
 
-    x3in <- with(x3, file.path(Folder, Camera, Date, File))
+    x3in <- with(x3, file.path(Camera, Date, File))
     x3out <- with(x3, file.path(Camera, Species, Individuals, File))
 
     #rm(images1, images2, images3, images4)
@@ -510,7 +507,7 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
   ## Create directories
   if(isTRUE(create.dirs)){
     print("Creating Directories")
-    dirs <- with(x3, unique(out.dir, outpath))
+    dirs <- with(x3, unique(file.path(out.dir, outpath)))
     fs::dir_create(dirs)
     rm(dirs)
   }
@@ -527,8 +524,8 @@ movePictures <- function(timelapse=NULL, do=NULL, in.dir, out.dir, create.dirs, 
   if(sum(!rename$inexists) > 0){
     message(paste(sum(!rename$inexists), " files out of ", nrow(rename), " do not exist in the in.dir.\nThese files will be skipped during file transfer.", sep = ""))
   }
-  if(sum(!rename$outexists) > 0){
-    message(paste(sum(!rename$outexists), " files out of ", nrow(rename), " already exist in the out.dir.\nThese files will be skipped during file transfer.", sep = ""))
+  if(sum(rename$outexists) > 0){
+    message(paste(sum(rename$outexists), " files out of ", nrow(rename), " already exist in the out.dir.\nThese files will be skipped during file transfer.", sep = ""))
   }
 
   ## Select only those photos that should be transferred
