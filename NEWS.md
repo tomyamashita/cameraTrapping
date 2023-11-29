@@ -222,6 +222,8 @@
 
 * Fixed a bug in movePictures where it couldn't create directories from a Timelapse file input. 
 
+## Version 0.0.0.40 (2023-11-29)
 
+* Fixed a bug in copyFiles where directories couldn't be created properly. 
 
 

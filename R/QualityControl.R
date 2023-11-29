@@ -127,15 +127,17 @@ copyFiles <- function(in.dir, out.dir, create.dirs, type){
   fs2 <- sub(in.dir, out.dir, fs1)
 
   fs3 <- data.frame(in.dir = fs1, out.dir = fs2, row.names = NULL)
+  fs3$outpath <- sapply(fs3$out.dir, function(x){sub(paste("/",basename(x), sep = ""), "", x)}, USE.NAMES = F)
 
   ## Create directories
   if(isTRUE(create.dirs)){
     print("Creating Directories")
-    dirs <- with(x3, unique(file.path(out.dir, site, species, individuals)))
+    dirs <- unique(fs3$outpath)
     fs::dir_create(dirs)
     rm(dirs)
   }
 
+  ## Copy or move files from one directory to another
   if(type == "move"){
     print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(transfer), " files are being moved.", sep = ""))
     test <- fs::file_move(path = transfer$in.files, new_path = transfer$out.files)
@@ -151,7 +153,6 @@ copyFiles <- function(in.dir, out.dir, create.dirs, type){
   rm(fs1, fs2, fs3)
   #rm(in.dir, out.dir, type)
 }
-
 
 ### Converting date-time information in a CT Table to character format (Added 2022-08-25) ####
 ##' @description This function will convert properly formatted date objects to characters. This is so camtrapR can read the character date. For some reason, the package does not like date-formatted dates.
