@@ -226,4 +226,10 @@
 
 * Fixed a bug in copyFiles where directories couldn't be created properly. 
 
+## Version 0.0.0.41 (2023-12-05)
+
+* Updated the summarizeEvents function to include an option to calculate number of detections/abundance per day instead of just per unit (i.e., month). This may be more beneficial than the original perUnit calculation for standardization purposes when there is missing data due to camera trap failures. 
+* Bug fixes and updates to the documentation for summarizeEvents associated new functionality and discovered errors in the text. 
+* Added the tidyr package to requirements due to its use in summarizeEvents to convert data from long to wide formats. 
+
 

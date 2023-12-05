@@ -680,23 +680,28 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
   #rm(x, ct, unit, subset, stationCol, sessionCol, ct_probs, count)
 }
 
-### Summarize number of events by a time period (Added 2023-01-20) ####
+### Summarize number of events by a time period (Added 2023-01-20, Modified 2023-12-05) ####
 ##' @description Summarize raw camera trap events by a user-specified time period for various analyses
 ##'
 ##' @title Summarize camera trap events, including setting up for regression analyses, occupancy models, n-mixture models
 ##'
-##' @param x data.frame. A data frame produced by the \code{\link{calculateEvents}} function available in this package.
-##' @param ct data.frame. A CT Table following the format from the package camtrapR.
-##' @param unit String. The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
+##' @param x A data frame produced by the APFun_env function available in this package.
+##' @param ct A CT Table following the format from the package camtrapR.
+##' @param unit The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
 ##' See details for how this function handles summarizing units greater than days.
-##' @param include String. This should be the names of the species that you want to include in this analysis. Use c() to include multiple inputs.
-##' @param camOP list. Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
+##' @param include String of characters. This should be the names of the species that you want to include in this analysis.
+##' @param camOP Arguments passed to \code{\link[camtraR]{cameraOperation}}. The most important ones of these are
 ##' stationCol, setupCol, and retrievalCol. hasProblems is often used as well.
 ##' If multiple cameras per site, you must specify cameraCol, byCamera, allCamsOn, and camerasIndepedent.
 ##' See \code{\link[camtrapR]{cameraOperation}} for details.
-##' @param out_form String. Should the data output in long format, wide format or both. Acceptable inputs are c("all", "l", "long", "w", "wide"). The maximum length of this input is 2. Do not include "all" if providing multiple arguments.
-##' @param out_data String. Should the data output number of detections (DE), abundance (AB; number of individuals), or presence/absence (PA). Acceptable inputs are c("all", "DE", "detections", "AB", "abundance", "PA", "presence"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
-##' @param out_correction String. Should the data apply no correction for active camera trap nights (raw), remove all data when camera traps were inactive for more than have the time interval (rm; Unit), or calculate an adjusted number of detections/abundance for each time interval (pu; events/activenights * totalnights). Acceptable inputs are c("all", "none", "raw", "rm", "rmInactive", "pu", "perUnit"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
+##' @param out_form Should the data output in long format, wide format or both. Acceptable inputs are c("all", "l", "long", "w", "wide"). The maximum length of this input is 2. Do not include "all" if providing multiple arguments.
+##' @param out_data Should the data output number of detections (DE), abundance (AB; number of individuals), or presence/absence (PA). Acceptable inputs are c("all", "DE", "detections", "AB", "abundance", "PA", "presence"). The maximum length of this input is 3. Do not include "all" if providing multiple arguments.
+##' @param out_correction Should the data apply no correction for active camera trap nights (raw, none; events),
+##' remove all data when camera traps were inactive for more than half the time interval (rm, rmInactive; events),
+##' calculate a number of detections/abundance per day for each time interval (pd, perDay; events/activenights),
+##' or calculate an adjusted number of detections/abundance for each time interval (pu, perUnit; events/activenights * totalnights).
+##' Acceptable inputs are c("all", "none", "raw", "rm", "rmInactive", "pd", "perDay", "pu", "perUnit").
+##' The maximum length of this input is 4. Do not include "all" if providing multiple arguments.
 ##'
 ##' @details Using units other than days: If you use units other than days, the function will start the time interval on the first day of the period.
 ##' For example, if "1 month" is specified as the unit, the function will start each period on the 1st of the month.
@@ -710,24 +715,7 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
 ##' @return Usually a 2-leveled list with species (chosen using the include argument) as the top level and requested outputs (chosen using out_form, out_data, and out_correction) below it.
 ##' However, this function will coerce any list that is length 1 to a data.frame, simplifying the return.
 ##'
-##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
-##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
-##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
-##' I build them for my own use and make no promises that they will work for different data formatting situations.
-##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
-##'
-##' @seealso \code{\link{calculateEvents}}
-##'
-##' \code{\link{occFun}}
-##'
-##' @keywords datagen
-##' @keywords manip
-##' @keywords univar
-##'
-##' @concept camera trapping
-##' @concept occupancy analysis
-##' @concept n-mixture model
-##' @concept regression
+##' @seealso \code{\link{calculateEvents}} \code{\link{occFun}}
 ##'
 ##' @importFrom camtrapR cameraOperation
 ##' @importFrom tidyr pivot_longer
@@ -740,14 +728,14 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
 ##' # No example provided
 ##' }
 summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_data = "all", out_correction = "all"){
-  #x <- AP2
-  #ct <- cttable
+  #x <- AP2_30min
+  #ct <- cttable_REZ_all
   #unit <- "1 month"
   #include <- c("bobcat", "coyote")
   #camOP <- list(stationCol = "Camera", setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T, cameraCol = "Camera", byCamera = F, allCamsOn = F, camerasIndependent = F)
-  #out_form <- "all"
-  #out_data <- "all"
-  #out_correction <- "all"
+  #out_form <- "long"
+  #out_data <- "AB"
+  #out_correction <- "pd"
 
   print(paste("This function started at ", Sys.time(), ". Running camtrapR...", sep = ""))
 
@@ -779,7 +767,7 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   c1$intdate <- with(c1, paste(Site, Interval, sep = "_"))
 
   c2 <- suppressMessages(data.frame(dplyr::summarise(dplyr::group_by(c1, intdate), mind = min(Date), maxd = max(Date), actived = sum(op, na.rm = T))))
-  c2$totald <- as.numeric(difftime(c2$maxd, c2$mind, units = "days") + 1)
+  c2$totald <- as.numeric(difftime(c2$maxd, c2$mind, units = "days")+1)
   c2$activet <- ifelse(c2$actived < c2$totald/2, NA, 0)
 
   c3 <- merge.data.frame(c1, c2, by = "intdate", all.x = T)
@@ -793,7 +781,7 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   x1$camdate <- with(x1, paste(Site, Date, sep = "_"))
   x2 <- suppressMessages(data.frame(dplyr::summarise(dplyr::group_by(x1, Site, Date, Species, camdate), Detections = dplyr::n(), Abundance = sum(Individuals))))
   x3 <- split(x2, f = x2$Species)
-  x4 <- x3[which(names(x3) %in% include)]
+  x4 <- x3[include]
 
   ## Check if requested outputs are valid outputs
   subFun <- function(x, v, s){
@@ -839,21 +827,23 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   }
   if(length(out_correction) == 1){
     if(out_correction == "all"){
-      out_correction <- c("raw", "rm", "pu")
+      out_correction <- c("raw", "rm", "pd", "pu")
     }else{
       out_correction <- subFun(out_correction, "none", "raw")
       out_correction <- subFun(out_correction, "rmInactive", "rm")
+      out_correction <- subFun(out_correction, "perDay", "pd")
       out_correction <- subFun(out_correction, "perUnit", "pu")
     }
-  }else if(any(length(out_correction) == 2, length(out_correction) == 3)){
+  }else if(any(length(out_correction) == 2, length(out_correction) == 4)){
     out_correction <- subFun(out_correction, "none", "raw")
     out_correction <- subFun(out_correction, "rmInactive", "rm")
+    out_correction <- subFun(out_correction, "perDay", "pd")
     out_correction <- subFun(out_correction, "perUnit", "pu")
   }else{
-    stop(paste("out_correction has ", length(out_correction), " items. It can only have between 1 and 3.", sep = ""))
+    stop(paste("out_correction has ", length(out_correction), " items. It can only have between 1 and 4.", sep = ""))
   }
-  if(length(out_correction[-which(out_correction %in% c("raw", "rm", "pu"))]) > 0){
-    stop(paste("You have incorrect inputs in out_correction. These are: c(", paste(out_correction[-which(out_correction %in% c("raw", "rm", "pu"))], collapse = ", "), ").", sep = ""))
+  if(length(out_correction[-which(out_correction %in% c("raw", "rm", "pd", "pu"))]) > 0){
+    stop(paste("You have incorrect inputs in out_correction. These are: c(", paste(out_correction[-which(out_correction %in% c("raw", "rm", "pd", "pu"))], collapse = ", "), ").", sep = ""))
   }
 
   if(all(length(out_form)==1, length(out_data)==1, length(out_correction)==1)){
@@ -878,12 +868,16 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
     a2$DE_rmInactive <- a2$DE_raw - a2$activet
     a2$AB_rmInactive <- a2$AB_raw - a2$activet
     a2$PA_rmInactive <- a2$PA_raw - a2$activet
+    a2$DE_perDay <- with(a2, ifelse(actived==0, NA, DE_raw/actived))
+    a2$AB_perDay <- with(a2, ifelse(actived==0, NA, AB_raw/actived))
+    a2$PA_perDay <- with(a2, ifelse(actived==0, NA, PA_raw/actived))
     a2$DE_perUnit <- with(a2, ifelse(actived==0, NA, DE_raw/actived * totald))
     a2$AB_perUnit <- with(a2, ifelse(actived==0, NA, AB_raw/actived * totald))
     a2$PA_perUnit <- with(a2, ifelse(actived==0, NA, PA_raw/actived * totald))
     a3 <- suppressMessages(data.frame(dplyr::summarise_all(dplyr::group_by(a2[,c(2,4:7,10:ncol(a2))], Site, Interval, totald, actived, activet), sum)))
     a3$PA_raw <- with(a3, ifelse(PA_raw==0 | is.na(PA_raw),0,1))
     a3$PA_rmInactive <- with(a3, ifelse(PA_rmInactive==0 | is.na(PA_rmInactive),0,1))
+    a3$PA_perDay <- with(a3, ifelse(PA_perDay==0 | is.na(PA_perDay),0,1))
     a3$PA_perUnit <- with(a3, ifelse(PA_perUnit==0 | is.na(PA_perUnit),0,1))
 
     ## Creating wide format data
@@ -900,24 +894,30 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
     names(a4) <- colnames(a3)[6:ncol(a3)]
 
     ## Output all possible outputs
-    out <- list("l_DE_raw" = a3[,c(1:5,6)],
-                "l_DE_rm" = a3[,c(1:5,9)],
-                "l_DE_pu" = a3[,c(1:5,12)],
-                "l_AB_raw" = a3[,c(1:5,7)],
-                "l_AB_rm" = a3[,c(1:5,10)],
-                "l_AB_pu" = a3[,c(1:5,13)],
-                "l_PA_raw" = a3[,c(1:5,8)],
-                "l_PA_rm" = a3[,c(1:5,11)],
-                "l_PA_pu" = a3[,c(1:5,14)],
+    out <- list("l_DE_raw" = a3[,c("Site","Interval","totald","actived","activet", "DE_raw")],
+                "l_DE_rm" = a3[,c("Site","Interval","totald","actived","activet", "DE_rmInactive")],
+                "l_DE_pd" = a3[,c("Site","Interval","totald","actived","activet", "DE_perDay")],
+                "l_DE_pu" = a3[,c("Site","Interval","totald","actived","activet", "DE_perUnit")],
+                "l_AB_raw" = a3[,c("Site","Interval","totald","actived","activet", "AB_raw")],
+                "l_AB_rm" = a3[,c("Site","Interval","totald","actived","activet", "AB_rmInactive")],
+                "l_AB_pd" = a3[,c("Site","Interval","totald","actived","activet", "AB_perDay")],
+                "l_AB_pu" = a3[,c("Site","Interval","totald","actived","activet", "AB_perUnit")],
+                "l_PA_raw" = a3[,c("Site","Interval","totald","actived","activet", "PA_raw")],
+                "l_PA_rm" = a3[,c("Site","Interval","totald","actived","activet", "PA_rmInactive")],
+                "l_PA_pd" = a3[,c("Site","Interval","totald","actived","activet", "PA_perDay")],
+                "l_PA_pu" = a3[,c("Site","Interval","totald","actived","activet", "PA_perUnit")],
                 "w_DE_raw" = a4[["DE_raw"]],
                 "w_DE_rm" = a4[["DE_rmInactive"]],
+                "w_DE_pd" = a4[["DE_perDay"]],
                 "w_DE_pu" = a4[["DE_perUnit"]],
                 "w_AB_raw" = a4[["AB_raw"]],
                 "w_AB_rm" = a4[["AB_rmInactive"]],
+                "w_AB_pd" = a4[["AB_perDay"]],
                 "w_AB_pu" = a4[["AB_perUnit"]],
                 "w_PA_raw" = a4[["PA_raw"]],
                 "w_PA_rm" = a4[["PA_rmInactive"]],
-                "w_PA_pu" = a4[["PA_rmInactive"]]
+                "w_PA_pd" = a4[["PA_perDay"]],
+                "w_PA_pu" = a4[["PA_perUnit"]]
     )
 
     choices <- unlist(lapply(out_form, function(f){lapply(out_data, function(d){lapply(out_correction, function(g){paste(f, d, g, sep = "_")})})}))
