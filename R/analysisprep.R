@@ -21,7 +21,7 @@
 ##' @param bw Numeric or NULL. Do you want to specify a bandwidth for the kernel density estimation of the activity distribution? The default is NULL where the function with calculate bandwidth internally.
 ##' @param rep Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.
 ##' @param pp Logical. Should this function take advantage of parallel processing.
-##' The default is FALSE. Because the function separates tasks by camera directory, it can use parallel processing to run multiple cameras at the same time.
+##' The default is FALSE. Because the function separates tasks by species and the split variable, it can use parallel processing to run multiple species/groups at the same time.
 ##' This is currently set up to run in Windows OS so I do not know if this will work on a Mac or Linux system.
 ##' If you want this functionality on a Unix device and know how to set it up, let me know and I can incorporate it.
 ##' @param cores.left Numeric. How many cores should be left available when using parallel processing?

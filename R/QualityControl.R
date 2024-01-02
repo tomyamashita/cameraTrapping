@@ -92,6 +92,15 @@ cameraDiagnostics <- function(x, cam_dir_level, from_bottom){
 ##' @param out.dir String. The directory where you want to copy the files to.
 ##' @param create.dirs Logical. Should the function create the directories it needs?
 ##' @param type String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').
+##' @param pp Logical. Should this function take advantage of parallel processing.
+##' The default is FALSE. Because the function separates tasks by camera directory, it can use parallel processing to run multiple cameras at the same time.
+##' This is currently set up to run in Windows OS so I do not know if this will work on a Mac or Linux system.
+##' If you want this functionality on a Unix device and know how to set it up, let me know and I can incorporate it.
+##' @param cores.left Numeric. How many cores should be left available when using parallel processing?
+##' The default is NULL. This is only necessary when pp=TRUE.
+##' If left at the default, the function will default to 2 cores remaining which is generally enough to continue using a PC while the function runs.
+##' I would set this to be greater than 0, otherwise the function will use the entire processing power of your computer.
+##' To see how many cores you have available for parallel processing, use: parallel::detectCores().
 ##'
 ##' @details This function can be used to copy or move files from one location to another.
 ##' It is useful for creating backups and duplicates of file structure and files on multiple drives or in multiple locations.
@@ -119,15 +128,20 @@ cameraDiagnostics <- function(x, cam_dir_level, from_bottom){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-copyFiles <- function(in.dir, out.dir, create.dirs, type){
+copyFiles <- function(in.dir, out.dir, create.dirs, type, pp = FALSE, cores.left = NULL){
   #in.dir <- "G:/new_20231218/images"
   #out.dir <- "D:/Raw/Raw_1847_PostCon"
 
+  ## Load the files
   fs1 <- fs::dir_ls(path = in.dir, recurse = TRUE, type = "file")
+  ## Replace the in directory with the out directory
   fs2 <- sub(in.dir, out.dir, fs1)
-
+  ## Compile into a single data frame
   fs3 <- data.frame(in.files = fs1, out.files = fs2, row.names = NULL)
   fs3$outpath <- sapply(fs3$out.files, function(x){sub(paste("/",basename(x), sep = ""), "", x)}, USE.NAMES = F)
+  ## Split into separate folders by camera
+  fs4 <- split(fs3, f = fs3$outpath)
+  names(fs4) <- sub(paste(out.dir, "/", sep = ""), "", names(fs4))
 
   ## Create directories
   if(isTRUE(create.dirs)){
@@ -137,21 +151,44 @@ copyFiles <- function(in.dir, out.dir, create.dirs, type){
     rm(dirs)
   }
 
+  ## Enable parallel processing
+  if(isTRUE(pp)){
+    cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
+    parallel::clusterExport(cl1, varlist = c("fs4"), envir = environment())
+  }else{
+    cl1 <- NULL
+  }
+
+  ## Move or copy files
   if(type == "move"){
-    print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(fs3), " files are being moved.", sep = ""))
-    test <- fs::file_move(path = fs3$in.files, new_path = fs3$out.files)
+    print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(fs3), " files in ", length(fs4), " folders are being moved.", sep = ""))
+    out <- pbapply::pblapply(1:length(fs4), cl = cl1, function(i){
+      x <- fs4[[i]]
+      fs::file_move(path = x$in.files, new_path = x$out.files)
+      print(paste("Completed moving for ", names(fs4)[i], ".", sep = ""))
+    })
   }else if(type == "copy"){
-    print(paste("File transfer in progress. Images are copied from in.dir to out.dir. ", nrow(fs3), " files are being copied.", sep = ""))
-    test <- fs::file_copy(path = fs3$in.files, new_path = fs3$out.files)
+    print(paste("File transfer in progress. Images are copied from in.dir to out.dir. ", nrow(fs3), " files in ", length(fs4), " folders are being copied.", sep = ""))
+    out <- pbapply::pblapply(1:length(fs4), cl = cl1, function(i){
+      x <- fs4[[i]]
+      fs::file_copy(path = x$in.files, new_path = x$out.files)
+      print(paste("Completed moving for ", names(fs4)[i], ".", sep = ""))
+    })
   }else if(type == "none"){
     print("No file transfer specified")
   }else{
     message("You chose an invalid type. No file transfer will occur. Choose one of c('move', 'copy', 'none') to avoid this warning")
   }
+
+  if(isTRUE(pp)){
+    parallel::stopCluster(cl1)
+  }
+
   return(fs3)
-  rm(fs1, fs2, fs3)
+  rm(fs1, fs2, fs3, fs4)
   #rm(in.dir, out.dir, type)
 }
+
 
 ### Converting date-time information in a CT Table to character format (Added 2022-08-25) ####
 ##' @description This function will convert properly formatted date objects to characters. This is so camtrapR can read the character date. For some reason, the package does not like date-formatted dates.

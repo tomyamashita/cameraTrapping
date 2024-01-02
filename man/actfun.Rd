@@ -29,7 +29,7 @@ actFun(
 \item{rep}{Numeric. The number of bootstraps that should be used to estimate the confidence intervals of the diel activity distribution.}
 
 \item{pp}{Logical. Should this function take advantage of parallel processing.
-The default is FALSE. Because the function separates tasks by camera directory, it can use parallel processing to run multiple cameras at the same time.
+The default is FALSE. Because the function separates tasks by species and the split variable, it can use parallel processing to run multiple species/groups at the same time.
 This is currently set up to run in Windows OS so I do not know if this will work on a Mac or Linux system.
 If you want this functionality on a Unix device and know how to set it up, let me know and I can incorporate it.}
 

@@ -234,5 +234,7 @@
 ## Version 0.0.0.42 (2024-01-02)
 
 * Fixed a bug in copyFiles where it called the incorrect object when conducting a file transfer. 
+* Added functionality for parallel processing in the copyFiles functions. 
+* Updated the documentation for actFun to use accurate language when discussing the parallel processing functionality. Previously, the language was identical to that of cameraRename3 which was inaccurate for this task. 
 
 
