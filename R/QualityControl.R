@@ -120,14 +120,14 @@ cameraDiagnostics <- function(x, cam_dir_level, from_bottom){
 ##' # No example provided
 ##' }
 copyFiles <- function(in.dir, out.dir, create.dirs, type){
-  #in.dir <- "D:/new_77_20231103"
-  #out.dir <- "E:/Raw/Raw_77_PreCon"
+  #in.dir <- "G:/new_20231218/images"
+  #out.dir <- "D:/Raw/Raw_1847_PostCon"
 
   fs1 <- fs::dir_ls(path = in.dir, recurse = TRUE, type = "file")
   fs2 <- sub(in.dir, out.dir, fs1)
 
-  fs3 <- data.frame(in.dir = fs1, out.dir = fs2, row.names = NULL)
-  fs3$outpath <- sapply(fs3$out.dir, function(x){sub(paste("/",basename(x), sep = ""), "", x)}, USE.NAMES = F)
+  fs3 <- data.frame(in.files = fs1, out.files = fs2, row.names = NULL)
+  fs3$outpath <- sapply(fs3$out.files, function(x){sub(paste("/",basename(x), sep = ""), "", x)}, USE.NAMES = F)
 
   ## Create directories
   if(isTRUE(create.dirs)){
@@ -137,13 +137,12 @@ copyFiles <- function(in.dir, out.dir, create.dirs, type){
     rm(dirs)
   }
 
-  ## Copy or move files from one directory to another
   if(type == "move"){
-    print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(transfer), " files are being moved.", sep = ""))
-    test <- fs::file_move(path = transfer$in.files, new_path = transfer$out.files)
+    print(paste("File transfer in progress. Images are moved from in.dir to out.dir. ", nrow(fs3), " files are being moved.", sep = ""))
+    test <- fs::file_move(path = fs3$in.files, new_path = fs3$out.files)
   }else if(type == "copy"){
-    print(paste("File transfer in progress. Images are copied from in.dir to out.dir. ", nrow(transfer), " files are being copied.", sep = ""))
-    test <- fs::file_copy(path = transfer$in.files, new_path = transfer$out.files)
+    print(paste("File transfer in progress. Images are copied from in.dir to out.dir. ", nrow(fs3), " files are being copied.", sep = ""))
+    test <- fs::file_copy(path = fs3$in.files, new_path = fs3$out.files)
   }else if(type == "none"){
     print("No file transfer specified")
   }else{

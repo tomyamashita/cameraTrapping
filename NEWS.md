@@ -213,7 +213,6 @@
 * Updated movePictures to determine if files exist in the in and out directories and adjust the transfer appropriately. 
 * Fixed a bug in cameraRename3 where the function fails when you do not include a "." in the file extensions. 
 
-
 ## Version 0.0.0.38 (2023-11-03)
 
 * Added the copyFiles function to create backups of camera data. 
@@ -231,5 +230,9 @@
 * Updated the summarizeEvents function to include an option to calculate number of detections/abundance per day instead of just per unit (i.e., month). This may be more beneficial than the original perUnit calculation for standardization purposes when there is missing data due to camera trap failures. 
 * Bug fixes and updates to the documentation for summarizeEvents associated new functionality and discovered errors in the text. 
 * Added the tidyr package to requirements due to its use in summarizeEvents to convert data from long to wide formats. 
+
+## Version 0.0.0.42 (2024-01-02)
+
+* Fixed a bug in copyFiles where it called the incorrect object when conducting a file transfer. 
 
 
