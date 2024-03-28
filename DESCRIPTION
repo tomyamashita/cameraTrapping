@@ -1,7 +1,7 @@
 Package: cameraTrapping
 Type: Package
 Title: Managing camera trap data
-Version: 0.0.0.42
+Version: 0.0.0.43
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
                     email = "tjyamashta@gmail.com", 
@@ -34,4 +34,4 @@ Imports:
   zoo (>= 1.8-10)
 Suggests: 
   ggplot2 (>= 3.3.6)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

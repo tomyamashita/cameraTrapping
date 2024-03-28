@@ -15,7 +15,7 @@ subsetImages(
   species.col = NULL,
   create.dirs = F,
   type = "none",
-  alt.load = NA
+  alt.load = "normal"
 )
 }
 \arguments{
@@ -39,7 +39,7 @@ subsetImages(
 
 \item{type.}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').}
 
-\item{alt.method.}{String. Options could include c("alt1", "alt2"). All other options use the default.
+\item{alt.load.}{String. Options could include c("normal", "alt1", "alt2"). "normal" is the default. If "alt1" or "alt2" is specified, the default is used. Values of NA or NULL will not be accepted.
 Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
 alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
 alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}}

@@ -237,4 +237,9 @@
 * Added functionality for parallel processing in the copyFiles functions. 
 * Updated the documentation for actFun to use accurate language when discussing the parallel processing functionality. Previously, the language was identical to that of cameraRename3 which was inaccurate for this task. 
 
+## Version 0.0.0.43 (2024-03-28)
+
+* Fixed a bug and updated documentation for subsetImages to require a value. NA or NULL will not work. This will be fixed a future version of this function. 
+
+
 

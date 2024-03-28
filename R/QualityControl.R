@@ -430,7 +430,7 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @param species.col String. Defaults to NULL Which species folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "raw".
 ##' @param create.dirs. Logical. Defaults to FALSE. Should the function create the directories it needs to do a file transfer?
 ##' @param type. String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').
-##' @param alt.method. String. Options could include c("alt1", "alt2"). All other options use the default.
+##' @param alt.load. String. Options could include c("normal", "alt1", "alt2"). "normal" is the default. If "alt1" or "alt2" is specified, the default is used. Values of NA or NULL will not be accepted.
 ##' Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
 ##' alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
 ##' alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}
@@ -464,7 +464,7 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, from = NULL, to = NULL, date.col = NULL, species.col = NULL, create.dirs = F, type = "none", alt.load = NA){
+subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, from = NULL, to = NULL, date.col = NULL, species.col = NULL, create.dirs = F, type = "none", alt.load = "normal"){
   #in.dir <- "H:/Raw/Raw_1847_PostCon"
   #in.dir <- c("H:/Raw/Raw_77_PostCon", "H:/Raw/Raw_1847_PostCon")
   #in.dir <- "H:/Raw"
