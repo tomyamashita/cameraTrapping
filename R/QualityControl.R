@@ -575,7 +575,7 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
       message(paste("This function is using ", paste(species.col, collapse = ", "), " species folders between ", from1, " and ", to1, ".", sep = ""))
       spec.col1 <- species.col
     }
-    x5 <- x4[x$species %in% spec.col1 & x4$datetime >= from1 & x4$datetime <= to1,]
+    x5 <- x4[x4$species %in% spec.col1 & x4$datetime >= from1 & x4$datetime <= to1,]
   }
 
   x5$oldpath <- with(x5, file.path(in.dir, path, file))
