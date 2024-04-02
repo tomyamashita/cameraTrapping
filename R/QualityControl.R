@@ -415,7 +415,7 @@ mergeFiles <- function(in.dir, pattern, save = F){
   #rm(in.dir, pattern, save)
 }
 
-### Subsetting sets of images from directories ####
+### Subsetting sets of images from directories (Redesigned 2024-04-02) ####
 ##' @description Subset images from a larger image directory
 ##'
 ##' @title Subset Images
@@ -423,22 +423,27 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @param in.dir String. The directory containing the images folders. This must the folder containing either the raw or sorted camera folders.
 ##' @param out.dir String. The directory where you want to move or copy your subsetted images.
 ##' @param ext String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for for subsetting?
-##' @param datatype String. Does the in.dir contain raw or sorted images. This can only be c("raw", "sorted").
+##' @param datatype String. Does the in.dir contain images corresponding with the raw, sorted, or interactions folder structure. This can only be c("raw", "sorted", "interactions").
 ##' @param from String. Defaults to NULL. The start date for images you want to subset. This is not required. See details below.
 ##' @param to String. Defaults to NULL The end date for images you want to subset. This is not required. See details below.
 ##' @param date.col String. Defaults to NULL Which date collected folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "sorted".
 ##' @param species.col String. Defaults to NULL Which species folders should be included in the subset. This is not required. See details below. This cannot be specified when datatype = "raw".
 ##' @param create.dirs. Logical. Defaults to FALSE. Should the function create the directories it needs to do a file transfer?
 ##' @param type. String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').
-##' @param alt.load. String. Options could include c("normal", "alt1", "alt2"). "normal" is the default. If "alt1" or "alt2" is specified, the default is used. Values of NA or NULL will not be accepted.
-##' Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
-##' alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
-##' alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}
+##' @param name.type. Strping. Do your file names have serial numbers or not. Choose one of c('original', 'serial'). All other options will default to 'serial'.
 ##'
 ##' @details When this function does its subset, you must specify at least one of from, to, date.col, or species.col.
 ##' date.col can only be used with raw data and species.col can only be used with sorted data.
 ##' When more than one of these is included, the subset will be created from all parameters provided.
 ##' The function will tell you what it is using for the subset.
+##'
+##' This function was updated and rewritten on 2024-04-02 to update and comply with issues regarding loading in large numbers of files.
+##' While this version is not free of those issues, it appears that reading in all files at once rather than only files with particular extensions may reduce the probability of a crash while loading files.
+##' As part of this change, the alt.load argument was removed from the list of arguments. The original description of this parameter is provided here:
+##' alt.load. String. Options could include c("normal", "alt1", "alt2"). "normal" is the default. If "alt1" or "alt2" is specified, the default is used. Values of NA or NULL will not be accepted.
+##' Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
+##' alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
+##' alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}
 ##'
 ##' @return data.frame containing the old file path and new file path
 ##'
@@ -456,45 +461,49 @@ mergeFiles <- function(in.dir, pattern, save = F){
 ##' @concept camera trapping
 ##' @concept subsetting images
 ##'
-##' @importFrom fs dir_ls path_split path_join path_ext_remove path_ext dir_create file_move file_copy
-##' @importFrom lubridate ymd_hms
+##' @importFrom fs dir_ls path_split path_join path_ext dir_create file_move file_copy
+##' @importFrom lubridate ymd_hms as_date as_datetime
+##' @importFrom tidyr separate
 ##'
 ##' @export
 ##'
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
-subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, from = NULL, to = NULL, date.col = NULL, species.col = NULL, create.dirs = F, type = "none", alt.load = "normal"){
-  #in.dir <- "H:/Raw/Raw_1847_PostCon"
-  #in.dir <- c("H:/Raw/Raw_77_PostCon", "H:/Raw/Raw_1847_PostCon")
-  #in.dir <- "H:/Raw"
-  #out.dir <- "M:/lostdata"
+subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, from = NULL, to = NULL, date.col = NULL, species.col = NULL, create.dirs = F, type = "none", name.type = "serial"){
+  #in.dir <- "E:/Interactions/Interactions_1847_PostCon"
+  #out.dir <- "D:/Interactions/Interactions_1847_PostCon_yr1"
   #ext <- c(".jpg", ".mp4")
-  #datatype = "raw"
-  #from <- NULL; to <- NULL; species.col <- NULL
+  #datatype <- "interactions"
+  #from <- NULL
+  #to <- NULL
+  #from <- "2022-09-01"
+  #to <- "2023-08-31"
+  #date.col <- NULL
+  #species.col <- NULL
   #from <- "2022-05-09 00:00:00"
   #to <- "2022-06-01 00:00:00"
   #date.col <- c("20230106", "20230201", "20230228", "20230328", "20230427")
   #species.col <- c("bobcat", "coyote")
   #create.dirs <- T
   #type <- "copy"
-  #alt.load <- NA
+  #name.type <- "serial
 
   print(paste("This function started at ", Sys.time(), sep = ""))
-  if(any(!grepl("[.]", ext))){
-    message("Some of your file extensions did not include the '.'. This is being added. Add a '.' to each ext to avoid this message")
-    ext[which(!grepl("[.]", ext))] <- paste(".", ext[which(!grepl("[.]", ext))], sep = "")
+  # Check file extensions and ensure that they are accessible
+  if(any(grepl("[.]", ext))){
+    message("File extensions cannot include a '.'. This is being removed. Remove the '.' to each ext to avoid this message")
+    ext[which(grepl("[.]", ext))] <- gsub("\\.", "", ext)
   }
 
-  if(any(!grepl("\\*", ext))){
-    message("Adding a '*' to file extensions.")
-    ext[which(!grepl("\\*", ext))] <- paste("*", ext[which(!grepl("\\*", ext))], sep = "")
-  }
+  Ext <- c(toupper(ext), tolower(ext))
+
+
 
   # Confirm that the options are specified correctly
   nullfrom <- is.null(from); nullto <- is.null(to); nulldate <- is.null(date.col); nullspec <- is.null(species.col)
 
-  if(!datatype %in% c("raw", "sorted")){stop("You must specify a proper datatype. The options are c('raw','sorted').")}
+  if(!datatype %in% c("raw", "sorted", "interactions")){stop("You must specify a proper datatype. The options are c('raw','sorted').")}
   if(all(nullfrom, nullto, nulldate, nullspec)){stop("You did not specify any valid subset inputs.")}
   if(datatype == "raw" & isFALSE(nullspec)){stop("You cannot use a set of species when using datatype='raw'.")}
   if(datatype == "sorted" & isFALSE(nulldate)){stop("You cannot use a set of date collected folders when using datatype='sorted'.")}
@@ -503,88 +512,107 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
   print("Loading files...")
 
   ## For some reason, there is a weird issue loading files. An alternate method may help either identify the problem or fix it
-  if(alt.load == "alt1"){
-    dirs <- fs::dir_ls(path = in.dir, type = "directory", recurse = TRUE)
-    x1 <- lapply(ext, function(ex){lapply(dirs, function(x){fs::dir_ls(path = x, type = "file", recurse = TRUE, glob = ex, ignore.case = TRUE)})})
-  }else if(alt.load == "alt2"){
-    x1 <- do.call(c, lapply(ext, function(ex){list.files(path = in.dir, pattern = ex, full.names = TRUE, recursive = TRUE, ignore.case = TRUE)}))
-  }else{
-    x1 <- unlist(lapply(ext, function(ex){fs::dir_ls(path = in.dir, type = "file", recurse = TRUE, glob = ex, ignore.case = T)}))
+
+  ## Load files
+  fs1 <- fs::dir_ls(path = in.dir, type = "file", recurse = TRUE, glob = NULL)
+  ## Subset only those files with the specified extension
+  fs2 <- fs1[fs::path_ext(fs1) %in% Ext]
+
+  if(length(fs1) != length(fs2)){
+    warning("Some files were not included because file extensions were not provided. Function will skip unknown file extensions")
   }
 
-  if(length(x1) == 0){
-    stop("You chose an invalid directory or file extension. No files returned.")
-  }
-
-  # Split file paths
-  x2 <- data.frame(do.call(rbind, fs::path_split(x1)))
+  ## Split the file paths and create appropriate column names
+  fs3 <- data.frame(do.call(rbind, fs::path_split(fs2)))
+  colnames(fs3) <- c(paste("dir", 1:length(unlist(fs::path_split(in.dir))), sep = ""), paste("X", 1:(ncol(fs3) - length(unlist(fs::path_split(in.dir)))), sep = ""))
 
   if(datatype == "raw"){
-    if(ncol(x2) > 3){
-      colnames(x2)[1:(ncol(x2)-3)] <- paste("old", seq(1:(ncol(x2)-3)), sep = "")
-      colnames(x2)[c((ncol(x2)-2):ncol(x2))] <- c("site", "date.col", "file")
-    }else if(ncol(x2) == 3){
-      colnames(x2) <- c("site", "date.col", "file")
-    }else{
+    if(length(grep("X", colnames(fs3))) != "3"){
       stop("This function won't work if the lowest 2 directories are not site and date collected")
     }
+    colnames(fs3)[grep("X", colnames(fs3))] <- c("site", "date.col", "file")
+    fs3$path <- apply(fs3[,c("site", "date.col")], 1, fs::path_join)
   }else if(datatype == "sorted"){
-    if(ncol(x2) > 4){
-      colnames(x2)[1:(ncol(x2)-4)] <- paste("old", seq(1:(ncol(x2)-4)), sep = "")
-      colnames(x2)[(ncol(x2)-3):ncol(x2)] <- c("site", "species", "individuals", "file")
-    }else if(ncol(x2) == 4){
-      colnames(x2) <- c("site", "species", "individuals", "file")
-    }else{
+    if(length(grep("X", colnames(fs3))) != "4"){
       stop("This function won't work if the lowest 3 directories are not site, species, and individuals")
+    }
+    colnames(fs3)[grep("X", colnames(fs3))] <- c("site", "species", "individuals", "file")
+    fs3$path <- apply(fs3[,c("site", "species", "individuals")], 1, fs::path_join)
+  }else if(datatype == "interactions"){
+    if(length(grep("X", colnames(fs3))) != "4"){
+      stop("This function won't work if the lowest 3 directories are not site, species, and individuals")
+    }
+    colnames(fs3)[grep("X", colnames(fs3))] <- c("site", "side", "species", "file")
+    fs3$path <- apply(fs3[,c("site", "side", "species")], 1, fs::path_join)
+  }
+
+  ## Split the date-time information from photos
+  if(name.type == "original"){
+    fs4 <- tidyr::separate(data = fs3, col = file, into = c("year", "month", "day", "hour", "minute", "second", "ext"),
+                           remove = FALSE, extra = "merge")
+  }else if(name.type == "serial"){
+    fs4 <- tidyr::separate(data = fs3, col = file, into = c("year", "month", "day", "hour", "minute", "second", "serial"),
+                           remove = FALSE, sep = " ", extra = "merge")
+  }else{
+    message("You chose an invalid name.type. Assuming file names have serial numbers.")
+    fs4 <- tidyr::separate(data = fs3, col = file, into = c("year", "month", "day", "hour", "minute", "second", "serial"),
+                           remove = FALSE, sep = " ", extra = "merge")
+  }
+
+  fs4$in.dir <- in.dir
+  fs4$out.dir <- out.dir
+  fs4$dt <- with(fs4, lubridate::ymd_hms(paste(year, month, day, hour, minute, second)))
+
+
+  # Subset the data
+  if(nullfrom){
+    from1 <- "1970-01-01 00:00:00"
+  }else{
+    if(lubridate::as_date(from) == lubridate::as_datetime(from)){
+      from1 <- paste(from, "00:00:00")
+    }else{
+      from1 <- from
+    }
+  }
+  if(nullto){
+    to1 <- as.character(Sys.time())
+  }else{
+    if(lubridate::as_date(to) == lubridate::as_datetime(to)){
+      to1 <- paste(to, "23:59:59")
+    }else{
+      to1 <- to
     }
   }
 
-  # Split file names to get dates
-  x3 <- data.frame(do.call(rbind, strsplit(fs::path_ext_remove(x2[,ncol(x2)]), split = " ")), ext = fs::path_ext(x2[,ncol(x2)]))
-
-  if(ncol(x3) == 8){
-    colnames(x3) <- c("year", "month", "day", "hour", "minute", "second", "serial", "ext")
-  }else if(ncol(x3) == 7){
-    colnames(x3) <- c("year", "month", "day", "hour", "minute", "second", "ext")
-  }
-
-  # Recombine everything together
-  x4 <- data.frame(in.dir, out.dir, x2[,!grepl(pattern = "old", colnames(x2))], x3,
-                   path = apply(x2[,-c(grep(pattern = "old", colnames(x2)), ncol(x2))], 1, fs::path_join),
-                   datetime = with(x3, lubridate::ymd_hms(paste(year, month, day, hour, minute, second, sep = " "))))
-
-  # Subset the data by date, date collected, and/or species
-  print("Subsetting data...")
-  if(nullfrom){from1 <- "2010-01-01"}else{from1 <= from}
-  if(nullto){to1 <- Sys.Date()}else{to1 <- to}
-
+  ## Different subsetting depending on Raw or Sorted Data
   if(datatype == "raw"){
     if(nulldate){
       message(paste("This function is using all date collected folders between ", from1, " and ", to1, ".", sep = ""))
-      date.col1 <- unique(x4$date.col)
+      date.col1 <- unique(fs4$date.col)
     }else{
       message(paste("This function is using ", paste(date.col, collapse = ", "), " date collected folders between ", from1, " and ", to1, ".", sep = ""))
       date.col1 <- date.col
     }
-    x5 <- x4[x4$date.col %in% date.col1 & x4$datetime >= from1 & x4$datetime <= to1,]
-  }else if(datatype == "sorted"){
+    fs5 <- fs4[fs4$date.col %in% date.col1 & fs4$dt >= from1 & fs4$dt <= to1,]
+  }else if(datatype %in% c("sorted", "interactions")){
     if(nullspec){
       message(paste("This function is using all species folders between ", from1, " and ", to1, ".", sep = ""))
-      spec.col1 <- unique(x4$species)
+      spec.col1 <- unique(fs4$species)
     }else{
       message(paste("This function is using ", paste(species.col, collapse = ", "), " species folders between ", from1, " and ", to1, ".", sep = ""))
       spec.col1 <- species.col
     }
-    x5 <- x4[x4$species %in% spec.col1 & x4$datetime >= from1 & x4$datetime <= to1,]
+    fs5 <- fs4[fs4$species %in% spec.col1 & fs4$dt >= from1 & fs4$dt <= to1,]
   }
 
-  x5$oldpath <- with(x5, file.path(in.dir, path, file))
-  x5$newpath <- with(x5, file.path(out.dir, path, file))
+  fs5$oldpath <- with(fs5, file.path(in.dir, path, file))
+  fs5$newpath <- with(fs5, file.path(out.dir, path, file))
+
 
   # Create directories
   if(isTRUE(create.dirs)){
     print("Creating Directories...")
-    dirs <- with(x5, unique(file.path(out.dir, path)))
+    dirs <- with(fs5, unique(file.path(out.dir, path)))
     fs::dir_create(dirs)
     rm(dirs)
   }
@@ -592,17 +620,17 @@ subsetImages <- function(in.dir, out.dir, ext = c(".jpg", ".mp4"), datatype, fro
   # Transfer files if requested
   if(type == "move"){
     print("File transfer in progress. Images are moved from in.dir to out.dir")
-    fs::file_move(path = x5$oldpath, new_path = x5$newpath)
+    fs::file_move(path = fs5$oldpath, new_path = fs5$newpath)
   }else if(type == "copy"){
     print("File transfer in progress. Images are copied from in.dir to out.dir")
-    fs::file_copy(path = x5$oldpath, new_path = x5$newpath)
+    fs::file_copy(path = fs5$oldpath, new_path = fs5$newpath)
   }else if(type == "none"){
     print("No file transfer specified")
   }else{
     message("You chose an invalid type. No file transfer will occur. Choose one of c('move', 'copy', 'none') to avoid this warning")
   }
 
-  out <- x5[,c("oldpath", "newpath")]
+  out <- fs5[,c("oldpath", "newpath")]
 
   return(out)
   rm(nullfrom, nullto, nulldate, nullspec, x1, x2, x3, x4, x5, out, date.col1, from1, to1, spec.col1)

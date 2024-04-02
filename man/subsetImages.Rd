@@ -15,7 +15,7 @@ subsetImages(
   species.col = NULL,
   create.dirs = F,
   type = "none",
-  alt.load = "normal"
+  name.type = "serial"
 )
 }
 \arguments{
@@ -25,7 +25,7 @@ subsetImages(
 
 \item{ext}{String. Defaults to c(".jpg", ".mp4"). What file extensions should the function look for for subsetting?}
 
-\item{datatype}{String. Does the in.dir contain raw or sorted images. This can only be c("raw", "sorted").}
+\item{datatype}{String. Does the in.dir contain images corresponding with the raw, sorted, or interactions folder structure. This can only be c("raw", "sorted", "interactions").}
 
 \item{from}{String. Defaults to NULL. The start date for images you want to subset. This is not required. See details below.}
 
@@ -39,10 +39,7 @@ subsetImages(
 
 \item{type.}{String. Should you move, copy, or do nothing with the images. Choose one of c('move','copy','none').}
 
-\item{alt.load.}{String. Options could include c("normal", "alt1", "alt2"). "normal" is the default. If "alt1" or "alt2" is specified, the default is used. Values of NA or NULL will not be accepted.
-Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
-alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
-alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}}
+\item{name.type.}{Strping. Do your file names have serial numbers or not. Choose one of c('original', 'serial'). All other options will default to 'serial'.}
 }
 \value{
 data.frame containing the old file path and new file path
@@ -55,6 +52,14 @@ When this function does its subset, you must specify at least one of from, to, d
 date.col can only be used with raw data and species.col can only be used with sorted data.
 When more than one of these is included, the subset will be created from all parameters provided.
 The function will tell you what it is using for the subset.
+
+This function was updated and rewritten on 2024-04-02 to update and comply with issues regarding loading in large numbers of files.
+While this version is not free of those issues, it appears that reading in all files at once rather than only files with particular extensions may reduce the probability of a crash while loading files.
+As part of this change, the alt.load argument was removed from the list of arguments. The original description of this parameter is provided here:
+alt.load. String. Options could include c("normal", "alt1", "alt2"). "normal" is the default. If "alt1" or "alt2" is specified, the default is used. Values of NA or NULL will not be accepted.
+Sometimes there is an issue loading files using the \code{\link[fs]{dir_ls}} function so this provides a couple alternatives that may address this issue.
+alt1 loads directories using the fs package then loads each directory individually using the fs package. This may help identify errors.
+alt1 loads files using \code{\link[base]{list.files}}. This is significantly slower than using the fs package but seems to work more consistently than \code{link[fs]{dir_ls}}
 }
 \section{{Standard Disclaimer}}{
  As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.

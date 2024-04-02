@@ -242,4 +242,9 @@
 * Fixed a bug and updated documentation for subsetImages to require a value. NA or NULL will not work. This will be fixed a future version of this function. 
 * Fixed a bug in subsetImages where the sorted option didn't work. 
 
+## Version 0.0.0.44 (2024-04-02)
+
+* Major update to the subsetImages function. The function has been nearly completely rewritten to hopefully make loading of files easier with fewer crashes. 
+* Support has been added in the subsetImages function to allow for copying of interactions files. 
+
 
