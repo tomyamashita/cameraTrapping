@@ -800,7 +800,7 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   x4 <- x3[names(x3) %in% include]
 
   ## Check for matching site names again. This seems to be the  Number 1 issue that I have had with this function.
-  if(!all(sort(unique(x2[,camOP$stationCol])) == sort(unique(c4[,camOP$stationCol])))){
+  if(!all(sort(unique(x2[,"Site"])) == sort(unique(c4[,camOP$stationCol])))){
     message("At least some of your station IDs do not line between the data and ct table. This function may not work properly.\nIf this is a new message, it is likely that something happened during the calculation of trap nights")
   }
 
