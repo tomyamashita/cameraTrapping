@@ -685,7 +685,7 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
 ##'
 ##' @title Summarize camera trap events, including setting up for regression analyses, occupancy models, n-mixture models
 ##'
-##' @param x A data frame produced by the APFun_env function available in this package.
+##' @param x A data frame produced by the \code{\link{calculateEvents}} function available in this package.
 ##' @param ct A CT Table following the format from the package camtrapR.
 ##' @param unit The temporal unit used to summarize the data. This should a unit >= 1 day. Weeks, months, or years can all be called using this argument.
 ##' See details for how this function handles summarizing units greater than days.
@@ -718,7 +718,7 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
 ##' @seealso \code{\link{calculateEvents}} \code{\link{occFun}}
 ##'
 ##' @importFrom camtrapR cameraOperation
-##' @importFrom tidyr pivot_longer
+##' @importFrom tidyr pivot_longer separate
 ##' @importFrom lubridate ymd floor_date
 ##' @importFrom dplyr summarise group_by n summarise_all
 ##'
@@ -728,18 +728,21 @@ occFun <- function(x, ct, unit, subset, stationCol, sessionCol=NULL, ct_probs=T,
 ##' # No example provided
 ##' }
 summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_data = "all", out_correction = "all"){
-  #x <- AP2_30min
-  #ct <- cttable_REZ_all
+  #x <- AP2[[2]]
+  #ct <- ct[[2]]
   #unit <- "1 month"
   #include <- c("bobcat", "coyote")
+  #include <- c("domestic_cat", "domestic_dog")
   #camOP <- list(stationCol = "Camera", setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T, cameraCol = "Camera", byCamera = F, allCamsOn = F, camerasIndependent = F)
+  #camOP <- list(stationCol = "Camera", setupCol = "Setup_date", retrievalCol = "Retrieval_date", hasProblems = T, cameraCol = "Camera", byCamera = F, allCamsOn = F, camerasIndependent = F, sessionCol = "Session")
   #out_form <- "long"
-  #out_data <- "AB"
-  #out_correction <- "pd"
+  #out_data <- "DE"
+  #out_correction <- "raw"
 
-  print(paste("This function started at ", Sys.time(), ". Running camtrapR...", sep = ""))
+  print(paste("This function started at ", Sys.time(), ". Calculating camera trap nights...", sep = ""))
 
   # Calculating number of camera trap nights
+  ## Initial function checks
   if(!is.list(camOP)){
     stop("camOP must be a list of arguments used in the camtrapR::cameraOperation function.")
   }
@@ -748,16 +751,29 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
     stop("You chose an incorrect unit. The unit must be a time interval of at least 1 day.\n(e.g., '3 days', '1 week', '2 months', '10 years').")
   }
 
+  # Check for matching site names. This seems to be the  Number 1 issue that I have had with this function.
+  if(!all(sort(unique(x[,camOP$stationCol])) == sort(unique(ct[,camOP$stationCol])))){
+    message("At least some of your station IDs do not line between the data and ct table. This function may not work properly.\nThis was an initial check. A subsequent check will be made after calculating trap nights")
+  }
+
+  ## Add ct table to the camOP argument
   camOP[["CTtable"]] <- ct
 
+  ## Run camtrapR
   camop <- do.call(camtrapR::cameraOperation, camOP)
 
-  print(paste("camtrapR completed at ", Sys.time(), ". Finalizing outputs...", sep = ""))
+  print(paste("Camera trap nights calculation completed at ", Sys.time(), ". Finalizing outputs...", sep = ""))
 
-  camopt <- t(camop)
-  c1 <- data.frame(tidyr::pivot_longer(data.frame(Date = row.names(camopt), camopt), cols = 1:ncol(camopt)+1, names_to = "Site", values_to = "op"))
+  any(grepl(pattern = "sessionCol", names(camOP)))
+
+  c0 <- tidyr::pivot_longer(data.frame(Site = row.names(camop), camop), cols = 1:ncol(camop)+1, names_prefix = "X", names_to = "Date", values_to = "op", values_drop_na = TRUE)
+  c1 <- tidyr::separate(c0, Site, into = c("Site", "Session", "Camera"), sep = "__", fill = "right")
   c1$Date <- lubridate::ymd(c1$Date)
-  c1$Site <- sub("[.]", "-", c1$Site)
+
+  #camopt <- t(camop)
+  #c1 <- data.frame(tidyr::pivot_longer(data.frame(Date = row.names(camopt), camopt), cols = 1:ncol(camopt)+1, names_to = "Site", values_to = "op"))
+  #c1$Date <- lubridate::ymd(c1$Date)
+  #c1$Site <- sub("[.]", "-", c1$Site)
 
   ## Uses user-specified unit to round dates back to desired unit. Months start on first of the month, weeks on Sundays
   c1$Interval <- lubridate::floor_date(c1$Date, unit = unit)
@@ -782,6 +798,11 @@ summarizeEvents <- function(x, ct, unit, include, camOP, out_form = "all", out_d
   x2 <- suppressMessages(data.frame(dplyr::summarise(dplyr::group_by(x1, Site, Date, Species, camdate), Detections = dplyr::n(), Abundance = sum(Individuals))))
   x3 <- split(x2, f = x2$Species)
   x4 <- x3[names(x3) %in% include]
+
+  ## Check for matching site names again. This seems to be the  Number 1 issue that I have had with this function.
+  if(!all(sort(unique(x2[,camOP$stationCol])) == sort(unique(c4[,camOP$stationCol])))){
+    message("At least some of your station IDs do not line between the data and ct table. This function may not work properly.\nIf this is a new message, it is likely that something happened during the calculation of trap nights")
+  }
 
   ## Check if requested outputs are valid outputs
   subFun <- function(x, v, s){

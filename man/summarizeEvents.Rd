@@ -16,7 +16,7 @@ summarizeEvents(
 )
 }
 \arguments{
-\item{x}{A data frame produced by the APFun_env function available in this package.}
+\item{x}{A data frame produced by the \code{\link{calculateEvents}} function available in this package.}
 
 \item{ct}{A CT Table following the format from the package camtrapR.}
 

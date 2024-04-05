@@ -247,4 +247,9 @@
 * Major update to the subsetImages function. The function has been nearly completely rewritten to hopefully make loading of files easier with fewer crashes. 
 * Support has been added in the subsetImages function to allow for copying of interactions files. 
 
+## Version 0.0.0.45 (2024-04-05)
+
+* Updated summarizeEvents to be able to better handle differences in site names between the ct table and data as well as handle multiple sessions and independent cameras at sites. 
+
+
 

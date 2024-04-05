@@ -12,6 +12,7 @@ You can install the latest version of cameraTrapping from github:
 ``` r
 if(!require(devtools)){install.packages("devtools")}
 devtools::install_github("tomyamashta/cameraTrapping")
+
 ```
 
 This package is currently not available on CRAN and likely will not be updated on CRAN unless I find someone who actually knows how to develop packages and submit them to CRAN. I'm not going to put my time into this.
