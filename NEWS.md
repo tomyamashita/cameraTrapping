@@ -251,5 +251,7 @@
 
 * Updated summarizeEvents to be able to better handle differences in site names between the ct table and data as well as handle multiple sessions and independent cameras at sites. 
 
+## Version 0.0.0.46 (2024-05-10)
 
+* Updated interactionsTimelapse to better handle duplicate files. 
 

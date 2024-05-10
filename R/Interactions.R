@@ -115,14 +115,14 @@ interactionsDataOrganize <- function(do, envdata, exclude, start_date, end_date=
 ##' @concept timelapse
 ##' @concept interactions
 ##'
-##' @importFrom fs file_copy
+##' @importFrom fs file_copy path_ext_remove path_ext file_exists dir_create
 ##' @export
 ##'
 ##' @examples \dontrun{
 ##' # No example provided
 ##' }
 interactionsTimelapse <- function(timelapse, envdata, in.dir, out.dir = NULL, create.dirs = T, type = "copy", exclude = c("ghost")){
-  #timelapse <- read.csv("timelapse_out_20221201.csv")
+  #timelapse <- read.csv("timelapse_out_20240315.csv")
   #envdata <- openxlsx::read.xlsx(file.choose())
   #in.dir <- getwd()
   #out.dir <- NULL
@@ -187,33 +187,41 @@ interactionsTimelapse <- function(timelapse, envdata, in.dir, out.dir = NULL, cr
   imagesout4$newpath <- with(imagesout4, paste("Interactions_", Date, "/", Site, "/", Side, "/", Species, sep = ""))
   imagesout4$fileold <- imagesout4$File
   dups <- which(duplicated(file.path(imagesout4$newpath, imagesout4$File)))
-  if(length(dups)>0){
+
+  imagesout4$filenew <- imagesout4$File
+
+  if(length(dups) > 0){
     message(paste("There were ", length(dups), " files with the same name as other files in the folder. \nA (#) will be appended to the duplicated file names.", sep = ""))
-    imagesout4$filenew <- ifelse(duplicated(file.path(imagesout4$newpath, imagesout4$File)), sapply(1:length(dups), function(i){imagesout4$File[dups[i]] <- paste(sub(".jpg", "", imagesout4$File[dups[i]], ignore.case = T), " (", i, ").jpg", sep = "")}), imagesout4$File)
-  }else{
-    imagesout4$filenew <- imagesout4$File
+    imagesout4$filenew[dups] <- paste(fs::path_ext_remove(imagesout4$File[dups]), " (", 1:length(dups), ").", fs::path_ext(imagesout4$File[dups]), sep = "")
   }
 
   # Step 4: Create the interactions file
-  intfile1 <- data.frame(imagesout4[,c("Type", "Site", "Camera", "Species")], Date_time = sub(".jpg", "", imagesout4$File, ignore.case = T), Individuals = imagesout4$Individuals, Class = NA, Direction = NA)
+  intfile1 <- data.frame(imagesout4[,c("Type", "Site", "Camera", "Species")], Date_time = fs::path_ext_remove(imagesout4$File), Individuals = imagesout4$Individuals, Class = NA, Direction = NA)
 
   # Step 5: Create new directories and subdirectories and copy pictures into them (optional)
   if(isTRUE(create.dirs)){
-    print("Creating directories")
-    dirs <- with(imagesout4, list(unique(file.path(out.dir, paste("Interactions_", Date, sep = ""))),
-                                  unique(file.path(out.dir, paste("Interactions_", Date, sep = ""), Site)),
-                                  unique(file.path(out.dir, paste("Interactions_", Date, sep = ""), Site, Side)),
-                                  unique(file.path(out.dir, paste("Interactions_", Date, sep = ""), Site, Side, Species))))
-    dirsTemp <- lapply(dirs, function(x){
-      lapply(x, function(y){
-        ifelse(!dir.exists(y), dir.create(y), print("Folder exists"))
-      })
-    })
+    print("Creating Directories")
+    dirs <- file.path(out.dir, unique(imagesout4$newpath))
+    fs::dir_create(dirs)
+  }
+
+  ## Check if all files that should get copied exist in the in.files path and do not exist in the out.files path
+  imagesout4$inexists <- with(imagesout4, fs::file_exists(file.path(in.dir, oldpath, fileold)))
+  imagesout4$outexists <- with(imagesout4, fs::file_exists(file.path(out.dir, newpath, filenew)))
+
+  if(any(sum(!imagesout4$inexists) > 0, sum(imagesout4$outexists) > 0)){
+    message(paste(sum(!imagesout4$inexists), " files out of ", nrow(imagesout4), " do not exist in the in.dir.\n", sum(imagesout4$outexists), " files out of ", nrow(imagesout4), " already exist in the out.dir.\nThese files will be skipped during file transfer.", sep = ""))
+  }else{
+    message(paste(nrow(imagesout4), " files will be transferred.", sep = ""))
+  }
+
+  if(type != "none"){
+    transfer <- imagesout4[imagesout4$inexists == TRUE & imagesout4$outexists == FALSE,]
   }
 
   if(type == "copy"){
     print("File transfer in progress. Images are copied from in.dir to out.dir")
-    with(imagesout4, fs::file_copy(path = file.path(in.dir, oldpath, fileold), new_path = file.path(out.dir, newpath, filenew)))
+    with(transfer, fs::file_copy(path = file.path(in.dir, oldpath, fileold), new_path = file.path(out.dir, newpath, filenew)))
   }else if(type == "none"){
     print("No file transfer specified")
   }else{
@@ -221,7 +229,6 @@ interactionsTimelapse <- function(timelapse, envdata, in.dir, out.dir = NULL, cr
   }
 
   return(list(Interactions = intfile1, Files = imagesout4))
-  rm(images1, images2, images3, images4, imagesout1, imagesout2, imagesout3, imagesout4, dups, intfile1, dirs, dirsTemp)
+  rm(images1, images2, images3, images4, imagesout1, imagesout2, imagesout3, imagesout4, dups, transfer, intfile1, dirs)
   #rm(timelapse, envdata, in.dir, out.dir, create.dirs, type, exclude)
 }
-
