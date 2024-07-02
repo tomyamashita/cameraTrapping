@@ -255,3 +255,8 @@
 
 * Updated interactionsTimelapse to better handle duplicate files. 
 
+## Version 0.0.0.47 (2024-07-02)
+
+* Added a new version of the cameraRename function to handle renaming of the date collected directory as well. 
+
+

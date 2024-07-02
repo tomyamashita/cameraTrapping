@@ -3,6 +3,7 @@
 ## This script includes the following functions:
   ## cameraRename2 (Deprecated)
   ## cameraRename3
+  ## cameraRename4 (New and developing)
   ## findCorruptImages
 
 ################################################################################
@@ -751,6 +752,438 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
   return(exif3)
   rm(Tag1, Tag2, Ext, fs1, fs2, fs3, fs4, fs5, exif1, exif2, exif3, cl1, paths1, folders, indir, out.dir.length, equal.dirs, dt.diff)
   #rm(in.dir, out.dir, ext, trigger.info, rename, return.type, adjust, fix.names, pp, cores.left)
+}
+
+## Another major update to the renaming function (Added 2024-07-02) ####
+##' @description This function is used to extract metadata information and rename camera trap images using date-times and an assigned serial number to each image.
+##' This function simplifies and cleans up \code{\link{cameraRename3}} while adding the ability to rename the folder level below the camera folder.
+##'
+##' (Description carried from \code{\link{cameraRename3}}) This function has all the same capabilities as the cameraRename2 function but should handle large datasets and corrupt files better.
+##' Unlike the cameraRename2 functions, this version keeps everything within each camera directory, running the same process on each camera.
+##' This allows it to take advantage of parallel processing and other functions to improve speed for very large datasets.
+##'
+##' @title (New) Rename Camera Trap Images
+##'
+##' @param in.dir String. The directory where the pictures are located.
+##' I typically specify a folder containing the camera folders although any folder containing images somewhere in the directory tree could work.
+##' The function can look for either ".jpg" or ".mp4" files. See file.type.
+##' @param out.dir String or Vector. The directory where the pictures will be renamed to.
+##' The default is NULL which will use the in.dir as the location for images.
+##' Another way to specify the output location to be the input location is to set out.dir = "in.dir".
+##' You can use this to change the output location for each camera directory.
+##' You can specify this with a single string, in which case it will use the relative paths to the images to locate the directory location or you can specify a vector of directories.
+##' The length of this vector must equal the number of camera directories in the in.dir. If rename="copy", you should specify a different out.dir than in.dir although the function does not check for this.
+##' @param ext String. The type(s) of file you want to rename.
+##' For images, this is likely to be ".jpg". For videos, this is likely to be ".mp4".
+##' Starting in package version 0.0.0.27, ext is used instead of file.type. This allows for specification of multiple file extensions, speeding up the renaming process.
+##' If a different file type is needed, this function will need to be updated to accommodate this. Please let me know and I will add it.
+##' This function can theoretically take any image format, although I do not know how exiftool reads file types other than ".jpg" and ".mp4". The function will ignore case when looking for file types.
+##' @param trigger.info String or NULL. Should additional information besides the date-time be included in the output?
+##' This defaults to NULL where no additional information is included, only date-time information.
+##' Because camera-specific information is variable between camera models, you must specify the camera model if you want additional information.
+##' When specifying multiple file types, you can currently only specify one format for trigger.info. If Reconyx is used, it will output both image exif data and video exif data. No other camera models are supported for multiple file extensions at this time.
+##' Currently, for image formats c("Reconyx", "PC900", "Hyperfire2","Ultrafire_image", "Browning", "Cuddyback") are supported and for video formats, c("Ultrafire_video") are supported.
+##' Note that all Reconyx camera models tested (PC900, Hyperfire2, Ultrafire) use the same metadata.
+##' Additional camera models could be added. See details for more information on this.
+##' @param date.collected Logical. Should the function create your date collected folders?
+##' @param date.name String. If the date.collected folder is being created, what is the date collected folder name?
+##' @param rename String. The default is none. Other options include c("replace", "copy").
+##' This specifies how images should be renamed.
+##' "none" tells R to not rename any pictures, "replace" replaces the name then moves the image with its new name to the out.dir, and "copy" creates a new copy of the image with its new name in the out.dir.
+##' Copy has not been tested with an out.dir the same as the in.dir but it is likely that it will keep both images and you will end up with duplicates.
+##' I suggest choosing a different out.dir if you are going to copy. Copy also takes significantly longer than replace.
+##' @param return.type String. How should the data be outputted.
+##' Options are c("list", "df"). The default is as a list where each camera directory is in its own item in the list.
+##' If you output a "df", the list of each camera is converted into a single data.frame object containing all cameras.
+##' @param adjust String or NULL. Do the image date-times need adjustment?
+##' This defaults to NULL, indicating no adjustment needed.
+##' You only need to specify this if your image date-times need to be adjusted.
+##' This could arise due to daylight savings time or misentered date-time information on the camera.
+##' This can be thought of as an R version of SpecialRenamer.
+##' You can either specify a difftime object or a character vector of the original and new date-times.
+##' If you specify a vector or original and new date-times, this must have length==2.
+##' @param fix.names Logical. Should a serial number be appended to date-time names?
+##' The default is FALSE. This was added to allow for updating image names to include a unique serial number that have already been run through a program like Renamer or SpecialRenamer where it may be uncertain if the DateTimeOriginal in the Exif data is accurate or not.
+##' Only set this to TRUE if you know what you are doing. It is highly recommended that you set rename="none" for this then rename manually after running the function.
+##' @param pp Logical. Should this function take advantage of parallel processing.
+##' The default is FALSE. Because the function separates tasks by camera directory, it can use parallel processing to run multiple cameras at the same time.
+##' This is currently set up to run in Windows OS so I do not know if this will work on a Mac or Linux system.
+##' If you want this functionality on a Unix device and know how to set it up, let me know and I can incorporate it.
+##' @param cores.left Numeric. How many cores should be left available when using parallel processing?
+##' The default is NULL. This is only necessary when pp=TRUE.
+##' If left at the default, the function will default to 2 cores remaining which is generally enough to continue using a PC while the function runs.
+##' I would set this to be greater than 0, otherwise the function will use the entire processing power of your computer.
+##' To see how many cores you have available for parallel processing, use: parallel::detectCores().
+##'
+##' @details Important: Exiftool must be available on the machine in its default location for the function to work.
+##' This function will check for exiftool and install it into the default directory if it is not available before running.
+##' Previous versions of this function required you to manually check this but this requirement has been removed.
+##'
+##' When running this function on video files, you need to make sure you specify a trigger.info that accommodates videos.
+##' This function will check if your trigger.info is associated with a video format. If not, it will warn you about this.
+##' Video files doe not have a DateTimeOriginal field in their metadata so it will fail to run if you do not properly specify the correct field.
+##' Right now, the "Ultrafire_video" option only accesses the "CreateDate" field which is used for video files.
+##'
+##' If you are interested in additional metadata information that is not provided, please run \code{\link[exiftoolr]{exif_read}} on a few images and choose the columns you are interested in.
+##' Send me the exact column names, and your camera model and I can add an option to trigger.info.
+##' Please keep in mind that the more metadata tags you choose, the longer the function takes to run.
+##'
+##' If you need to fix names (or add a serial number to existing names) rather than replace names, then you should specify fix.names to TRUE.
+##' By specifying this, it is telling the tool to check if the images are in the form YYYY MM DD HH MM SS.jpg (or, more likely some consistent form with spaces but I don't know for sure).
+##' When it does this, if an image does not fit this form, it replaces the name with the new date-time information derived from the metadata.
+##' The reason for this is that sometimes camera date-times are wrong so we needed to make an adjustment using SpecialRename, similar to what is done with the adjust call in this function.
+##' Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust improperly named images.
+##'
+##' Starting in package version 0.0.0.27, the file.type parameter was replaced with ext to allow for specification of multiple file extensions.
+##' As part of this, the c("image", "video") options have been removed. Please begin using c(".jpg", ".mp4") instead.
+##'
+##' @return This function outputs either a list or a data.frame, depending on whether return.type = c("list", "df")
+##' @return list:
+##' If a list, each camera directory will be kept in a separate item in the list. This allows for easy checking if there is a problem which would have thrown an error when running exiftool, namely from a corrupt file. After outputting a list, you can combine the items into a single data.frame using do.call(rbind, out) where out is the name of the list object outputted by this function.
+##' @return df:
+##' If a data.frame, all camera directories will be combined into a single output file.
+##' If a data.frame cannot be outputted (usually because you have two different camera models that have different exif tags), a list will be outputted instead.
+##'
+##' @references exiftool: \url{https://exiftool.org/}
+##'
+##' exiftoolr package: \code{\link[exiftoolr]{exif_read}}, \url{https://github.com/JoshOBrien/exiftoolr}
+##'
+##' Renamer and SpecialRenamer: \url{https://smallcats.org/resources/}
+##'
+##' @note Differences between this function and \code{\link{cameraRename2}}:
+##'
+##' There were several major changes in this function that differentiate it from the \code{\link{cameraRename2}} function enough that it warranted its own function rather than an update.
+##' The main change and this affected everything down the line was that the function now acts on each camera directory separately.
+##' By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files.
+##' One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
+##' Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{cameraRename2}} \code{\link{cameraRename3}}
+##'
+##' \code{\link[exiftoolr]{install_exiftool}}
+##'
+##' \code{\link[fs]{file_copy}}, \code{\link[fs]{file_move}}
+##'
+##' @importFrom dplyr bind_rows
+##' @importFrom exiftoolr exif_version install_exiftool exif_read
+##' @importFrom fs dir_ls path_ext path_file path_dir path_ext_remove path_common file_move file_copy
+##' @importFrom lubridate is.difftime ymd_hms year month day hour minute second
+##' @importFrom parallel makeCluster clusterExport detectCores stopCluster
+##' @importFrom pbapply pblapply
+##' @importFrom stats complete.cases
+##'
+##' @keywords manip
+##' @keywords files
+##'
+##' @concept camera trapping
+##' @concept rename images
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided yet
+##' }
+##'
+cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.collected=FALSE, date.name=NULL, rename="none", return.type = "list", adjust = NULL, fix.names = FALSE, pp = FALSE, cores.left = NULL){
+  #in.dir <- "G:/test" # More than likely, this must be a folder containing camera folders
+  #out.dir <- NULL             # Where should the files be outputted to?
+  #ext <- c(".jpg", ".mp4")    # What type(s) of file do you want to rename
+  #trigger.info <- "Reconyx"   # Should the output include info about trigger method, and photo numbers? Currently only available for Hyperfire 2 cameras
+  #date.collected <- TRUE      # Should the date.collected folder be created from the raw files
+  #date.name <- "20240604"     # If the date.collected folder is being created, what is the date collected folder name?
+  #rename <- "none"            # Should the original image files be renamed? Note: this affects the raw file names and cannot be easily undone.
+  #return.type <- "df"         # Should the function output a data frame or a list of each folder
+  #adjust <- NULL              # Do the image date-times need adjustment?
+  #adjust <- c("2021-01-01 00:00:00", "2021-01-01 01:00:00")  # Do the image date-times need adjustment? Specify the original date-time and the new date-time. This is used to calculate a difftime object for adjustment purposes.
+  #fix.names <- F              # Do the image names only need a serial number?
+  #pp <- F                     # Should you use parallel processing
+  #pp <- T                     # Parallel processing?
+  #cores.left <- 4             # How many cores should be reserved when running parallel processing
+
+  print(paste("This function started at ", Sys.time(), ". Loading images...", sep = ""))
+
+  # Check file types and define metadata tags for particular camera models
+  if(length(ext) == 2){
+    if(any(grepl(".jpg", ext, ignore.case = T)) & any(grepl(".mp4", ext, ignore.case = T))){
+      message("You are running both photo and video files. Selecting appropriate exif tags")
+      if(isTRUE(is.null(trigger.info))){
+        Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
+      }else if(trigger.info %in% c("Reconyx")){
+        Tag1 <- list(photo = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"), video = c("CreateDate"))
+      }else if(trigger.info %in% c("Browning", "Cuddyback")){
+        message("This function does not yet support video files from Browning or Cuddyback cameras. Only date-time information will be provided. \nPlease send me the tags you wish to include.")
+        Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
+      }else{
+        Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
+        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor photo file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback') and for video file types, choose one of c('Reconyx', 'Ultrafire_Video').")
+      }
+    }else{
+      stop("Providing multiple file extensions that are not '.jpg' and '.mp4' files is not supported at this time. \nContact me if you need this support.")
+    }
+  }else if(length(ext) == 1){
+    if(ext %in% c(".jpg", ".JPG")){
+      if(isTRUE(is.null(trigger.info))){
+        Tag1 <- list(photo = c("DateTimeOriginal"))
+      }else if(trigger.info %in% c("Reconyx", "Hyperfire2", "PC900", "Ultrafire_image")){
+        Tag1 <- list(photo = c("DateTimeOriginal", "TriggerMode", "Sequence", "EventNumber", "AmbientTemperature", "UserLabel", "SerialNumber"))
+      }else if(trigger.info %in% c("Browning", "Cuddyback")){
+        Tag1 <- list(photo = c("DateTimeOriginal", "UserComment"))
+      }else{
+        Tag1 <- list(photo = c("DateTimeOriginal"))
+        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor photo file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback').")
+      }
+    }else if(ext %in% c(".mp4", ".MP4")){
+      if(isTRUE(is.null(trigger.info))){
+        Tag1 <- list(video = c("CreateDate"))
+      }else if(trigger.info %in% c("Reconyx", "Ultrafire_Video")){
+        Tag1 <- list(video = c("CreateDate"))
+      }else{
+        Tag1 <- list(video = c("CreateDate"))
+        message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor video file types, choose one of c('Ultrafire_Video').")
+      }
+    }else{
+      stop("You must specify an appropriate file extension. Choose one of c('.jpg', '.JPG', '.mp4', '.MP4').")
+    }
+  }else{
+    stop("You must input at least 1 file extension")
+  }
+
+  # Check if exiftool is installed within R
+  tryCatch(paste("Using exiftool version ", exiftoolr::exif_version(), sep = ""),
+           error = function(e){message("Exiftool is not installed on your version of R. Installing the most up-to-date version of exiftool using exiftoolr::install_exiftool() and default inputs."); exiftoolr::install_exiftool()})
+
+  # Check if the "in" and "out" directories exist
+  if(!dir.exists(in.dir)){
+    stop("in.dir does not exist. Check your directory name")
+  }
+  ## If the out directory is not specified, it is set as the same as the "in" directory.
+  if(length(out.dir)<=1){
+    if(is.null(out.dir)){
+      out.dir <- in.dir
+    }else if(out.dir == "in.dir"){
+      out.dir <- in.dir
+    }else if(!dir.exists(out.dir)){
+      stop("out.dir does not exist. Do you need to create it? If you want out.dir==in.dir, specify either c(NULL,'in.dir').")
+    }
+  }else{
+    print(paste(length(dir.exists(unique(out.dir))), " unique out.dir(s) were specified", sep = ""))
+    if(!all(dir.exists(unique(out.dir)))){
+      stop("Some of your out.dirs do not exist. Do you need to create them?")
+    }
+  }
+
+  if(any(grepl("[.]", ext))){
+    message("File extensions cannot include a '.'. This is being removed. Remove the '.' to each ext to avoid this message")
+    ext[which(grepl("[.]", ext))] <- gsub("\\.", "", ext)
+  }
+
+  Ext <- c(toupper(ext), tolower(ext))
+
+  # Find files and check directory structure
+  fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
+  fs2 <- fs1[fs::path_ext(fs1) %in% Ext]
+
+  if(length(fs1) != length(fs2)){
+    warning("Some files were not included because file extensions were not provided. Function will skip unknown file extensions")
+  }
+
+  # Split files by directory
+  fs3 <- data.frame(infull = fs2, indir = NA, incam = fs::path_file(fs::path_dir(fs::path_dir(fs2))), indc = fs::path_file(fs::path_dir(fs2)), infile = fs::path_file(fs2),
+                    inname = fs::path_ext_remove(fs::path_file(fs2)), ext = fs::path_ext(fs2), row.names = NULL)
+  fs3$indir <- fs::path_common(fs2)
+  fs3$type <- ifelse(fs3$ext %in% c("JPG", "jpg"), "photo", ifelse(fs3$ext %in% c("MP4", "mp4"), "video", "unknown"))
+  fs3$outfull <- NA
+  fs3$outdir <- out.dir
+  fs3$outcam <- fs3$incam
+  fs3$outdc <- ifelse(date.collected, date.name, fs3$indc)
+  fs3$outfile <- NA
+  fs3$outname <- NA
+  fs3$inpath <- with(fs3, file.path(indir, incam, indc))
+  fs3$outpath <- with(fs3, file.path(outdir, outcam, outdc))
+  fs3[1:5,]
+  fs4 <- split(fs3, f = ~ fs3$type + fs3$indir + fs3$incam)
+  fs5 <- fs4[sapply(fs4, nrow) != 0]
+
+  # Apply appropriate exif tags to each camera and data type
+  Tag2 <- list()
+  Tag2[grep("photo", names(fs5))] <- Tag1["photo"]
+  Tag2[grep("video", names(fs5))] <- Tag1["video"]
+
+  # Some directory diagnostics
+  print(paste("Images loaded at ", Sys.time(), ". Checking file structure and running exiftool...", sep = ""))
+  message(paste(length(unique(fs3[,"outdc"])), " unique folder(s) was detected at the lowest directory. Is this correct?", sep = ""))
+  message(paste(length(unique(fs3[,"incam"])), " unique folder(s) were detected at the second lowest directory. Is this correct?", sep = ""))
+
+  # Checking the out directory
+  if(length(out.dir)==1){
+    out.dir.length <- "one"
+    message("The length of out.dir is 1. out.dir will reference a relative path for all images")
+  }else if(length(out.dir)==length(fs5)){
+    out.dir <- as.list(out.dir)
+    out.dir.length <- "cams"
+    message("The length of out.dir is the same as the number of unique directories. out.dir will be unique for each camera folder")
+  }else{
+    stop("The length of out.dir is not the same as the number of unique image directories")
+  }
+
+  # Parallel processing
+  if(isTRUE(pp)){
+    message("Parallel processing enabled")
+    if(is.null(cores.left)){
+      cores.left <- 2
+    }else{
+      cores.left <- tryCatch(as.numeric(cores.left),
+                             error = function(e){message("There was an error coercing cores.left to a number. The default of 2 cores are not utilized"); return(2)},
+                             warning = function(w){message("Could not coerce cores.left to a number. The default of 2 cores are not utilized"); return(2)})
+    }
+    cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
+    parallel::clusterExport(cl1, varlist = c("fs5", "Tag2"), envir = environment())
+  }else{
+    cl1 <- NULL
+  }
+
+  exif1 <- pbapply::pblapply(1:length(fs5), cl = cl1, function(i){
+    # Run exiftoolr to get metadata information
+    arg <- list(path = fs5[[i]]$infull, tags = Tag2[[i]])
+    x <- tryCatch(do.call(exiftoolr::exif_read, args = arg),
+                  error = function(e){message(paste("There is likely a corrupt file in: \n", names(fs5)[i], "\nThe original error is: ", sep = "")); message(e); return(names(fs5)[i])})
+
+    # Change the column name for video files because DateTimeOriginal does not exist
+    colnames(x) <- sub("CreateDate", "DateTimeOriginal", colnames(x))
+    x1 <- x[order(x$DateTimeOriginal),]
+    #x2 <- merge.data.frame(fs5[[i]], x1, by.x = "infull", by.y = "SourceFile")
+    print(paste("Exiftool completed on ", names(fs5)[i], ". This is ", i, " of ", length(fs5), ".", sep = ""))
+    return(x1)
+    rm(arg, x, x1)
+  })
+
+  if(isTRUE(pp)){
+    parallel::stopCluster(cl1)
+  }
+  names(exif1) <- names(fs5)
+  print(paste("Exiftool completed at ", Sys.time(), ". Specifying image paths...", sep = ""))
+
+  # Do any adjustments to date-times, if necessary
+  if(is.null(adjust)){
+    dt.diff <- 0
+  }else{
+    print("Adjustments to the date-time are being made")
+    if(isTRUE(lubridate::is.difftime(adjust))){
+      dt.diff <- adjust
+    }else{
+      if(length(adjust)!=2){stop("Two date-times must be provided in adjust. If only one is provided, it needed to be a difftime object.")}
+      dt.diff <- difftime(adjust[2], adjust[1], units = "secs")
+    }
+  }
+
+  # Compile all the file paths, information for new file names, and combine with metadata
+  exif2 <- lapply(1:length(exif1), function(i){
+    x <- fs5[[i]]
+    e <- exif1[[i]]
+    datetime <- lubridate::ymd_hms(e$DateTimeOriginal) + dt.diff
+    x1 <- data.frame(infull = x$infull,
+                     inpath = x$inpath,
+                     outpath = x$outpath,
+                     old.name = x$infile,
+                     ext = x$ext,
+                     year = formatC(lubridate::year(datetime), width = 4, flag = "0"),
+                     month = formatC(lubridate::month(datetime), width = 2, flag = "0"),
+                     day = formatC(lubridate::day(datetime), width = 2, flag = "0"),
+                     hour = formatC(lubridate::hour(datetime), width = 2, flag = "0"),
+                     minute = formatC(lubridate::minute(datetime), width = 2, flag = "0"),
+                     second = formatC(lubridate::second(datetime), width = 2, flag = "0")
+    )
+    # Add serial numbers based on the lowest sub-directory
+    x1$serial <- formatC(seq(1:nrow(x1)), width = 6, flag = "0")
+
+    # Define the new name for each file. Manipulate this to get different file names
+    x$outfile <- with(x1, paste(year, " ", month, " ", day, " ", hour, " ", minute, " ", second, " ", serial, ".", ext, sep = ""))
+    x$outname <- with(x1, paste(year, " ", month, " ", day, " ", hour, " ", minute, " ", second, " ", serial, sep = ""))
+    x$outfull <- with(x, file.path(outpath, outfile))
+
+    # Only add serial numbers to names that are renamed
+    if(isTRUE(fix.names)){
+      message("Image names were only replaced if they were not in the form YYYY MM DD HH MM SS.jpg. Serial number added to all images.")
+      x1$complete <- stats::complete.cases(apply(do.call(rbind, strsplit(fs::path_ext_remove(x$inname), " ")), 2, as.numeric))
+      x$outfile[isFALSE(x1$complete)] <- paste(x$inname[isFALSE(x1$complete)], " ", x1$serial[isFALSE(x1$complete)], x$ext[isFALSE(x1$complete)], sep = "")
+    }
+
+    # Cleanup the output
+    x2 <- x[,c("infull", "inpath", "outpath", "infile", "outfile")]
+    x3 <- merge.data.frame(x2, e, by.x = "infull", by.y = "SourceFile")
+    if(nrow(x3) != nrow(x1)){  # One last data integrity check
+      warning("Something happened. Some pictures went missing or got added between loading the exif data and renaming images.")
+    }
+    return(x3[,-1])
+    rm(x, datetime, x1, x2, x3)
+  })
+  names(exif2) <- names(exif1)
+
+  # Rename the images if desired (this cannot be undone)
+  print(paste("Image paths specified at ", Sys.time(), ". Cleaning up and renaming...", sep = ""))
+  if(isTRUE(pp)){
+    cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
+    parallel::clusterExport(cl1, varlist = c("exif2"), envir = environment())
+  }
+
+  if(rename=="replace"){
+    print(paste("Files will be renamed and replaced. Renaming started at ", Sys.time(), sep = ""))
+    pbapply::pblapply(1:length(exif2), cl = cl1, function(i){
+      x <- exif2[[i]]
+      if(all(is.na(x))){
+        print(paste("Skipping ", names(exif2)[i], " due to missing exif data.", sep = ""))
+      }else{
+        with(x, fs::file_move(path = file.path(inpath, infile), new_path = file.path(outpath, outfile)))
+        print(paste("Completed renaming for ", names(exif2)[i], ".", sep = ""))
+      }
+      rm(x)
+    })
+    print(paste("File renaming completed at ", Sys.time(), sep = ""))
+  }else if(rename=="copy"){
+    print(paste("Files will be renamed and copied. Renaming started at ", Sys.time(), sep = ""))
+    pbapply::pblapply(1:length(exif2), cl = cl1, function(i){
+      x <- exif2[[i]]
+      if(all(is.na(x))){
+        print(paste("Skipping ", names(exif2)[i], " due to missing exif data.", sep = ""))
+      }else{
+        with(x, fs::file_copy(path = file.path(inpath, infile), new_path = file.path(outpath, outfile)))
+        print(paste("Completed renaming for ", names(exif2)[i], ".", sep = ""))
+      }
+      rm(x)
+    })
+    print(paste("File renaming completed at ", Sys.time(), sep = ""))
+  }else if(rename=="none"){
+    message("No files were renamed")
+  }else{
+    message("No files were renamed because you did not specify a correct value for rename. Renaming can be done using the output file. To avoid this warning, choose one of c('replace', 'copy', 'none').")
+  }
+
+  if(isTRUE(pp)){
+    parallel::stopCluster(cl1)
+  }
+
+  # Clean up the data and prepare to shut down the function
+  if(return.type == "list"){
+    exif3 <- exif2
+  }else if(return.type == "df"){
+    exif3 <- tryCatch(do.call(dplyr::bind_rows, exif2), error = function(e){exif2})
+    if(!is.data.frame(exif3)){
+      warning("You tried to recombine your camera folders into a single data frame but your data has incompatible columns. \nThis is likely because you have different camera models the in.dir and used a camera-specific trigger.info. \nA list will be returned.")
+    }
+  }else{
+    message("You chose an invalid return type. A list is returned. Choose one of c('list', 'df').")
+    exif3 <- exif2
+  }
+  print(paste("This function completed at ", Sys.time(), sep = ""))
+  return(exif3)
+  rm(Tag1, Tag2, Ext, fs1, fs2, fs3, fs4, fs5, exif1, exif2, exif3, cl1, out.dir.length, dt.diff)
+  #rm(in.dir, out.dir, ext, trigger.info, date.collected, date.name, rename, return.type, adjust, fix.names, pp, cores.left)
 }
 
 ## A function to find corrupt files (Added 2022-08-25, Modified 2023-03-22) ####
