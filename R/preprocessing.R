@@ -891,7 +891,8 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
 ##' }
 ##'
 cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.collected=FALSE, date.name=NULL, rename="none", return.type = "list", adjust = NULL, fix.names = FALSE, pp = FALSE, cores.left = NULL){
-  #in.dir <- "G:/test" # More than likely, this must be a folder containing camera folders
+  #in.dir <- "G:/test"
+  #in.dir <- "G:/new_20240604/images" # More than likely, this must be a folder containing camera folders
   #out.dir <- NULL             # Where should the files be outputted to?
   #ext <- c(".jpg", ".mp4")    # What type(s) of file do you want to rename
   #trigger.info <- "Reconyx"   # Should the output include info about trigger method, and photo numbers? Currently only available for Hyperfire 2 cameras
@@ -1006,9 +1007,12 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
   fs3$outname <- NA
   fs3$inpath <- with(fs3, file.path(indir, incam, indc))
   fs3$outpath <- with(fs3, file.path(outdir, outcam, outdc))
-  fs3[1:5,]
+  #fs3[1:5,]
   fs4 <- split(fs3, f = ~ fs3$type + fs3$indir + fs3$incam)
   fs5 <- fs4[sapply(fs4, nrow) != 0]
+  fs6 <- lapply(fs5, function(x){x$infull})
+
+  if(date.collected){fs::dir_create(unique(fs3$outpath))}
 
   # Apply appropriate exif tags to each camera and data type
   Tag2 <- list()
@@ -1034,7 +1038,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
 
   # Parallel processing
   if(isTRUE(pp)){
-    message("Parallel processing enabled")
+    message("Parallel processing enabled. Creating and exporting cluster...")
     if(is.null(cores.left)){
       cores.left <- 2
     }else{
@@ -1043,22 +1047,29 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
                              warning = function(w){message("Could not coerce cores.left to a number. The default of 2 cores are not utilized"); return(2)})
     }
     cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
-    parallel::clusterExport(cl1, varlist = c("fs5", "Tag2"), envir = environment())
+    saveRDS(fs6, file = "fs5.RDS")
+    saveRDS(Tag2, file = "tags.RDS")
+    #parallel::clusterExport(cl1, varlist = c("fs6", "Tag2"), envir = environment())
+    message("Cluster exported. Running exiftool...")
   }else{
     cl1 <- NULL
   }
 
-  exif1 <- pbapply::pblapply(1:length(fs5), cl = cl1, function(i){
+  exif1 <- pbapply::pblapply(1:length(fs6), cl = cl1, function(i){
+    # Load data if necessary
+    if(!exists("fs6")){fs6 <- readRDS("fs5.RDS")}
+    if(!exists("Tag2")){Tag2 <- readRDS("tags.RDS")}
+    #fs5 <- readRDS("fs5.RDS")
     # Run exiftoolr to get metadata information
-    arg <- list(path = fs5[[i]]$infull, tags = Tag2[[i]])
+    arg <- list(path = fs6[[i]], tags = Tag2[[i]])
     x <- tryCatch(do.call(exiftoolr::exif_read, args = arg),
-                  error = function(e){message(paste("There is likely a corrupt file in: \n", names(fs5)[i], "\nThe original error is: ", sep = "")); message(e); return(names(fs5)[i])})
+                  error = function(e){message(paste("There is likely a corrupt file in: \n", names(fs6)[i], "\nThe original error is: ", sep = "")); message(e); return(names(fs6)[i])})
 
     # Change the column name for video files because DateTimeOriginal does not exist
     colnames(x) <- sub("CreateDate", "DateTimeOriginal", colnames(x))
     x1 <- x[order(x$DateTimeOriginal),]
     #x2 <- merge.data.frame(fs5[[i]], x1, by.x = "infull", by.y = "SourceFile")
-    print(paste("Exiftool completed on ", names(fs5)[i], ". This is ", i, " of ", length(fs5), ".", sep = ""))
+    print(paste("Exiftool completed on ", names(fs6)[i], ". This is ", i, " of ", length(fs6), ".", sep = ""))
     return(x1)
     rm(arg, x, x1)
   })
@@ -1066,7 +1077,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
   if(isTRUE(pp)){
     parallel::stopCluster(cl1)
   }
-  names(exif1) <- names(fs5)
+  names(exif1) <- names(fs6)
   print(paste("Exiftool completed at ", Sys.time(), ". Specifying image paths...", sep = ""))
 
   # Do any adjustments to date-times, if necessary
