@@ -910,7 +910,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
 
   # Check file types and define metadata tags for particular camera models
   if(length(ext) == 2){
-    if(any(grepl(".jpg", ext, ignore.case = T)) & any(grepl(".mp4", ext, ignore.case = T))){
+    if(any(grepl("jpg", ext, ignore.case = T)) & any(grepl("mp4", ext, ignore.case = T))){
       message("You are running both photo and video files. Selecting appropriate exif tags")
       if(isTRUE(is.null(trigger.info))){
         Tag1 <- list(photo = c("DateTimeOriginal"), video = c("CreateDate"))
@@ -927,7 +927,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
       stop("Providing multiple file extensions that are not '.jpg' and '.mp4' files is not supported at this time. \nContact me if you need this support.")
     }
   }else if(length(ext) == 1){
-    if(ext %in% c(".jpg", ".JPG")){
+    if(ext %in% c("jpg", "JPG")){
       if(isTRUE(is.null(trigger.info))){
         Tag1 <- list(photo = c("DateTimeOriginal"))
       }else if(trigger.info %in% c("Reconyx", "Hyperfire2", "PC900", "Ultrafire_image")){
@@ -938,7 +938,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
         Tag1 <- list(photo = c("DateTimeOriginal"))
         message("Additional info is not supported for your camera model. Only date-time information will be provided. \nFor photo file types, choose one of c('Reconyx', 'Hyperfire2', 'PC900', 'Ultrafire_image', 'Browning', 'Cuddyback').")
       }
-    }else if(ext %in% c(".mp4", ".MP4")){
+    }else if(ext %in% c("mp4", "MP4")){
       if(isTRUE(is.null(trigger.info))){
         Tag1 <- list(video = c("CreateDate"))
       }else if(trigger.info %in% c("Reconyx", "Ultrafire_Video")){
