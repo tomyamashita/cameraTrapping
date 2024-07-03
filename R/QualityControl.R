@@ -4,6 +4,7 @@
   ## cameraDiagnostics
   ## copyFiles
   ## ctDates
+  ## deleteEmptyDirs
   ## imageEffort
   ## mergeFiles
   ## subsetImages
@@ -232,6 +233,77 @@ ctDates <- function(ct, start.col=6){
   }
   return(ct)
   #rm(ct, start.col)
+}
+
+## Delete empty directories function (Added 2024-07-03) ####
+##' @description This function can be used to delete empty directories from the file system.
+##' You can specify a subset or look through all directories in the in directory.
+##'
+##' @title Delete Empty Diretories
+##'
+##' @param in.dir. Where should the function look for directories to delete?
+##' @param glob. What search term should be used for subsetting? The default is NULL which uses all directories in the in directory
+##' @param delete. Logical. Defaults to FALSE. Should the function delete empty directories. This cannot be undone to my knowledge.
+##'
+##' @return A character string containing a list of the empty directories
+##'
+##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
+##' If you want to make these functions work, I would recommend either adjusting your formatting or using this function as a template to build your own.
+##' These functions are built for very specific purposes and may not generalize well to whatever you need it for.
+##' I build them for my own use and make no promises that they will work for different data formatting situations.
+##' As I come across errors, I attempt to further generalize the functions but this is done as I go.
+##'
+##' @seealso \code{\link{cameraRename4}}
+##'
+##' @importFrom fs dir_ls dir_delete
+##'
+##' @keywords files
+##' @keywords manip
+##'
+##' @concept directory management
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided yet
+##' }
+##'
+deleteEmptyDirs <- function(in.dir, glob=NULL, delete = TRUE){
+  #in.dir <- "G:/test"
+  #glob <- "RECNX"
+  #delete <- FALSE
+
+  # Load in all directories in the in.dir
+  fs1 <- fs::dir_ls(path = in.dir, type = "directory", recurse = TRUE)
+
+  # Subset directories by the glob term
+  if(is.null(glob)){
+    fs2 <- fs1
+  }else{
+    fs2 <- fs1[grep(pattern = glob, fs1)]
+  }
+
+  # Iteratively find all the files in the directories
+  fs3 <- pbapply::pblapply(fs2, fs::dir_ls)
+
+  # Identify which directories are empty
+  fs4 <- names(fs3[which(sapply(fs3, length) == 0)])
+
+  # Delete empty directories
+  if(length(fs4) == 0){
+    message("There are no empty directories.")
+  }else{
+    if(isTRUE(delete)){
+      message("Empty directories will be permanently deleted")
+      fs::dir_delete(fs4)
+    }else{
+      message("Empty directories will be identified but not deleted")
+    }
+  }
+
+  return(fs4)
+  rm(fs1, fs2, fs3, fs4)
+  #rm(in.dir, glob, delete)
 }
 
 ### Number of Photos (Added 2022-08-25) ####

@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing.R
 \name{cameraRename4}
 \alias{cameraRename4}
-\title{(New) Rename Camera Trap Images}
+\title{Rename Camera Trap Images}
 \usage{
 cameraRename4(
   in.dir,
@@ -96,6 +96,11 @@ If a data.frame cannot be outputted (usually because you have two different came
 This function is used to extract metadata information and rename camera trap images using date-times and an assigned serial number to each image.
 This function simplifies and cleans up \code{\link{cameraRename3}} while adding the ability to rename the folder level below the camera folder.
 
+A key difference between this function and \code{\link{cameraRename3}} is that this code does not have the same kinds of validation checks for your file structure.
+It makes very specific assumptions regarding file structure, namely that there is a shared directory with all the cameras, then camera, then date-collected, then your images.
+The function will disregard and remove any folders between your shared directory and the camera folders so be sure to only use this function if you want to use the above directory structure.
+If this is not you, please use \code{\link{cameraRename3}} as it has better functionality for alternative directory structures.
+
 (Description carried from \code{\link{cameraRename3}}) This function has all the same capabilities as the cameraRename2 function but should handle large datasets and corrupt files better.
 Unlike the cameraRename2 functions, this version keeps everything within each camera directory, running the same process on each camera.
 This allows it to take advantage of parallel processing and other functions to improve speed for very large datasets.
@@ -121,7 +126,7 @@ The reason for this is that sometimes camera date-times are wrong so we needed t
 Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust improperly named images.
 
 Starting in package version 0.0.0.27, the file.type parameter was replaced with ext to allow for specification of multiple file extensions.
-As part of this, the c("image", "video") options have been removed. Please begin using c(".jpg", ".mp4") instead.
+As part of this, the c("image", "video") options have been removed. Please use c("jpg", "mp4") instead.
 }
 \note{
 Differences between this function and \code{\link{cameraRename2}}:
@@ -129,7 +134,7 @@ Differences between this function and \code{\link{cameraRename2}}:
 There were several major changes in this function that differentiate it from the \code{\link{cameraRename2}} function enough that it warranted its own function rather than an update.
 The main change and this affected everything down the line was that the function now acts on each camera directory separately.
 By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files.
-One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
+One of the main issues with the \code{\link{cameraRename2}} function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
 Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
 }
 \section{{Standard Disclaimer}}{

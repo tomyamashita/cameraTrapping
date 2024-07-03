@@ -259,4 +259,10 @@
 
 * Added a new version of the cameraRename function to handle renaming of the date collected directory as well. 
 
+## Version 0.0.0.48 (2024-07-03)
+
+* Updated the cameraRename4 function to better handle massive camera directories. 
+* Fixed some bugs in cameraRename4 to handle directories with only one camera folder. 
+* Added the deleteEmptyDirs function to help find and delete empty directories after running cameraRename4 with the date collected folders specified. 
+
 

@@ -754,9 +754,14 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
   #rm(in.dir, out.dir, ext, trigger.info, rename, return.type, adjust, fix.names, pp, cores.left)
 }
 
-## Another major update to the renaming function (Added 2024-07-02) ####
+## Another major update to the renaming function (Added 2024-07-02, Updated 2024-07-03) ####
 ##' @description This function is used to extract metadata information and rename camera trap images using date-times and an assigned serial number to each image.
 ##' This function simplifies and cleans up \code{\link{cameraRename3}} while adding the ability to rename the folder level below the camera folder.
+##'
+##' A key difference between this function and \code{\link{cameraRename3}} is that this code does not have the same kinds of validation checks for your file structure.
+##' It makes very specific assumptions regarding file structure, namely that there is a shared directory with all the cameras, then camera, then date-collected, then your images.
+##' The function will disregard and remove any folders between your shared directory and the camera folders so be sure to only use this function if you want to use the above directory structure.
+##' If this is not you, please use \code{\link{cameraRename3}} as it has better functionality for alternative directory structures.
 ##'
 ##' (Description carried from \code{\link{cameraRename3}}) This function has all the same capabilities as the cameraRename2 function but should handle large datasets and corrupt files better.
 ##' Unlike the cameraRename2 functions, this version keeps everything within each camera directory, running the same process on each camera.
@@ -835,7 +840,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
 ##' Because I did not want to go back through the images and find those that were orignally fixed and fix them again, this should leave those photos alone and only adjust improperly named images.
 ##'
 ##' Starting in package version 0.0.0.27, the file.type parameter was replaced with ext to allow for specification of multiple file extensions.
-##' As part of this, the c("image", "video") options have been removed. Please begin using c(".jpg", ".mp4") instead.
+##' As part of this, the c("image", "video") options have been removed. Please use c("jpg", "mp4") instead.
 ##'
 ##' @return This function outputs either a list or a data.frame, depending on whether return.type = c("list", "df")
 ##' @return list:
@@ -855,7 +860,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
 ##' There were several major changes in this function that differentiate it from the \code{\link{cameraRename2}} function enough that it warranted its own function rather than an update.
 ##' The main change and this affected everything down the line was that the function now acts on each camera directory separately.
 ##' By doing it this way, it allows for speed improvements on large numbers of folders and images using parallel processing, allows for the addition of progress bars to help track where it is, and allows for a way to check for corrupt image files.
-##' One of the main issues with the cameraRename2 function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
+##' One of the main issues with the \code{\link{cameraRename2}} function is that if one image is bad, the entire function will fail, something that I discovered when running it on 1,031,000 pictures in 47 folders.
 ##' Therefore we needed a way to ensure that if there is a bad image, the function will skip it and keep going. In this case, it skips the entire folder and keeps going, allowing it to not be caught and stopped by a bad file.
 ##'
 ##' @section {Standard Disclaimer}: As with most of the functions in this package, using this function assumes that you have been following my normal workflow, including the particular formatting that these functions assume.
@@ -872,7 +877,7 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
 ##'
 ##' @importFrom dplyr bind_rows
 ##' @importFrom exiftoolr exif_version install_exiftool exif_read
-##' @importFrom fs dir_ls path_ext path_file path_dir path_ext_remove path_common file_move file_copy
+##' @importFrom fs dir_ls path_ext path_file path_dir path_ext_remove file_move file_copy
 ##' @importFrom lubridate is.difftime ymd_hms year month day hour minute second
 ##' @importFrom parallel makeCluster clusterExport detectCores stopCluster
 ##' @importFrom pbapply pblapply
@@ -892,9 +897,9 @@ cameraRename3 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, rename="
 ##'
 cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.collected=FALSE, date.name=NULL, rename="none", return.type = "list", adjust = NULL, fix.names = FALSE, pp = FALSE, cores.left = NULL){
   #in.dir <- "G:/test"
-  #in.dir <- "G:/new_20240604/images" # More than likely, this must be a folder containing camera folders
+  #in.dir <- "G:/new_20240604/timelapse" # More than likely, this must be a folder containing camera folders
   #out.dir <- NULL             # Where should the files be outputted to?
-  #ext <- c(".jpg", ".mp4")    # What type(s) of file do you want to rename
+  #ext <- c("jpg", "mp4")    # What type(s) of file do you want to rename
   #trigger.info <- "Reconyx"   # Should the output include info about trigger method, and photo numbers? Currently only available for Hyperfire 2 cameras
   #date.collected <- TRUE      # Should the date.collected folder be created from the raw files
   #date.name <- "20240604"     # If the date.collected folder is being created, what is the date collected folder name?
@@ -908,6 +913,9 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
   #cores.left <- 4             # How many cores should be reserved when running parallel processing
 
   print(paste("This function started at ", Sys.time(), ". Loading images...", sep = ""))
+  warning("This code will not keep your file structure if it is different from the following:
+  [Main Folder]->[Camera]->[Date Collected].
+Use cameraRename3 if you need to keep your file structure")
 
   # Check file types and define metadata tags for particular camera models
   if(length(ext) == 2){
@@ -997,7 +1005,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
   # Split files by directory
   fs3 <- data.frame(infull = fs2, indir = NA, incam = fs::path_file(fs::path_dir(fs::path_dir(fs2))), indc = fs::path_file(fs::path_dir(fs2)), infile = fs::path_file(fs2),
                     inname = fs::path_ext_remove(fs::path_file(fs2)), ext = fs::path_ext(fs2), row.names = NULL)
-  fs3$indir <- fs::path_common(fs2)
+  fs3$indir <- in.dir
   fs3$type <- ifelse(fs3$ext %in% c("JPG", "jpg"), "photo", ifelse(fs3$ext %in% c("MP4", "mp4"), "video", "unknown"))
   fs3$outfull <- NA
   fs3$outdir <- out.dir
@@ -1007,8 +1015,9 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
   fs3$outname <- NA
   fs3$inpath <- with(fs3, file.path(indir, incam, indc))
   fs3$outpath <- with(fs3, file.path(outdir, outcam, outdc))
-  #fs3[1:5,]
-  fs4 <- split(fs3, f = ~ fs3$type + fs3$indir + fs3$incam)
+  fs3 <- do.call(rbind, lapply(split(fs3, f = fs3$outpath), function(x){x$serial <- formatC(1:nrow(x), width = 6, flag = "0"); return(x)}))
+  fs3[1:5,]
+  fs4 <- split(fs3, f = ~ fs3$type + fs3$indir + fs3$incam + fs3$indc)
   fs5 <- fs4[sapply(fs4, nrow) != 0]
   fs6 <- lapply(fs5, function(x){x$infull})
 
@@ -1047,7 +1056,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
                              warning = function(w){message("Could not coerce cores.left to a number. The default of 2 cores are not utilized"); return(2)})
     }
     cl1 <- parallel::makeCluster(parallel::detectCores()-cores.left, outfile = "out.txt")
-    saveRDS(fs6, file = "fs5.RDS")
+    saveRDS(fs6, file = "files.RDS")
     saveRDS(Tag2, file = "tags.RDS")
     #parallel::clusterExport(cl1, varlist = c("fs6", "Tag2"), envir = environment())
     message("Cluster exported. Running exiftool...")
@@ -1057,7 +1066,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
 
   exif1 <- pbapply::pblapply(1:length(fs6), cl = cl1, function(i){
     # Load data if necessary
-    if(!exists("fs6")){fs6 <- readRDS("fs5.RDS")}
+    if(!exists("fs6")){fs6 <- readRDS("files.RDS")}
     if(!exists("Tag2")){Tag2 <- readRDS("tags.RDS")}
     #fs5 <- readRDS("fs5.RDS")
     # Run exiftoolr to get metadata information
@@ -1111,11 +1120,11 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
                      second = formatC(lubridate::second(datetime), width = 2, flag = "0")
     )
     # Add serial numbers based on the lowest sub-directory
-    x1$serial <- formatC(seq(1:nrow(x1)), width = 6, flag = "0")
+    #x1$serial <- formatC(seq(1:nrow(x1)), width = 6, flag = "0")
 
     # Define the new name for each file. Manipulate this to get different file names
-    x$outfile <- with(x1, paste(year, " ", month, " ", day, " ", hour, " ", minute, " ", second, " ", serial, ".", ext, sep = ""))
-    x$outname <- with(x1, paste(year, " ", month, " ", day, " ", hour, " ", minute, " ", second, " ", serial, sep = ""))
+    x$outfile <- with(x1, paste(year, " ", month, " ", day, " ", hour, " ", minute, " ", second, " ", x$serial, ".", ext, sep = ""))
+    x$outname <- with(x1, paste(year, " ", month, " ", day, " ", hour, " ", minute, " ", second, " ", x$serial, sep = ""))
     x$outfull <- with(x, file.path(outpath, outfile))
 
     # Only add serial numbers to names that are renamed
@@ -1127,12 +1136,13 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
 
     # Cleanup the output
     x2 <- x[,c("infull", "inpath", "outpath", "infile", "outfile")]
+    colnames(x2) <- c("infull", "inpath", "outpath", "old.name", "new.name")
     x3 <- merge.data.frame(x2, e, by.x = "infull", by.y = "SourceFile")
     if(nrow(x3) != nrow(x1)){  # One last data integrity check
       warning("Something happened. Some pictures went missing or got added between loading the exif data and renaming images.")
     }
     return(x3[,-1])
-    rm(x, datetime, x1, x2, x3)
+    rm(x, e, datetime, x1, x2, x3)
   })
   names(exif2) <- names(exif1)
 
@@ -1193,7 +1203,7 @@ cameraRename4 <- function(in.dir, out.dir=NULL, ext, trigger.info=NULL, date.col
   }
   print(paste("This function completed at ", Sys.time(), sep = ""))
   return(exif3)
-  rm(Tag1, Tag2, Ext, fs1, fs2, fs3, fs4, fs5, exif1, exif2, exif3, cl1, out.dir.length, dt.diff)
+  rm(Tag1, Tag2, Ext, fs1, fs2, fs3, fs4, fs5, fs6, exif1, exif2, exif3, cl1, out.dir.length, dt.diff)
   #rm(in.dir, out.dir, ext, trigger.info, date.collected, date.name, rename, return.type, adjust, fix.names, pp, cores.left)
 }
 
