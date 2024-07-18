@@ -265,4 +265,8 @@
 * Fixed some bugs in cameraRename4 to handle directories with only one camera folder. 
 * Added the deleteEmptyDirs function to help find and delete empty directories after running cameraRename4 with the date collected folders specified. 
 
+## Version 0.0.0.49 (2024-07-18)
+
+* Bug fix on cameraRename4 so that it can properly rename files. The file paths were mis-specified in the rename section.
+
 

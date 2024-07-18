@@ -1,7 +1,7 @@
 Package: cameraTrapping
 Type: Package
 Title: Managing camera trap data
-Version: 0.0.0.48
+Version: 0.0.0.49
 Authors@R: c(person("Thomas J.", "Yamashita", 
                     role = c("aut", "cre"), 
                     email = "tjyamashta@gmail.com", 

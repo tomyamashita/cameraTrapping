@@ -1160,7 +1160,7 @@ Use cameraRename3 if you need to keep your file structure")
       if(all(is.na(x))){
         print(paste("Skipping ", names(exif2)[i], " due to missing exif data.", sep = ""))
       }else{
-        with(x, fs::file_move(path = file.path(inpath, infile), new_path = file.path(outpath, outfile)))
+        with(x, fs::file_move(path = file.path(inpath, old.name), new_path = file.path(outpath, new.name)))
         print(paste("Completed renaming for ", names(exif2)[i], ".", sep = ""))
       }
       rm(x)
@@ -1173,7 +1173,7 @@ Use cameraRename3 if you need to keep your file structure")
       if(all(is.na(x))){
         print(paste("Skipping ", names(exif2)[i], " due to missing exif data.", sep = ""))
       }else{
-        with(x, fs::file_copy(path = file.path(inpath, infile), new_path = file.path(outpath, outfile)))
+        with(x, fs::file_copy(path = file.path(inpath, old.name), new_path = file.path(outpath, new.name)))
         print(paste("Completed renaming for ", names(exif2)[i], ".", sep = ""))
       }
       rm(x)
