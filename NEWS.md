@@ -269,4 +269,8 @@
 
 * Bug fix on cameraRename4 so that it can properly rename files. The file paths were mis-specified in the rename section.
 
+## Version 0.0.0.50 (2024-07-31)
+
+* Efficiency improvement for doFolder. 
+
 

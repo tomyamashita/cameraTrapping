@@ -141,8 +141,8 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##' # No example provided
 ##' }
 doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save = F, diagnostics = T){
-  #in.dir <- "I:/new_20221201/sorted"
-  #ext <- c(".jpg", "mp4")
+  #in.dir <- "G:/new_77_20240705/sorted"
+  #ext <- c("jpg", "mp4")
   #do_format <- "serial"
   #save <- FALSE
   #diagnostics <- TRUE
@@ -154,50 +154,38 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 
   Ext <- c(toupper(ext), tolower(ext))
 
+  message("This function requires the bottom three directories by site -> species -> # of individuals. It not work properly otherwise")
   fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
-  fs2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(fs1[fs::path_ext(fs1) %in% Ext]))))
-  fs3 <- data.frame(fs2[,(ncol(fs2)-3):(ncol(fs2)-1)], do.call(rbind, strsplit(fs2[,ncol(fs2)], " ")))
 
-  if(ncol(fs3)==10){
-    if(!exists("do_format")){
-      fs4 <- fs3[,-ncol(fs3)]
-      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      message("You forgot to specify do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-    }else if(do_format == "serial"){
-      fs4 <- fs3
-      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second", "serial")
-    }else if(do_format == "original"){
-      fs4 <- fs3[,-ncol(fs3)]
-      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-    }else{
-      fs4 <- fs3[,-ncol(fs3)]
-      colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
-      message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-    }
-  }else if(ncol(fs3)==9){
-    fs4 <- fs3
-    colnames(fs4) <- c("site", "species", "individuals", "year", "month", "day", "hour", "minute", "second")
+  fs2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(fs1[fs::path_ext(fs1) %in% Ext]))))
+  colnames(fs2) <- c(paste("X", seq(1, ncol(fs2)-4), sep = ""), paste("A", seq(1,4), sep = ""))
+
+  if(do_format == "serial"){
+    fs3 <- tidyr::separate(fs2[,grep("A", colnames(fs2))], "A4", into = c("year", "month", "day", "hour", "minute", "second", "serial"), sep = " ", extra = "merge")
+  }else if(do_format == "original"){
+    fs3 <- tidyr::separate(fs2[,grep("A", colnames(fs2))], "A4", into = c("year", "month", "day", "hour", "minute", "second"), sep = " ", extra = "drop")
   }else{
-    message("Your file and folder structure in your input directory does not have an expected number of columns. If you are attempting to use this function with a different structure, the function may not work properly.")
-    fs4 <- fs3
+    message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+    fs3 <- tidyr::separate(fs2[,grep("A", colnames(fs2))], "A4", into = c("year", "month", "day", "hour", "minute", "second"), sep = " ", extra = "drop")
   }
+  colnames(fs3) <- c("site", "species", "individuals", colnames(fs3)[-c(1:3)])
 
   if(diagnostics == T){
-    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(fs4, site), species = length(unique(species)), images = dplyr::n())),
-                  "Unique Species" = sort(unique(fs4$species)),
-                  "Unique Number of Individuals" = sort(unique(fs4$individuals)))
+    diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(fs3, site), species = length(unique(species)), images = dplyr::n())),
+                  "Unique Species" = sort(unique(fs3$species)),
+                  "Unique Number of Individuals" = sort(unique(fs3$individuals)))
     print(diagn)
     rm(diagn)
   }
 
   if(isTRUE(save)){
     print("Writing a text file to the in.dir.")
-    write.table(fs4, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = T)
+    write.table(fs3, file = file.path(in.dir, "dataorganize.txt"), row.names = F, col.names = T)
   }
 
-  return(fs4)
+  return(fs3)
 
-  rm(fs1, fs2, fs3, fs4)
+  rm(fs1, fs2, fs3)
   #rm(in.dir, ext, do_format, save, diagnostics)
 }
 
