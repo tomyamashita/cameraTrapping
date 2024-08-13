@@ -25,6 +25,11 @@ This function calculates the probability of a true null hypothesis
 # No example provided
 }
 }
+\references{
+Sellke, T., M. J. Bayarri, and J. O. Berger. 2001. Calibration of ρ Values for Testing Precise Null Hypotheses. The American Statistician 55:62-71.
+
+Benjamin, D. J., and J. O. Berger. 2019. Three Recommendations for Improving the Use of p-Values. The American Statistician 73:186-191.
+}
 \concept{p value}
 \concept{probability}
 \keyword{arith}
