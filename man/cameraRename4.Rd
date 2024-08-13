@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing.R
 \name{cameraRename4}
 \alias{cameraRename4}
-\title{Rename Camera Trap Images}
+\title{(New) Rename Camera Trap Images}
 \usage{
 cameraRename4(
   in.dir,

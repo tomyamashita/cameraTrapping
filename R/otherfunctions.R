@@ -2,6 +2,7 @@
 ## This script contains functions that are not related to working with camera data.
 ## This script contains the following functions:
   ## timeConvert
+  ## prH0
 
 ################################################################################
 
@@ -55,4 +56,62 @@ timeConvert <- function(ds, dateCol, timeCol, LocalTZ){
   return(ds)
   rm(date1, date2, time1, time2, datetime1, datetime2, tzconv)
   #rm(ds, dateCol, timeCol, LocalTZ)
+}
+
+## Statistical manipulatons
+### Calculate the probability of a true null hypothesis (or alternatively the probability of a true alternative hypothesis)
+##' @description This function calculates the probability of a true null hypothesis
+##'
+##' @title Calculate true null hypothesis
+##'
+##' @param p numeric. The p value from your analysis
+##' @param prior numeric. The prior probability of a true null hypothesis.
+##' 0.5 indicates an uninformative prior.
+##' @param null logical. Do you want to test whether the null hypothesis is true or the alternative?
+##'
+##' @return value. The requested probability given the p value and prior.
+##'
+##' @keywords arith
+##' @keywords utilities
+##' @keywords htest
+##'
+##' @concept p value
+##' @concept probability
+##'
+##' @export
+##'
+##' @examples \dontrun{
+##' # No example provided
+##' }
+prH0 <- function(p, prior = 0.5, null = TRUE){
+  #p <- 0.0829
+  #p <- 0.05
+  #prior <- 0.50
+  #null <- TRUE
+
+  # Convert p value into a bayes factor
+  ## Bayes factor for null hypothesis
+  B <- -exp(1)*p*log(p)
+  ## Bayes factor for alternative hypothesis
+  BFB <- 1/B
+
+  # Calculate the final oddds that the null/alternative hypothesis is true
+  if(is.logical(null)){
+    if(isTRUE(null)){
+      message("Returning probability of a true null hypothesis")
+      FO <- B*(prior/(1-prior))
+    }else{
+      message("Returning probability of a true alternative hypothesis")
+      FO <- BFB*(prior/(1-prior))
+    }
+  }else{
+    stop("null must be logical")
+  }
+
+  # Calculate the probability that the null/alternative hypothesis is true
+  PR <- FO/(1+FO)
+
+  return(PR)
+  rm(B, BFB, FO, PR)
+  #rm(p, prior)
 }

@@ -154,7 +154,7 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 
   Ext <- c(toupper(ext), tolower(ext))
 
-  message("This function requires the bottom three directories by site -> species -> # of individuals. It not work properly otherwise")
+  message("This function requires the bottom three directories be site -> species -> # of individuals. It will not work properly otherwise")
   fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
 
   fs2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(fs1[fs::path_ext(fs1) %in% Ext]))))

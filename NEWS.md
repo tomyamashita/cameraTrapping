@@ -273,4 +273,8 @@
 
 * Efficiency improvement for doFolder. 
 
+## Version 0.0.0.51 (2024-08-13)
+
+* Added the prH0 function to calculate the probability of a true null hypothesis. 
+* Fixed spelling errors in output messages of the doFolder function. 
 
