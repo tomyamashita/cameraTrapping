@@ -11,7 +11,7 @@ You can install the latest version of cameraTrapping from github:
 
 ``` r
 if(!require(devtools)){install.packages("devtools")}
-devtools::install_github("tomyamashta/cameraTrapping")
+devtools::install_github("https://github.com/tomyamashita/cameraTrapping.git")
 
 ```
 
