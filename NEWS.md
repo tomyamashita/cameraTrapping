@@ -278,3 +278,7 @@
 * Added the prH0 function to calculate the probability of a true null hypothesis. 
 * Fixed spelling errors in output messages of the doFolder function. 
 
+## version 0.0.0.52 (2024-09-25)
+
+* Modified the doFolder function to better accommodate large databases. 
+

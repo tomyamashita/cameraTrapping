@@ -141,7 +141,7 @@ bestPics <- function(timelapse, in.dir, out.dir, copy = T, sorted = F){
 ##' # No example provided
 ##' }
 doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save = F, diagnostics = T){
-  #in.dir <- "G:/new_77_20240705/sorted"
+  #in.dir <- "F:/Sorted/Sorted_1847_PostCon_yr2"
   #ext <- c("jpg", "mp4")
   #do_format <- "serial"
   #save <- FALSE
@@ -154,21 +154,41 @@ doFolder <- function(in.dir, ext = c(".jpg", ".mp4"), do_format = "serial", save
 
   Ext <- c(toupper(ext), tolower(ext))
 
-  message("This function requires the bottom three directories be site -> species -> # of individuals. It will not work properly otherwise")
-  fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
+  message("This function requires the bottom three directories by site -> species -> # of individuals. It will not work properly otherwise")
+  #fs1 <- fs::dir_ls(path = in.dir, recurse = T, type = "file")
 
-  fs2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(fs1[fs::path_ext(fs1) %in% Ext]))))
-  colnames(fs2) <- c(paste("X", seq(1, ncol(fs2)-4), sep = ""), paste("A", seq(1,4), sep = ""))
+  f1 <- fs::dir_ls(path = in.dir, recurse = F, type = "directory")
 
-  if(do_format == "serial"){
-    fs3 <- tidyr::separate(fs2[,grep("A", colnames(fs2))], "A4", into = c("year", "month", "day", "hour", "minute", "second", "serial"), sep = " ", extra = "merge")
-  }else if(do_format == "original"){
-    fs3 <- tidyr::separate(fs2[,grep("A", colnames(fs2))], "A4", into = c("year", "month", "day", "hour", "minute", "second"), sep = " ", extra = "drop")
-  }else{
-    message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
-    fs3 <- tidyr::separate(fs2[,grep("A", colnames(fs2))], "A4", into = c("year", "month", "day", "hour", "minute", "second"), sep = " ", extra = "drop")
-  }
-  colnames(fs3) <- c("site", "species", "individuals", colnames(fs3)[-c(1:3)])
+  #fs1 <- pbapply::pblapply(f1, fs::dir_ls, recurse = TRUE, type = "file")
+
+  fs1 <- pbapply::pblapply(f1, function(x){
+    x1 <- fs::dir_ls(path = x, recurse = TRUE, type = "file")
+    if(length(x1) == 0){
+      return(NA)
+    }else{
+      x2 <- data.frame(do.call(rbind, fs::path_split(fs::path_ext_remove(x1[fs::path_ext(x1) %in% Ext]))))
+      colnames(x2) <- c(paste("X", seq(1, ncol(x2)-4), sep = ""), paste("A", seq(1,4), sep = ""))
+
+      if(do_format == "serial"){
+        x3 <- tidyr::separate(x2[,grep("A", colnames(x2))], "A4", into = c("year", "month", "day", "hour", "minute", "second", "serial"), sep = " ", extra = "merge")
+      }else if(do_format == "original"){
+        x3 <- tidyr::separate(x2[,grep("A", colnames(x2))], "A4", into = c("year", "month", "day", "hour", "minute", "second"), sep = " ", extra = "drop")
+      }else{
+        message("You specified an incorrect do_format. The function will output in 'original' format. \nTo avoid this message, please choose one of c('serial', 'original').")
+        x3 <- tidyr::separate(x2[,grep("A", colnames(x2))], "A4", into = c("year", "month", "day", "hour", "minute", "second"), sep = " ", extra = "drop")
+      }
+      colnames(x3) <- c("site", "species", "individuals", colnames(x3)[-c(1:3)])
+
+      return(x3)
+    }
+
+    rm(x1, x2, x3)
+  })
+
+  fs2 <- do.call(rbind, fs1)
+  row.names(fs2) <- NULL
+
+  fs3 <- fs2[!is.na(fs2$site),]
 
   if(diagnostics == T){
     diagn <- list("Sites and Species" = data.frame(dplyr::summarise(dplyr::group_by(fs3, site), species = length(unique(species)), images = dplyr::n())),
